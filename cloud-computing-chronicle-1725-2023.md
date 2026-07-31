@@ -1,63 +1,66 @@
-# 云计算发展编年史 1725-2023（第二版）
+# 云计算发展编年史（1725–2023）
 
-从穿孔纸带到云原生与 AIGC 的技术演进年表。正文按年代叙事展开；本版在保留原叙事的前提下，统一编号与版式，并校正笔误、人名、专有名词与明显史实偏差，同时补充专业定义与参考文献。
+> 从穿孔纸带到云原生与 AIGC，计算能力如何一步步从专用机械走向按需可得的共享资源池？本文按年代叙事展开，是技术史整理，而非百科全书式年表。
+>
+> 本版在保留原叙事风格的前提下，统一编号与版式，校正笔误、人名、专有名词与明显史实偏差，并补充专业定义与可核验参考文献。部分节点存在学界争议（如「第一台计算机」归属）；凡遇争议，正文采用通行表述并在附录中标明。
 
 > **NIST 对云计算的定义（行业通行基准）**  
 > Cloud computing is a model for enabling ubiquitous, convenient, on-demand network access to a shared pool of configurable computing resources… composed of five essential characteristics, three service models, and four deployment models.  
-> — Mell & Grance, *The NIST Definition of Cloud Computing*, NIST SP 800-145 (2011) [[1]](#references)  
+> — Mell & Grance, *The NIST Definition of Cloud Computing*, NIST SP 800-145 (2011) [1]  
 >  
 > 五类基本特征：按需自助、广泛网络访问、资源池、快速弹性、可度量服务。  
 > 三类服务模型：**IaaS** / **PaaS** / **SaaS**。  
 > 四类部署模型：公有云 / 私有云 / 社区云 / 混合云。
 
-> **演进主线（便于对照正文）**  
-> 1. 可编程介质与自动机 → 2. 可计算性与存储程序计算机 → 3. 分时与虚拟机 → 4. UNIX/C 与可移植 OS → 5. 开源与 Linux → 6. x86 虚拟化与容器 → 7. 云与大数据商业化 → 8. 云原生与编排 → 9. 云化 AIGC / LLMaaS。
+演进主线便于对照正文：可编程介质与自动机 → 可计算性与存储程序计算机 → 分时与虚拟机 → UNIX/C 与可移植 OS → 开源与 Linux → x86 虚拟化与容器 → 云与大数据商业化 → 云原生与编排 → 云化 AIGC / LLMaaS。
+
+---
 
 ## 目录
 
-1. [早期计算与存储介质](#1--早期计算与存储介质)
-2. [可计算性与通用计算机](#2--可计算性与通用计算机)
-3. [分时、虚拟化与操作系统](#3--分时虚拟化与操作系统)
-4. [UNIX、C 语言与 VMM](#4--unixc-语言与-vmm)
-5. [微型机、开源与 Linux](#5--微型机开源与-linux)
-6. [微机虚拟化与容器](#6--微机虚拟化与容器)
-7. [云计算与大数据](#7--云计算与大数据)
-8. [云原生](#8--云原生)
-9. [云化 AIGC](#9--云化-aigc)
-10. [附录 A · 勘误说明](#附录-a--勘误说明)
-11. [References](#references)
+1. [早期计算与存储介质](#1-早期计算与存储介质)
+2. [可计算性与通用计算机](#2-可计算性与通用计算机)
+3. [分时、虚拟化与操作系统](#3-分时虚拟化与操作系统)
+4. [UNIX、C 语言与 VMM](#4-unixc-语言与-vmm)
+5. [微型机、开源与 Linux](#5-微型机开源与-linux)
+6. [微机虚拟化与容器](#6-微机虚拟化与容器)
+7. [云计算与大数据](#7-云计算与大数据)
+8. [云原生](#8-云原生)
+9. [云化 AIGC](#9-云化-aigc)
+10. [附录 A：勘误与史实修订说明](#附录-a勘误与史实修订说明)
+11. [参考文献](#参考文献)
 
-## 1 · 早期计算与存储介质
+---
 
-### 1.1 · 1725 · 诞生穿孔纸带
+## 1. 早期计算与存储介质
 
-1725 年，法国人巴西尔·布尚（Basile Bouchon）发明了**穿孔纸带**，它是历史上最早的数据存储介质之一。穿孔纸带是一种很薄的纸片，面积为 190×84 毫米，最初用于储存纺织机工作过程控制的信息。
+### 1.1 1725：诞生穿孔纸带
 
-其工作原理如下：纺织机在编织过程中，编织针会往复滑动，同时编织针会根据穿孔纸带上的小孔是否存在来判断是否应该进行勾线，继而编织出不同的图案。
+1725 年，法国人巴西尔·布尚（Basile Bouchon）发明了用于控制织机的**穿孔纸带**：连续纸卷上的孔位决定提综动作，从而编织出不同图案。这是可编程控制的早期工业实践之一。
 
-这种根据 “存储” 在穿孔纸带上的 “图案程序” 来进行编织作业的方式，被认为是半自动化机械领域中的第一个工业应用。
+约 1728 年，让-巴蒂斯特·法尔孔（Jean-Baptiste Falcon）改用更易更换、修补的穿孔卡片链。约 1801–1804 年，约瑟夫·玛丽·雅卡尔（Joseph Marie Jacquard）在前人基础上完成改良，成熟为 **Jacquard 编织机**，成为工业革命早期自动化机械的重要里程碑。
 
-1801 年，法国人约瑟夫·玛丽·雅卡尔（Joseph Marie Jacquard）在巴西尔·布尚发明的基础上对早期纺织机进行了改良，基于类似的原理，实现了更加高效的自动化编织复杂的图案，大大提高了编织效率和质量。这种成熟的机器后来被称为 **Jacquard 编织机**，是工业革命早期自动化机械的重要里程碑之一。
+这种把「图案程序」预先制作在纸带/卡片上再驱动机器的方式，被后世视为现代编程思想的重要前史；它启发了后续穿孔卡制表与程序控制计算机。
 
-18 世纪末期到 19 世纪后期，穿孔纸带被广泛用于 “程序化” 的织机和其他工业机器。现在回头看，Jacquard 编织机的发明影响深远，不仅推动了纺织业的发展，还为计算机诞生提供了启示，这种根据需要进行制作穿孔纸带的工作也被视为现代 “编程” 的起源。
-
-### 1.2 · 1846 · 诞生穿孔指令带
+### 1.2 1846：诞生穿孔指令带
 
 1846 年，苏格兰人亚历山大·贝恩（Alexander Bain）发明了电报打字机（Electric printing telegraph），它能够将电信号转化为可打印的文字，这被认为是第一台现代打印机的雏形。
 
-亚历山大·贝恩在电报打字机中沿用了穿孔纸带的思路，改进为了体积更小的穿孔指令带。穿孔指令带上的每一行代表一个字符，利用 01 二进制编码，以规定格式排列就可以代表规定的信息。
+亚历山大·贝恩的电传打印思路，与后来电报/电传中广泛使用的穿孔纸带一脉相承：以孔位编码字符，按约定格式排列即可表示信息（后世电传纸带多为五单位等编码，不宜直接等同于现代「01 二进制」表述）。
 
-### 1.3 · 1890 · 诞生穿孔卡制表机
+### 1.3 1890：诞生穿孔卡制表机
 
-1890 年，美国统计学家赫尔曼·何勒里斯（Herman Hollerith）发明了**穿孔卡制表机**。通过该机器可以制作同时最多存储 960 bits 数据量的穿孔卡。
+1890 年，美国统计学家赫尔曼·何勒里斯（Herman Hollerith）发明了**穿孔卡制表机**，以卡片上的孔位编码数据，并用机电方式读卡统计。该技术用于美国 1890 年人口普查，后扩展到商业统计与检索，标志着半自动化数据处理时代的开启。
 
-结合穿孔卡读取设备，它能将穿孔卡以 01 二进制方式进行读取并完成数据统计。这项技术最早应用于美国人口普查局的人口普查工作中，后来被广泛应用在工业检索以及数据统计领域，也标志着半自动化数据处理系统时代的开始。
+说明：后世通行的 80 列穿孔卡（孔位规模常被计为约 960）是 1928 年前后 IBM 标准化的结果；不宜把该规格直接写回 1890 年的何勒里斯卡片。
 
-1896 年，赫尔曼·何勒里斯成立了制表机公司，这也是后来 IBM 公司的前身。
+1896 年，何勒里斯成立制表机公司（Tabulating Machine Company），经合并演变为 CTR，最终成为 IBM 的前身脉络之一。
 
-## 2 · 可计算性与通用计算机
+---
 
-### 2.1 · 1936 · 诞生图灵完备性和图灵机
+## 2. 可计算性与通用计算机
+
+### 2.1 1936：诞生图灵完备性和图灵机
 
 20 世纪初的数学界最炙手可热的讨论话题莫过于哥德尔的不完全定理（Gödel's incompleteness theorem）。
 
@@ -69,9 +72,9 @@
 
 直到 1936 年，图灵向伦敦的数学杂志投了一篇题为《On Computable Numbers, with an Application to the Entscheidungsproblem》（论可计算数及其在判定性问题上的应用）的论文。该论文中提到了一种数学模型，该模型讨论的是一种有穷的、构造性的问题的求解思路。
 
-图灵以数学领域的布尔代数（Boolean，True or False）为基础，将逻辑领域中的任意命题（可转化为数学符号）都用一种通用的机器来表示和演算，并且能按照一定的规则推导出结论，即：将论据（输入）基于某种规则（指令集）来进行论证（计算）之后就肯定能得到结论（输出）。这就是可计算性理论，是一种严格的逻辑和数学框架，限定了什么样的问题是可求解的，什么样的问题是不可求解的。也就是所谓**图灵完备（Turing-complete）**的。
+图灵以数学领域的布尔代数（Boolean，True or False）为基础，将逻辑领域中的任意命题（可转化为数学符号）都用一种通用的机器来表示和演算，并且能按照一定的规则推导出结论，即：将论据（输入）基于某种规则（指令集）来进行论证（计算）之后就肯定能得到结论（输出）。这就是可计算性理论，是一种严格的逻辑和数学框架，限定了什么样的问题是可求解的，什么样的问题是不可求解的。能在通用图灵机上模拟的计算能力，即后世所谓**图灵完备（Turing-complete）**。
 
-而**图灵机（Turing Machine）**就是可计算性理论中的核心计算模型；凡可用图灵机刻画并求解的问题，属于可计算问题。图灵在论文中给出了图灵机的设计思想，利用机器来模拟人使用纸笔进行数学运算的过程，通过一个机械操作的读写头去模拟笔和眼睛，可以在纸带上写上或者擦除某个符号，也可以像眼一样移动到纸的另一个位置。为了模拟人的这种行为，一个典型的图灵机应该具有以下组成部分：
+而**图灵机（Turing Machine）**是可计算性理论中的核心计算模型；凡可用图灵机刻画并求解的问题，属于可计算问题。图灵在论文中给出了图灵机的设计思想，利用机器来模拟人使用纸笔进行数学运算的过程，通过一个机械操作的读写头去模拟笔和眼睛，可以在纸带上写上或者擦除某个符号，也可以像眼一样移动到纸的另一个位置。为了模拟人的这种行为，一个典型的图灵机应该具有以下组成部分：
 
 - 一条无限长的穿孔指令带（输入/输出存储）：指令带被划分为一个个小格子，每个格子用于表示一个有限字母表上的符号。
 - 一个穿孔指令带读写头（读/写）：读写头可以在指令带上左右移动，它能读出当前格子上的符号，并能改变当前格子上的符号。
@@ -80,13 +83,13 @@
 
 尽管图灵机当时还只是一纸空文，但其思想奠定了整个现代计算机发展的理论基础。
 
-### 2.2 · 1942 · 诞生世界上第一台专用计算机
+### 2.2 1942：诞生世界上第一台专用计算机
 
-在 1937-1942 年间，美国工程师约翰·阿塔纳索夫（John Atanasoff）和克利福特·贝瑞（Clifford Berry）基于图灵机的理论基础设计并研制了实际上第一台专用计算机 Atanasoff-Berry Computer（阿塔纳索夫-贝瑞计算机），简称 ABC 计算机。
+在 1937–1942 年间，美国工程师约翰·阿塔纳索夫（John Vincent Atanasoff）和克利福特·贝瑞（Clifford Berry）设计并研制了 Atanasoff-Berry Computer（阿塔纳索夫-贝瑞计算机），简称 ABC。它常被表述为最早的电子数字计算机之一（专用机；「第一台」归属在史学上仍有争议），其工作大体独立于图灵 1936 年论文，不宜简单写成「基于图灵机理论」。
 
 之所以称之为 “专用”，是因为 ABC 不可以进行编程，仅能用于求解线性方程组。但 ABC 的诞生仍开创了多项现代计算机的基础要素，包括二进制算术方式和电子开关器件。
 
-### 2.3 · 1945 · 诞生冯·诺依曼体系结构
+### 2.3 1945：诞生冯·诺依曼体系结构
 
 1945 年，冯·诺依曼（John von Neumann）在论文《First Draft of a Report on the EDVAC》（第一份草案）中提出了**冯·诺依曼体系结构**，又称：存储程序计算机。即：程序本身是存储在主机内存中的，可以通过加载不同的程序来解决不同的问题。
 
@@ -101,31 +104,33 @@
 
 **外设**
 
-- **输入/输出设备**：键盘、鼠标属于输入设备，显示器是输出设备，网卡即是输入设备又是输出设备。
+- **输入/输出设备**：键盘、鼠标属于输入设备，显示器是输出设备，网卡既是输入设备又是输出设备。
 
 回头看，现代计算机的诞生经历了 3 个重大的历史节点：
 
 - 阿兰·图灵（Alan Mathison Turing）揭示了计算机能不能做出来：从理论上证明了计算机的可行性。
-- 阿塔那索夫（John Vincent Atanasoff）把计算机做出来了：把世界上第一台计算机做了出来。
+- 阿塔纳索夫（John Vincent Atanasoff）等人把电子数字计算付诸硬件：ABC 等专用机证明了电子实现的可行性（「第一台」存在争议）。
 - 冯·诺依曼（John von Neumann）指示了计算机应该怎么做：存储程序计算机，奠定了现代计算机的体系结构。
 
-### 2.4 · 1946 · 诞生了世界上第一台通用计算机
+### 2.4 1946：诞生了世界上第一台通用计算机
 
 1946 年 2 月 14 日，世界上第一台通用计算机 **ENIAC**（Electronic Numerical Integrator And Computer，电子数值积分计算机）于美国宾夕法尼亚大学诞生，发明人是美国人莫克利（John W. Mauchly）和艾克特（J. Presper Eckert）。
 
 ENIAC 是第一代电子管计算机，是图灵完备的，并且能够重新编程以解决各种计算问题。同时，ENIAC 也是一个不折不扣的庞然大物，用了 18000 个电子管，占地 150 平方米，重达 30 吨，耗电功率约 150 千瓦，每秒钟可进行 5000 次运算。由于使用的电子管体积很大，耗电量大，易发热。因而，ENIAC 的工作时间不能太长，最初只用于帮助美国陆军的弹道研究实验室（BRL）计算火炮的火力表。
 
-ENIAC 程序员在工作；实际上，女性是最早的程序员主力军之一。
+当时参与 ENIAC 操作与「编程」工作的人员中，有多位女性；女性是早期计算实践中的重要力量。
 
-## 3 · 分时、虚拟化与操作系统
+---
 
-### 3.1 · 1955 · 第一次提出了分时多用户共享的概念
+## 3. 分时、虚拟化与操作系统
 
-#### 3.1.1 · 串行系统
+### 3.1 1955–1959：分时多用户共享概念的提出
+
+#### 3.1.1 串行系统
 
 最初的计算机系统都是串行运作的，一次只能录入执行一个程序，当程序进行缓慢的 I/O 操作时，CPU 只好空转等待。这不仅造成了 CPU 的浪费，也造成了其他计算机硬件资源的浪费。
 
-#### 3.1.2 · 批处理系统
+#### 3.1.2 批处理系统
 
 那时的计算机科学家们都在思考如何能够提高 CPU 的利用率，直到提出了多道程序设计（Multi-Programming），这也是批处理/多任务处理系统的前身。多道程序设计的运行原理就是一次性把一批任务都提交给计算机，然后等待执行结果。并且中途不能和计算机进行交互。
 
@@ -137,15 +142,15 @@ ENIAC 程序员在工作；实际上，女性是最早的程序员主力军之�
 
 最初，这个问题是让人接受的，因为那时的科学家们更在意最终的输出结果，而不是谁先谁后的问题。直到有人提出了新的需求 —— 多用户同时使用计算机。
 
-#### 3.1.3 · 分时系统（多用户共享交互式操作系统）
+#### 3.1.3 分时系统（多用户共享交互式操作系统）
 
-1955 年，美国麻省理工学院（MIT）的约翰·麦卡锡（John McCarthy，AI 概念提出者，1971 年获图灵奖）教授提出了 **Time-Sharing（分时）** 系统的概念，希望以此来解决多人同时使用一台计算机的诉求。
+约 1955 年起，美国麻省理工学院（MIT）的约翰·麦卡锡（John McCarthy，AI 概念提出者，1971 年获图灵奖）开始思考 **Time-Sharing（分时）**；其影响较大的书面提案见于 1959 年致 Philip Morse 的备忘录，希望解决多人交互式共享同一台计算机的诉求。
 
 所谓 “分时” 的含义是将 CPU 占用切分为多个极短（1/100 s）的时间片，每个时间片之间轮询地执行着不同的程序。在一个分时系统中，能够允许几个、几十个甚至几百个用户通过终端机连接到同一台大型主机，将 CPU 时间分片与内存空间按一定的时间周期，轮流地切换给各终端用户的程序使用。由于时间间隔很短，所以让每个用户感觉像是独占了计算机一样。
 
 分时系统实现了让多个程序共享计算机硬件和软件资源的效果，本质是一个多用户交互式操作系统。
 
-### 3.2 · 1959 · 第一次提出了虚拟化技术的概念
+### 3.2 1959：第一次提出了虚拟化技术的概念
 
 时间来到 1959 年 6 月 15 日，牛津大学的计算机教授，克里斯托弗·斯特雷奇（Christopher Strachey）在国际信息处理大会（International Conference on Information Processing）上发表了一篇名为《大型高速计算机中的分时系统》（"Time sharing in large fast computers"）的学术报告，他在文中首次提出了 **“虚拟化”** 的基本概念，还论述了什么是虚拟化技术。这篇文章被认为是最早的虚拟化技术论述，从此拉开了虚拟化发展的帷幕。
 
@@ -161,7 +166,7 @@ Christopher Strachey 生平参见：[Computer History pioneers — Strachey](htt
 
 本质上，斯特雷奇是在讨论如何将分时系统的实现方式融入到多道程序设计的方式当中，从而实现一个可多用户操作（CPU 时间切片），又具有多程序设计效益（CPU 中断让出）的虚拟化系统。可见，虚拟化概念最初的提出就是为了满足多用户同时操作大型计算机，并充分利用大型计算机各部件资源的现实需求。而对这一需求的实现与演进，贯穿了整个大型机与小型机虚拟化技术的发展历程。
 
-### 3.3 · 1962 · 诞生了第一台超级计算机和专用操作系统 — Atlas
+### 3.3 1962：诞生了第一台超级计算机和专用操作系统 — Atlas
 
 1960 年，英国启动 Atlas 超级计算机（Super Computer）项目。
 
@@ -169,34 +174,29 @@ Christopher Strachey 生平参见：[Computer History pioneers — Strachey](htt
 
 超级计算机的计算速度与内存性能有关，所以程序的数据结构需要经过精心的设计来确保内存数据的读写效率，传输速率的细微差别可以导致运算能力的巨大差别。
 
-1962 年 12 月 7 日，第一台 Atlas 超级计算机 Atlas 1 诞生，Atlas 是第二代晶体管计算机，被认为是当时世界上最强大的计算机。Atlas 开创了许多沿用至今的软件概念，包括第一次实现了名为 Atlas Supervisor 的底层资源管理组件，Supervisor 通过特殊的指令或代码来管理主机的硬件资源。还第一次实现了内存分页技术（Paging Techniques）以及当时被称为一级存储（One-Level Store）的虚拟内存（Virtual Memory）技术。
+1962 年 12 月 7 日，Atlas 1 投入运行。Atlas 是第二代晶体管计算机，被认为是当时世界上最强大的计算机之一（「第一台超级计算机」的称号亦常被归于稍后的 CDC 6600 等，史学表述不一）。Atlas 开创了许多沿用至今的软件概念，包括第一次实现了名为 Atlas Supervisor 的底层资源管理组件，Supervisor 通过特殊的指令或代码来管理主机的硬件资源。还第一次实现了内存分页技术（Paging Techniques）以及当时被称为一级存储（One-Level Store）的虚拟内存（Virtual Memory）技术。
 
 Supervisor 就是我们现在称之为 Operating System（操作系统）的前身，还被叫过一段时间的 Master Control Program（主控程序），但最终更贴切的 Operating System 胜出了。另外，Hypervisor（虚拟机管理程序）的命名也来源于 Supervisor。在西文中，Super 和 Hyper 是同义词，意为超级，但词义上 Hyper 比 Super 还要高级一些。
 
 *Atlas 1 超级计算机*
-### 3.4 · 1964 · 诞生了第一个分时共享操作系统 — Multics
+
+### 3.4 1964：诞生了第一个分时共享操作系统 — Multics
 
 1961 年 11 月，由麻省理工学院的费尔南多·科尔巴托（Fernando Corbató，1990 年获得图灵奖）教授带领团队开始研发 CTSS（Compatible Time-Sharing System，兼容性分时系统）项目，并由 IBM 提供主机设备和工程师进行支持。CTSS 开创性的实现了多用户硬件隔离和多用户独立的文件系统技术，极大地影响了后来的分时系统的设计，包括 IBM 著名的 TSS（Time Sharing System）技术。
 
 同年，在麻省理工学院百周年纪念典礼上，约翰·麦卡锡（John McCarthy）第一次提出了 Utility Computing（公共计算）的概念。约翰·麦卡锡认为：“如果我设想的那种计算机（即：分时系统，同时支持多人同时使用的计算机）能够成真，那么计算或许某天会像电话一样被组织成公共服务（Utility Computing，公共计算服务），就像生活中的水、电、煤气一样，被每一个人寻常地使用。那将是一种全新的重要工业的基础。”
 
-1964 年，麦卡锡在大西洋月刊发表了一篇题为《The Computers of Tomorrow（明日计算机）》的文章，详细分析了 Utility Computing Service（公共计算服务）与公共电网之间的异同点。文章指出，计算想要成为像电网那样的公共服务，需要关注三个问题：
+1964 年 5 月，MIT 的马丁·格林伯格（Martin Greenberger）在《大西洋月刊》发表《The Computers of Tomorrow（明日计算机）》，系统讨论了「信息公用事业 / 计算机公用事业」（information utility）设想，常与麦卡锡等人的 Utility Computing 愿景一并被后世回溯为云计算思想的早期表述。文中将计算服务与公共电网类比，并触及接口、终端设备、服务异质性等议题——这很像云计算最初的远景，只是那时还没有今天意义上的互联网把终端大规模连起来。
 
-- 接口：用户如何和资源进行对接？
-- 服务设备：用户通过什么设备将资源转换成服务？
-- 产品同质性：电总归是电，而计算是一种复杂的服务，存在多样性，存在不同的编程语言和硬件，如何兼容、交互？
+与此并行（时间上更早），1963 年起麻省理工学院（MIT）在 DARPA（美国国防高级研究计划局）下属 IPTO 等资助下推进著名的 Project MAC（Multiple Access Computing / Machine-Aided Cognition，多址计算 / 机器辅助认知）项目；Multics 是其核心成果之一。不宜写成「因 1964 年该文才启动 MAC」。
 
-这似乎是云计算最初的远景，只是那时还没有网络将人们连接起来。
+Project MAC 获得 DARPA 等机构资助（当时量级常被记为约 200 万美元量级）。其目标之一，是在 CTSS 经验之上，开发具有多用户交互与多道程序能力的分时共享操作系统——**Multics**，以超越当时主流的批处理使用方式。
 
-在《The Computers of Tomorrow》的影响下，麻省理工学院（MIT）和 DARPA（美国国防高级研究计划局）下属的 IPTO（信息处理技术办公室）共同启动了著名的 MAC（Multiple Access Computing，多址计算）项目。
-
-DARPA 还专门提供了约 200 万美元的项目津贴。其目的是在 CTSS 所取得的经验之上，开发出一种具有多用户交互能力的、且具有多道程序处理能力的分时共享操作系统（多人可同时使用的电脑系统）— Multics 系统，以取代当时广泛使用的批处理操作系统。
-
-Multics（Multiplexed information and Computing Service，多路信息计算系统）意为多用户、多任务、多层次（Multi-User、Multi-Processor、Multi-Level），目标是连接 1000 部终端机，同时支持 300 个用户在线。Multics 项目是 Unix 操作系统的前身。
+Multics（Multiplexed information and Computing Service，多路信息计算系统）意为多用户、多任务、多层次（Multi-User、Multi-Processor、Multi-Level），目标是连接 1000 部终端机，同时支持 300 个用户在线。Multics 是 Unix 操作系统的重要前驱与灵感来源（Unix 并非 Multics 的直接改名延续）。
 
 MAC 项目组最终由贝尔实验室（Bell Labs），麻省理工学院（MIT）以及通用电气公司（General Electric）组成。其中，由于 GE（通用电气公司）被选为硬件供应商，IBM 被踢出局。
 
-### 3.5 · 1965 · IBM 开启了大型计算机的虚拟化之路
+### 3.5 1965：IBM 开启了大型计算机的虚拟化之路
 
 1964 年，从 MAC 项目中出局的 IBM，在 Thomas J. Watson Research Center（纽约沃森研究中心）进行 M44/44X 计算机项目的研究。M44/44X 项目基于 IBM 7044 大型机（M44），并通过软件和硬件结合的方式来模拟出多个 7044 虚拟机（44X）。
 
@@ -209,7 +209,9 @@ MAC 项目组最终由贝尔实验室（Bell Labs），麻省理工学院（MIT�
 注：大型计算机使用了专用的处理器指令集、操作系统和应用软件，是硬件和专属软件一体化的计算机系统。大型机与超级计算机不同，大型机追求的 RAS（Reliability, Availability, Serviceability）高可靠性、可用性和可维护性。大型机的性能并不能用单一的每秒并行浮点计算能力来体现，大型机的运算任务主要受数据传输与转移、可靠性及并发处理性能所限制。大型机更倾向整数运算，如订单数据、银行业务数据等，超级计算机则是更强调浮点计算性能如天气预报，大型机在处理数据的同时需要读写或传输大量信息，如海量的交易信息、航班信息等等。
 
 *System/360 大型计算机*
+
 *《人月神话：软件项目管理之道》*
+
 1967 年，科学家 L.W. Comeau 和 R.J. Creasy 为 System/360 大型机量身研发了 CP-40/CMS 分时共享操作系统。
 
 CP-40/CMS 被认为是第一个实现了基于硬件的完全虚拟化操作系统（Full Hardware Virtualization）。支持 TSS（Time Sharing System，最原始的 CPU 虚拟化技术）、虚拟内存、多任务处理，还支持通过捕获特权指令（例如 I/O 操作）和内存缺页（Page Faults）等异常，然后交由控制程序（Control Program）进行模拟的方式来实现虚拟机（最多可提供 14 个虚拟机）。用户可以在虚拟机之上安装其他的操作系统，多个操作系统之间互相隔离，就像运行在一台独立的主机之上。
@@ -220,7 +222,7 @@ CP-40/CMS 最大的成就在于提出并实现了 Trap-And-Emulate（捕获-模�
 
 综上可见，虚拟化技术的应用和发展源于大型机对分时系统的需求。这种通过硬件的方式来生成多个可以运行独立操作系统软件的虚拟机实例，解决了早期大型计算机只能单任务处理而不能分时多任务处理的问题。
 
-### 3.6 · 1965 · 诞生了第一台小型计算机
+### 3.6 1965：诞生了第一台小型计算机
 
 1960 年，DEC（Digital Equipment Corporation，数字设备公司，是计算机历史上最有影响力的公司之一）推出试验性的 PDP-1（Programmed Data Processor，程序数据处理机）小型计算机。直到 1965 年 3 月 28 日，DEC 才正式推出了世界上第一台真正意义上的小型机（Mini Computer）PDP-8。
 
@@ -228,9 +230,11 @@ CP-40/CMS 最大的成就在于提出并实现了 Trap-And-Emulate（捕获-模�
 
 PDP-8 小型机简化了大型机的功能，但相对也价格低廉，在当时它的售价只有 18500 美元，比当时任何公司的电脑产品都低，很快便成为 DEC 的主力产品，并引发了当时计算机市场的小型化革命。而 PDP-8 则被认为是 PC（个人电脑）的先驱者。
 
-## 4 · UNIX、C 语言与 VMM
+---
 
-### 4.1 · 1973-1977 · 诞生 C 语言和可移植的 UNIX 分时共享操作系统
+## 4. UNIX、C 语言与 VMM
+
+### 4.1 1973-1977：诞生 C 语言和可移植的 UNIX 分时共享操作系统
 
 1950 年代末期，随着操作系统的发展，大量的计算机编程语言也随之涌现。最初，这些编程语言都是围绕着单个操作系统展开的，只能为 UNIVAC、IBM700 等主机编写应用程序。这样的状况使得不同操作系统之间的程序移植几乎不可能完成。对此，一些美国计算机科学家们开始提倡研究和开发出一种与硬件无关的科学用程序设计语言。
 
@@ -250,7 +254,7 @@ PDP-8 小型机简化了大型机的功能，但相对也价格低廉，在当�
 
 当完成之后，Thompson 怀着激动的心情把身边同事 Dennis M. Ritchie（丹尼斯·里奇）叫过来一起游戏。很可惜，Ritchie 表示对他的游戏不感兴趣，但是对他编写的操作系统很感兴趣，并加入一起开发。
 
-也许是对 Multics 项目的怨念，最初 Thompson 将自己的这个操作系统取名为 Uni-plexed Information and Computing Service（没路信息计算系统），与 Multiplexed information and Computing Service（多路信息计算系统）相反，简称为 UNICS，后来取其谐音，就称其为 UNIX 了。
+也许是对 Multics 项目的怨念，最初 Thompson 将自己的这个操作系统取名为 Uni-plexed Information and Computing Service（单路信息计算系统），与 Multiplexed Information and Computing Service（多路信息计算系统）相对，简称为 UNICS，后来取其谐音，就称其为 UNIX 了。
 
 那时候的 UNIX 是使用汇编语言写的，Thompson 和 Ritchie 在做内核移植开发时，感觉使用汇编语言很难实现。所以开始切换到 B 语言来。后来在 PDP-11 发布后，由于 PDP-11 提供了多种不同规格大小的基本对象，例如：一字节长的字符、两字节长的整型数、四字节长的浮点数等等。又由于 B 语言是一种无类型的编程语言，无法处理这些不同规格大小的对象，也没有提供单独的操作符去操作它们。所以为了将 UNIX 移植到 PDP-11，Ritchie 开始着手改进 Thompson 的 B 语言。
 
@@ -258,7 +262,8 @@ PDP-8 小型机简化了大型机的功能，但相对也价格低廉，在当�
 
 1973 年初，C 语言的主体完成了，它既保持了 B 语言的优点（精炼、接近硬件），又克服了 B 语言的缺点（过于简单，数据无类型）。于是 Thompson 和 Ritchie 开始着手使用 C 语言在 PDP-11 上重写 UNIX。这是 C 语言第一次被应用在操作系统的内核开发上。可见，从一开始，C 语言就是为系统级编程而设计，程序的运行效率至关重要。
 
-*PDP-11 前面的 Ken Thompson（坐着）和 Dennis M. Ritchie（站着）*
+*PDP-11 前的 Ken Thompson（坐着）与 Dennis M. Ritchie（站着）*
+
 1974 年，Thompson 和 Ritchie 发表了第一篇关于 UNIX 的论文《The UNIX Time Sharing System》（UNIX 分时共享操作系统），从此 UNIX 广为人知。
 
 1977 年，Dennis M. Ritchie 跨时代的论文《可移植的 C 语言编译程序》，标志 UNIX 成为了世界上第一个可移植的操作系统。与主机硬件设备完全解耦的 C 语言和 UNIX 使得程序员这门职业得以诞生，计算机技术不再是科学家们的专属，程序员们走向了台前。
@@ -271,7 +276,7 @@ Thompson 和 Ritchie 因在计算机领域做出的杰出贡献，于 1983 年�
 
 UNIX 和 C 语言的结合是一个伟大的时刻，在此之前，使用汇编语言来编写能够发挥计算机最高效能的操作系统是业界共识。而 C 语言为 UNIX 所带来的可移植性在那时可以说是极具创新意义。从此以后，当一款新的主机出现时，程序员再也不需要重复发明轮子了。
 
-### 4.2 · 1974 · 第一次提出了 VMM 的概念
+### 4.2 1974：第一次提出了 VMM 的概念
 
 1974 年，Gerald J. Popek（杰拉尔德·J·波佩克）和 Robert P. Goldberg（罗伯特·P·戈德堡）在合作论文《可虚拟第三代架构的规范化条件》（Formal Requirements for Virtualizable Third Generation Architectures）中提出了一组称为虚拟化准则的充分条件，又称波佩克与戈德堡虚拟化需求（Popek and Goldberg virtualization requirements），即：虚拟化系统结构的三个基本条件。满足这些条件的控制程序才可以被称为**虚拟机监控器（Virtual Machine Monitor，简称 VMM）**：
 
@@ -294,28 +299,31 @@ UNIX 和 C 语言的结合是一个伟大的时刻，在此之前，使用汇编
 
 现在回看，由于当时技术的原因，早期的 VMM 产品大多实现的是寄居式，例如：VMware 5.5 以前的版本、Xen 3.0 以前的版本。随着硬件虚拟化技术的诞生，几乎所有的 VMM 产品都转向了裸金属 Hypervisor 实现。例如：VMware 5.5 及以后版本、Xen 3.0 及以后版本以及 KVM。
 
-### 4.3 · 1978 · 诞生了第一片 x86 处理器和提出了摩尔定律
+### 4.3 1978：诞生了第一片 x86 处理器和提出了摩尔定律
 
 在上世纪 60 到 70 年代末，大型机和虚拟化技术互相成就了对方，并且在相当长的一段时间里，虚拟化技术也只被应用于大型机中。其实也可以理解，以当时 Micro-CPU（微处理器）的处理能力，应付一两个应用程序已然捉襟见肘，的确没有更多的资源分与虚拟化应用了。直到摩尔定律开始生效为止。
 
-1965 年，Intel（英特尔）创始人之一戈登·摩尔提出了摩尔定律（Moore's law）：“在成本不变的前提下，半导体芯片上的晶体管密度（运算速度），约每隔两年便会增加一倍。”
+1965 年，Intel（英特尔）创始人之一戈登·摩尔提出后来所称的摩尔定律（Moore's law）：集成电路上的晶体管数量大约每年翻倍（1975 年左右他将经验周期修正为约每两年翻倍）。通行通俗表述常写作：「在成本大致可控的前提下，芯片集成度约每隔两年增加一倍。」
 
 从提出开始算起，半导体行业已经按照摩尔定律发展了半个多世纪，对二十世纪后半叶的世界经济增长做出了贡献，PC（个人电脑）、Internet、智能手机等技术的创新都离不开摩尔定律的延续。
 
-*摩尔定律：半导体行业预计摩尔定律将至少持续到 2020 年，但实际上在 2013 年就已经放缓*
+*摩尔定律示意：业界曾预期可延续至约 2020 年；实际增速在 2010 年代已显著放缓*
+
 1971 年，Intel 设计了世界上第一个微处理器芯片 Intel 4004，并以它为核心组成了世界上第一台微型计算机 MCS-4，从此揭开了微型计算机发展的序幕。微型计算机是第四代大规模集成电路计算机的典型代表。
 
 1978 年 6 月 8 日，Intel 发布了新款的 16 位微处理器 8086，是世界上第一款 x86 架构。（注：x86 架构并非指某一个芯片的型号，而是指代 Intel 通用计算机系列的标准编号缩写，也标识一套通用的计算机指令集合。）
 
-## 5 · 微型机、开源与 Linux
+---
 
-### 5.1 · 1980 · Wintel 个人微型计算机时代来临
+## 5. 微型机、开源与 Linux
+
+### 5.1 1980：Wintel 个人微型计算机时代来临
 
 自微型计算机诞生以来，消费者们对微机的热情几近疯狂，美国新闻界就曾对群众进行过问卷调查，问人们是否希望在不久的将来拥有一台家用计算机，结果超 80% 的人表达了这个愿望。往后的几年里，面对巨大的市场和商机，直接体现为全球计算机的产量逐渐从巨大、昂贵的小型计算机转变为更小型的、便宜的微型计算机。各种各样的微处理器和微型计算机如潮水般地涌入市场，尤其是以 IBM 推出的 PC（Personal Computer，个人计算机）电脑在早期几乎形成了垄断地位。如果没有后来的 Wintel 联盟的话。
 
-1980 年，微软和英特尔组成 Wintel 商业联盟，希望以此来取代 IBM PC 在个人计算机市场上的主导地位。依靠英特尔的摩尔定律和微软 Windows 桌面（Desktop）操作系统的升级换代，双方通过共同辖制下游 PC 生产商而不断攫取巨额暴利，以至于在全球个人电脑产业形成了所谓的 “双寡头垄断” 格局。直到 2016 年微软在 WinHEC 上宣布 Windows 10 可以运行在 ARM 架构之上，标志着垄断桌面端长达 20 多年的 Wintel 联盟正式破裂。但不可否认的是，正因为有了 Wintel 的强悍联合，才使个人电脑的发展日新月异。
+1980 年代，微软与英特尔在 PC 生态中形成后来所称的 Wintel 协作关系（IBM PC 于 1981 年推出，采用 Intel 8088 与 Microsoft 的 PC-DOS/MS-DOS）。随着兼容机市场扩张，Wintel 逐渐在桌面端占据主导。依靠英特尔的摩尔定律和微软 Windows 桌面（Desktop）操作系统的升级换代，双方通过共同辖制下游 PC 生产商而不断攫取巨额暴利，以至于在全球个人电脑产业形成了所谓的 “双寡头垄断” 格局。直到 2016 年微软在 WinHEC 上宣布 Windows 10 可以运行在 ARM 架构之上，标志着垄断桌面端长达 20 多年的 Wintel 联盟正式破裂。但不可否认的是，正因为有了 Wintel 的强悍联合，才使个人电脑的发展日新月异。
 
-### 5.2 · 1984 · GNU 计划启动
+### 5.2 1984：GNU 计划启动
 
 1974 年 7 月，经过不断改良的 UNIX 发展到第 5 个版本，Bell 选择了公开 UNIX 的源码，引起了学术界的广泛兴趣。所以，UNIX 第 5 版就以 “仅用于教育目的” 的协议，提供给各大学作为教学之用，成为当时操作系统课程的范例教材。
 
@@ -355,11 +363,11 @@ GNU 包含了 3 个协议条款：
 
 尽管 GNU 计划大部分时候是由个人自愿无偿贡献，但 FSF 有时还是会聘请程序员帮助编写。当 GNU 计划开始逐渐获得成功时，一些商业公司开始介入开发和技术支持。当中最著名的就是之后被 Red Hat 兼并的 Cygnus Solutions。
 
-到了 1990 年，GNU 已经开发出的一系列的开源软件，被称为 GNU 套件，包括：GCC（GNU Compiler Collection，GNU 编译器集合），GLIBC（libraries，函数库）、GDB（debugs，调试工具）、TeX（文本编辑器）、Emacs（一个功能强大的文字编辑器）、X Window 视窗系统、Apache HTTP 服务器，以及 UNIX Shell 等等。
+到了 1990 年前后，GNU 计划已产出一系列关键用户态工具（常称 GNU 工具链/套件），包括：GCC（GNU Compiler Collection）、glibc、GDB、Emacs、Bash 等。需要区分的是：TeX 由 Knuth 主导、X Window System 来自 MIT 等、Apache HTTP Server 属于独立开源项目——它们常与 GNU/Linux 系统一起使用，但并不等于「GNU 项目产物」。
 
 你可能会发现，上面唯独缺少了一个操作系统 Kernel。
 
-### 5.3 · 1991 · Linux 诞生
+### 5.3 1991：Linux 诞生
 
 在 UNIX 需要支付昂贵的授权费用后，很多大学不得不停止对其的研究。
 
@@ -371,7 +379,7 @@ GNU 包含了 3 个协议条款：
 
 1991 年，Linus Torvalds 编写出了与 UNIX 兼容的 Linux Kernel 并在 GPL 条款下发布。随即引起了黑客们的注意，通过网络加入到了 Linux Kernel 的开发。由于一批高水平黑客的加入，使 Linux 发展迅猛，几乎一两个礼拜就有新版或修正版的出现。
 
-1993 年底，Linux 1.0 终于诞生了！
+1994 年 3 月 14 日，Linus 宣布 Linux 内核 1.0 发布。
 
 Linux 1.0 已经是一个功能完备的操作系统 Kernel，代码实现紧凑而高效，可以充分发挥硬件的性能，在 4M 内存的 Intel 80386 主机上也表现得非常好。直至今天，Linux 社区的开发者们依然认为在 Linux Kernel 里进行开发才是真正的编程。
 
@@ -379,7 +387,7 @@ Linux 1.0 已经是一个功能完备的操作系统 Kernel，代码实现紧凑
 
 关于 “大教堂”（集权、封闭、受控、保密）和 “集市”（分权、公开、精细的同僚复审）两种开发模式的对比成为了新思潮的中心思想。这个新思潮对 IT 业产生了非常深远影响。为整个计算机世界带来了革命性的价值观。
 
-### 5.4 · 1992 · Linux 与 GNU 伟大结合
+### 5.4 1992：Linux 与 GNU 伟大结合
 
 由于 Linux 诞生即开源，其良好的开放性使得几乎所有 GNU 计划中的、运行于用户空间的软件都可以在 Linux 上使用。1992 年，Linux 与 GNU 套件结合，一个完全自由的操作系统诞生了。
 
@@ -387,14 +395,17 @@ Linux 1.0 已经是一个功能完备的操作系统 Kernel，代码实现紧凑
 
 当时，Richard 主张，因为 Linux 使用了许多的 GNU 软件，所以应该正名为 GNU/Linux，但这一提议并没有得到 Linux 社区的一致认同，后来还引发了 GNU/Linux 命名争议。但不管如何，虽然 Linux 本身并不属于 GNU 计划的一部分，但两者的关系早已宛如一体共生。
 
-1995 年，Linux 从 Apache 基金会找到了自己的杀手级应用 — Apache HTTP Web Server。
+1995 年前后，Apache HTTP Server 迅速成为 Web 服务器主力（Apache Software Foundation 成立于 1999 年；此前是 Apache Group 协作）。Linux + Apache 很快成为 ISP 与站点托管的经典组合。
 
-很快，运行 Apache HTTP 的 Linux 服务器成了全球 ISP 平台的首选。当时，约 60% 的网站选用 Apache。时至今日，LAMP（Linux、Apache、MySQL、PHP）仍是一个非常经典的组合。
+很快，运行 Apache HTTP 的 Linux 服务器成了全球 ISP 平台的常见选择；在相当长时期里 Apache 占据很高的站点份额。LAMP（Linux、Apache、MySQL、PHP）成为经典组合。
 
-*UNIX-Like 操作系统的主干脉络图。*
-## 6 · 微机虚拟化与容器
+*UNIX-like 操作系统的主干脉络图*
 
-### 6.1 · 1987 · 微机虚拟化时代全面启动
+---
+
+## 6. 微机虚拟化与容器
+
+### 6.1 1987：微机虚拟化时代全面启动
 
 随着 x86 服务器（Server）和桌面（Desktop）部署的增长，也为企业 IT 基础架构带来了新的难题：
 
@@ -404,7 +415,7 @@ Linux 1.0 已经是一个功能完备的操作系统 Kernel，代码实现紧凑
 
 而解决这些难题就是新时代赋予虚拟化技术的历史任务，自上世纪 80 年代开始，微机虚拟化技术及公司如同雨后春笋般涌现，它们都是云计算时代的奠基者。
 
-#### 6.1.1 · 操作系统模拟器
+#### 6.1.1 操作系统模拟器
 
 1987 年，Insignia Solutions 公司演示了一个称为 SoftPC 的软件模拟器，这个模拟器允许用户在 UNIX Workstations 上运行 DOS 应用。当时一个可以运行 Microsoft DOS 的 PC 需要 1,500 美金，而使用 SoftPC 模拟，就可以直接在大型工作站上运行 Microsoft DOS 了。
 
@@ -412,7 +423,7 @@ Linux 1.0 已经是一个功能完备的操作系统 Kernel，代码实现紧凑
 
 1998 年，著名的 x86 仿真模拟器 Bochs 发布。
 
-#### 6.1.2 · VMware ESXi 虚拟化
+#### 6.1.2 VMware ESXi 虚拟化
 
 1998 年，VMware 公司成立并首次实现了基于 x86 CPU 的虚拟技术，这是一种称之为 “二进制翻译（Binary Translation）” 的技术。可以通过运行在 Windows NT 上的 VMware 来启动 Windows 95 虚拟机。
 
@@ -428,7 +439,7 @@ VMware 商业化的成功，也标志着虚拟化技术已经从大型机开始�
 
 陷入模拟（二进制翻译）：无论是 HostOS 还是 GuestOS，只要是一个 OS 都必然会存在有敏感指令（e.g. reboot、shutdown 等）。试想如果我们希望将 GuestOS 重启，并在 GuestOS 中执行了 reboot 指令，但是却将 HostOS 给重启了，这将会非常糟糕。VMM 的陷入模拟机制就是为了解决这个问题。例如：在 GuestOS 中执行了敏感指令 reboot 时，VMM 首先会将敏感指令 reboot 捕获、检测并判定其为敏感指令。此时 VMM 就会陷入模拟，将敏感指令 reboot 模拟成一个只针对 GuestOS 进行操作的、非敏感的、并且运行在非核心态上的 “reboot” 指令，最后 VMM 执行虚拟机的重启操作。
 
-#### 6.1.3 · Citrix XenServer 虚拟化
+#### 6.1.3 Citrix XenServer 虚拟化
 
 2000 年代初期，英国剑桥大学的 Ian Pratt、Keir Fraser 等推动了 Xen 虚拟化相关工作（其后商业化为 XenSource / Citrix XenServer）。
 
@@ -444,7 +455,7 @@ Xen 实现的半虚拟化 VMM 在处理敏感指令和内核态指令的流程�
 
 在那时，Xen 之父 Ian Pratt 也曾表示：“这个项目是由我本人和剑桥大学计算机科学实验室的一些学生共同做的。我们当时就意识到要想使得虚拟化的工作越来越好，必须需要得到硬件方面的帮助，而且要不断地改变 CPU，改变芯片组，以及改变一些 I/O 的装置，使得他们能够适应虚拟化的需要。”
 
-#### 6.1.4 · Intel CPU 硬件虚拟化
+#### 6.1.4 Intel CPU 硬件虚拟化
 
 2003 年，Intel 对外宣布将在 x86 CPU 上支持硬件虚拟化技术。
 
@@ -482,7 +493,7 @@ int    $0x80
 
 2007 年 10 月，Citrix 公司出资 5 亿美金收购了 XenSource，变成了 Xen 虚拟机项目的东家。之后推出了虚拟化产品 “Citrix 交付中心”。
 
-#### 6.1.5 · Windows Hyper-V 虚拟化
+#### 6.1.5 Windows Hyper-V 虚拟化
 
 1997 年，Connectix 发布了 Virtual PC 产品（后被广泛用于在 Macintosh 等平台运行 x86 操作系统）。
 
@@ -492,9 +503,9 @@ int    $0x80
 
 2008 年，微软随 Windows Server 2008 发布虚拟化产品 Hyper-V（Windows Server 2008 R2 为后续版本）。
 
-#### 6.1.6 · QEMU-KVM 虚拟化
+#### 6.1.6 QEMU-KVM 虚拟化
 
-2001，Fabrice Bellard 发布了目前最流行的、采用了动态二进制翻译技术的开源虚拟化软件 QEMU（Quick EMUlator）。18 年后的 2019 年，QEMU 4.0.0 发布并对外宣称几乎可以模拟所有的物理设备，这简直就是个奇迹般的伟大软件。
+2001 年，Fabrice Bellard 发布了目前最流行的、采用了动态二进制翻译技术的开源虚拟化软件 QEMU（Quick EMUlator）。18 年后的 2019 年，QEMU 4.0.0 发布并对外宣称几乎可以模拟所有的物理设备，这简直就是个奇迹般的伟大软件。
 
 2006 年 10 月，以色列的创业公司 Qumranet 在完成了虚拟化 Hypervisor 基本功能、动态迁移以及主要的性能优化之后，正式对外宣布了 **KVM（Kernel-based Virtual Machine，基于内核的虚拟机）** 的诞生。
 
@@ -512,7 +523,7 @@ int    $0x80
 
 联盟成立之时，红帽的发言人表示：“大家都希望除 VMware 之外还有一种开源选择。未来的云基础设施一定会基于开源。我们想要营造一个小厂商们可以轻松加入的生态环境。”
 
-#### 6.1.7 · 操作系统虚拟化（容器）
+#### 6.1.7 操作系统虚拟化（容器）
 
 1979 年，UNIX 的第 7 个版本引入了 chroot 机制，被认为是第一个操作系统虚拟化（OS-level virtualization）技术。chroot 是直到现在我们依然在使用的一个 System call，这个系统调用会让一个进程把指定的目录作为根目录，它的所有文件系统操作都只能在这个指定目录中进行，本质是一种文件系统层的隔离。操作系统虚拟化这个说法你或许会感到陌生，但容器（Container）这一称呼你应该非常熟悉。
 
@@ -530,13 +541,15 @@ int    $0x80
 
 2014 年 6 月，Docker 发布了第一个正式版本 v1.0。同年，Red Hat 和 AWS 就宣布了为 Docker 提供官方支持。
 
-## 7 · 云计算与大数据
+---
 
-### 7.1 · 2006 · 云计算与大数据时代
+## 7. 云计算与大数据
+
+### 7.1 2006：云计算与大数据时代
 
 本节以 **2006 年前后**（AWS / Hadoop 等产业化节点）为叙事锚点，并回溯网格计算与“云计算”概念的提出，再展开各厂商与开源项目脉络。
 
-### 7.2 · 1984 · 第一次提出了网格计算的概念
+### 7.2 1984：第一次提出了网格计算的概念
 
 1984 年，SUN 公司联合创始人 John Gage（约翰·盖奇）提出 “网络就是计算机（The Network is the Computer）” 这个重要的猜想，用于描述分布式计算技术带来的新世界。分布式计算正是云计算和大数据的基本架构形式。
 
@@ -545,7 +558,8 @@ int    $0x80
 网格（Grid）的叫法，和我们日常理解的 “网格化管理” 有很大不同，它是直接照搬自电网的概念（Electric Power Grid）。它的本质目的，还是把大量机器整合成一个虚拟的超级机器，给分布在世界各地的人们使用，也就是公共计算服务。
 
 *约翰·盖奇*
-### 7.3 · 1996 · 第一次提出云计算的概念
+
+### 7.3 1996：第一次提出云计算的概念
 
 1996 年，Compaq（康柏）公司的一群技术主管在讨论计算业务的发展时，首次使用了 Cloud Computing 这个词，他们认为商业计算会向 Cloud Computing 的方向转移。这是 Cloud Computing（云计算）概念的真正首次出现。
 
@@ -556,16 +570,17 @@ int    $0x80
 > **专业补充（与 NIST 对齐）**
 > 学术史上“Cloud Computing”一词的出现早于产业大规模落地；而 **NIST SP 800-145（2011）** 给出了至今仍被监管、采购与架构文档广泛引用的操作性定义（五特征 / 三服务模型 / 四部署模型）[[1]](#references)。阅读后文 AWS / Azure / GCP 时，可用该框架对照其产品属于 IaaS、PaaS 或 SaaS。
 
-*拉姆纳特·K·切拉帕（印度裔）*
-### 7.4 · 1999 · Salesforce 成立
+*拉姆纳特·K·切拉帕（Ramnath K. Chellappa）*
+
+### 7.4 1999：Salesforce 成立
 
 1999 年，当时 37 岁的甲骨文（Oracle）高级副总裁，俄罗斯裔美国人马克·贝尼奥夫（Marc Benioff）创办了 Salesforce 公司，是第一家通过网站提供企业级应用程序的公司。通过租赁式网页 CRM（Customer Relationship Management，客户关系管理）软件服务，开启了 SaaS（Software as a service）交付模式。初创企业只要每月按月支付租赁费用，不用再购买任何软件硬件，也不用花费人力成本在软件运营上。
 
 Marc Benioff 后来回忆到：“在那个时期，任何商业天才都难以想象会有公司愿意把它的 CRM，这个关系到公司生命线的系统，从坐落在自己精密机房内的一排排嗡嗡作响的 IBM 主机服务器上，然后挪到一个小小的浏览器内，况且这个浏览器访问的数据中心还完全不在这家公司的掌控之中。但是 Salesforce 做到了，并且做得非常成功。”
 
-Salesforce 的 Customers 包括了通用电气、荷兰航空、法国银行业客户、Comcast、NBC 等公司，这些公司选择 salesforce.com 的原因一点都不像是买不起服务器而是用廉价的在线方案。这也充分说明了基于云的服务不仅仅是大型业务系统的廉价替代品，更重要的是它真正提高了企业运营效率、促进业务发展的解决方案，同时可以在可靠性上维持一个极高的标准。
+Salesforce 的客户后来包括通用电气、荷兰航空、部分法国银行业客户、Comcast、NBC 等。它们选择 salesforce.com，往往并非「买不起服务器」，而是看重在线交付带来的效率与标准运维能力。这也充分说明了基于云的服务不仅仅是大型业务系统的廉价替代品，更重要的是它真正提高了企业运营效率、促进业务发展的解决方案，同时可以在可靠性上维持一个极高的标准。
 
-### 7.5 · 2006 · AWS 成立
+### 7.5 2006：AWS 成立
 
 2000 年，当时的 Amazon 正在开发电商服务平台 Merchant.com，旨在帮助第三方公司在 Amazon 上构建自己的在线购物网站。不过，因为架构设计能力和管理流程等方面的问题，这个项目进展缓慢。于是，亚马逊的管理层开始考虑，是不是可以将已有的代码进行解耦，设计成独立的 API 服务，然后让内部或外部应用进行服务调用。这样，既可以节约后续的开发工作量，也可以增强系统的灵活性和复用度。
 
@@ -577,11 +592,12 @@ Salesforce 的 Customers 包括了通用电气、荷兰航空、法国银行业�
 
 同年，亚马逊启用了 Amazon Web Services（AWS）平台。当时该免费服务可以让企业将 Amazon.com 的功能整合到自家网站上。
 
-2003 年，安迪·杰西（Andy Jassy），当时杰夫·贝索斯（Jeff Bezos，亚马逊创始人）的技术助理 / 幕僚，现为 AWS CEO，在贝索斯的家里召开了一次管理层会议。会上，大家决定要把应用开发的通用部分抽离出来，做一个公共基础设施服务平台，让内外部开发者可以基于这个平台开发自己的应用。
+2003 年前后，时任贝索斯技术助理/幕僚的安迪·杰西（Andy Jassy；后任 AWS CEO，2021 年起任 Amazon CEO）参与管理层讨论：把应用开发中的通用部分抽离，做成可供内外部开发者使用的公共基础设施服务平台。
 
 随后，他们整理了一系列可以成为公共服务的候选模块，并从中挑了服务器、存储和数据库三个部分开始。不仅因为这三个需求最多，还因为 Amazon 最擅长这部分，毕竟低利润率商业模式让他在如何降低数据中心的运营成本上颇有积累。
 
-*安迪·杰西*
+*安迪·杰西（Andy Jassy）*
+
 2006 年，**Amazon Web Services（AWS）** 推出了两款重磅产品，开始以 Web 服务的形式，将其弹性计算能力作为云服务进行售卖时，标志着云计算这种新的商业模式的诞生。AWS 向企业提供 IT 基础设施服务，包括：弹性计算云（Elastic Compute Cloud，EC2）、简单存储服务（Simple Storage Service，S3）、简单数据库（SimpleDB）等，现在通常称为云计算服务。
 
 其中 EC2 推出了第一个采用 Xen 虚拟化的实例类型 m1.small。
@@ -596,7 +612,7 @@ Salesforce 的 Customers 包括了通用电气、荷兰航空、法国银行业�
 
 2017 年 11 月，AWS 推出 C5，首次采用了 KVM 虚拟化。
 
-### 7.6 · 2006 · Hadoop 成立
+### 7.6 2006：Hadoop 成立
 
 2002 年，Apache 推出了 Nutch，一个使用 Java 实现的开源搜索引擎，其包括了全文搜索和 Web 爬虫工具。
 
@@ -612,7 +628,7 @@ Salesforce 的 Customers 包括了通用电气、荷兰航空、法国银行业�
 
 2006 年，Yahoo 雇用了 Doug Cutting，Doug Cutting 将 NDFS 和 MapReduce 升级命名为 Hadoop，Yahoo 开建了一个独立的团队给 Doug Cutting 专门研究发展 Hadoop。
 
-### 7.7 · 2008 · GCP 成立
+### 7.7 2008：GCP 成立
 
 2006 年，27 岁的 Google 高级工程师克里斯托夫·比希利亚（Christophe Bisciglia）第一次向 Google 董事长兼 CEO 施密特提出 “云端计算” 的想法。在施密特的支持下，Google 推出了 “Google 101 计划”。Google 首席执行官埃里克•施密特（Eric Schmidt）在搜索引擎大会（SES San Jose 2006）再次提出 “云计算（Cloud Computing）” 的概念。
 
@@ -623,7 +639,8 @@ Salesforce 的 Customers 包括了通用电气、荷兰航空、法国银行业�
 2009 年 7 月，Google 宣布将推出 Chrome OS。
 
 *克里斯托夫·比希利亚（Christophe Bisciglia）*
-### 7.8 · 2008 · Microsoft Azure 成立
+
+### 7.8 2008：Microsoft Azure 成立
 
 2008 年 10 月，微软发布公有云计算战略和平台 **Windows Azure Platform**，尝试将技术和服务托管化、线上化。主要目标是为开发者提供一个平台，帮助开发可运行在云服务器、数据中心、Web 和 PC 上的应用程序。
 
@@ -635,7 +652,7 @@ Salesforce 的 Customers 包括了通用电气、荷兰航空、法国银行业�
 
 2018 年，微软收购 GitHub，无论好坏，开源的历史会记住这一天。
 
-### 7.9 · 2009 · 阿里云成立
+### 7.9 2009：阿里云成立
 
 2009 年，阿里云写下第一行代码，采用的是 Xen 虚拟化技术。
 
@@ -643,8 +660,9 @@ Salesforce 的 Customers 包括了通用电气、荷兰航空、法国银行业�
 
 2015 年开始探索，2016 年开始立项，2017 年首次发布 X-Dragon 神龙架构，真正使用软硬融合、软硬件协同设计的模式，改变了传统虚拟化技术和当前的计算架构不友好的地方。
 
-*经典的第一行代码*
-### 7.10 · 2009 · VMware vCloud 成立
+*阿里云「第一行代码」相关叙事常被用作创业节点象征*
+
+### 7.10 2009：VMware vCloud 成立
 
 2003 年，存储设备厂商 EMC 宣布以 6.35 亿美元的价格收购了创立仅 5 年的虚拟技术公司 VMware，成为 EMC 迄今最成功的一笔收购。
 
@@ -664,7 +682,7 @@ Salesforce 的 Customers 包括了通用电气、荷兰航空、法国银行业�
 
 2017 年 8 月，在 VMworld 2017 大会上，VMware 和 Amazon Web Services 共同宣布 VMware Cloud on AWS 初步可用。
 
-### 7.11 · 2010 · OpenStack 开源项目成立
+### 7.11 2010：OpenStack 开源项目成立
 
 2010 年 7 月，NASA 贡献了云计算管理平台 Nova 代码，Rackspace 云存储（对象存储）代码，发起了 OpenStack 云操作系统开源项目。同年 10 月 21 日，发布了首个版本 Austin（奥斯丁）。OpenStack 挽手自主可控的口号，推动了云计算在国内的全面爆发。
 
@@ -672,13 +690,15 @@ Salesforce 的 Customers 包括了通用电气、荷兰航空、法国银行业�
 
 2019 年，Open Infrastructure Summit 相继在上海举办。中国的开源会铭记这一天。
 
-## 8 · 云原生
+---
 
-### 8.1 · 2015 · 云原生时代
+## 8. 云原生
+
+### 8.1 2015：云原生时代
 
 云原生（Cloud Native）在 2010 年代中期由方法论（如 Pivotal）与基金会治理（CNCF）共同推动走向主流；其工程抓手则与容器编排密不可分。下文先交代概念演进，再专述 Kubernetes 与 CNCF。
 
-### 8.2 · 2014 · Kubernetes 开源项目成立
+### 8.2 2014：Kubernetes 开源项目成立
 
 2013 年，Pivotal 公司（敏捷开发领域的领导者）的 Matt Stine 首次提出云原生（CloudNative）的概念。
 
@@ -706,7 +726,7 @@ CNCF 中托管的一系列项目，都致力于云原生应用整个生命周期
 - 易处理：快速启动和优雅终止可最大化健壮性。
 - 开发环境与线上环境等价：尽可能地保持开发，预发布，线上环境相同。
 - 日志：把日志当作事件流。
-- 管理进程：后台管理任务当作一次性进程运行
+- 管理进程：后台管理任务当作一次性进程运行。
 
 2017 年，Matt Stine 将云原生架构归纳为 6 大特质：
 
@@ -737,13 +757,15 @@ CNCF 立足于整个云计算生态和技术创新、变革者，偏重于技术
 
 笔者则认为，云原生是一套方法论（Pivotal）和一系列技术堆栈（CNCF）的有机组合，指导进行新型 IT 软件架构设计与研发，使其 “生在云上、长在云上”，能够最大化地发挥云的价值，并赋能企业高速成长。所以云原生的时代，得开发者得天下。
 
-2019 年，全球最大的开源盛会 KubeCon + CloudNativeCon + Open Source Summit 在上海举办
+2019 年，KubeCon + CloudNativeCon + Open Source Summit 在上海举办。
 
 截至 2020 年 2 月，CNCF 已有 433 个会员，其中不乏国内各个行业的龙头企业。
 
-## 9 · 云化 AIGC
+---
 
-### 9.1 · 2023 · 云化 AIGC 时代
+## 9. 云化 AIGC
+
+### 9.1 2023：云化 AIGC 时代
 
 至此，即使笔者的脑力已经几近枯竭，但还是不能不提到现在已经来到眼前的 AIGC 时代，或者我更愿意称之为 “云化 AIGC 时代”，相信朋友们能够理解其中的含义。
 
@@ -770,50 +792,64 @@ AIGC 技术将会以集约式算力中心为基础，站在云计算商业和服
 
 ---
 
-## 附录 A · 勘误说明
+## 附录 A：勘误与史实修订说明
 
-本版仅修正下列**明显笔误 / 专有名词**，不改变原叙事与观点：
+本版在保留原叙事结构与口语风格的前提下，修正笔误，并校正下列**可核验的史实 / 归属**问题：
+
+### A.1 笔误与专有名词
 
 | 原文问题 | 更正 | 说明 |
-|---|---|---|
+| ------ | ------ | ------ |
 | Ture or False | True or False | 拼写 |
 | Report o the EDVAC | Report on the EDVAC | 论文题名 |
-| 同意词 | 同义词 | 用词 |
-| 实习了 | 实现了 | 用词 |
-| GUN | GNU | 专有名词 |
-| VMaware | VMware | 专有名词 |
-| 性能底下 | 性能低下 | 用词 |
-| Hypercells | Hypercalls | 术语 |
-| 名次 | 名词 | 用词 |
-| Sample Storage Service | Simple Storage Service | AWS S3 正式名称 |
-| saleforce.com | salesforce.com | 拼写 |
-| 付过银行 | 法国银行 | 疑似笔误 |
-| 最早的的 / 的的龙头 | 去重 | 笔误 |
-| 伯特兰·罗素 / Dijkstra / Hykes / Brooks 等 | 人名拼写与通译 | 人名 |
-| 批处理处理系统 | 批处理系统 | 重复用词 |
-| 弹性计算网云 | 弹性计算云 | EC2 译名 |
-| 苹果发布 Virtual PC | Connectix 发布 | 史实 |
-| FreeBSD 是 MacOS 前身 | 与 Darwin/macOS 相关 | 表述过强 |
+| 同意词 / 实习了 / 性能底下 / 名次 | 同义词 / 实现了 / 性能低下 / 名词 | 用词 |
+| GUN / VMaware / Hypercells | GNU / VMware / Hypercalls | 专有名词 |
+| Sample Storage Service / saleforce.com | Simple Storage Service / salesforce.com | 产品名 |
+| 没路信息计算系统 | 单路信息计算系统 | Uni-plexed 对译 |
+| 即是…又是 | 既是…又是 | 用词 |
+| 阿塔那索夫 | 阿塔纳索夫 | 译名统一 |
+| 付过银行 | 法国银行业客户 | 疑似笔误 |
 | 扛脆弱性 / 自敏捷 | 抗脆弱性 / 自助服务 | 译名 |
 | Solomon Hvkes | Solomon Hykes | 人名 |
-| 1990 XenServer 初始代码 | 2000 年代初 Xen 相关工作 | 年代 |
-| Windows Server 2008 R2 + Hyper-V（2008 Q1） | Server 2008 发布 Hyper-V | 版本时间 |
+| 2001，Fabrice | 2001 年，Fabrice | 缺字 |
 
-口语化表述（如“吹鼓手”“横财”“起个大早，赶个晚集”等）**予以保留**，以保持原文风格。
+### A.2 史实与表述修订（本版重点）
 
-## References
+| 原文问题 | 更正 | 依据要点 |
+| ------ | ------ | ------ |
+| 穿孔纸带面积 190×84 mm | 删除该尺寸 | 易与后世标准穿孔卡规格混淆；布尚为连续纸卷 |
+| ABC「基于图灵机理论」 | 改为独立研制，并标注「第一台」有争议 | ABC 与 Turing 1936 论文无直接推导关系 |
+| 《The Computers of Tomorrow》作者为麦卡锡 | 作者为 Martin Greenberger（*Atlantic*，1964-05） | 原文可核验 |
+| 因该文启动 Project MAC | MAC 约 1963 年启动，与该文并行而非因果 | Project MAC / Multics 史料 |
+| 麦卡锡 1955「提出」分时 | 约 1955 起思考；书面提案多见 1959 备忘录 | McCarthy 本人回忆与备忘录 |
+| Linux 1.0「1993 年底」 | **1994-03-14** 发布公告 | `comp.os.linux.announce` |
+| 1995「Apache 基金会」 | ASF 成立于 1999；此前为 Apache Group | ASF 年表 |
+| TeX / X Window / Apache 列入「GNU 套件」 | 改为常与 GNU/Linux 共用，但非 GNU 产物 | 项目归属 |
+| Andy Jassy「现为 AWS CEO」 | 补 2021 起任 Amazon CEO | 公开职务 |
+| Atlas「第一台超级计算机」 | 改为「之一」，并注 CDC 6600 等竞争表述 | 史学争议 |
+| Multics「是 Unix 前身」 | 改为重要前驱与灵感来源 | 避免线性世系误解 |
 
-1. Mell, P., & Grance, T. (2011). *The NIST Definition of Cloud Computing* (NIST Special Publication 800-145). National Institute of Standards and Technology. <https://doi.org/10.6028/NIST.SP.800-145> · <https://csrc.nist.gov/pubs/sp/800/145/final>
+口语化表述（如「吹鼓手」「横财」「起个大早，赶个晚集」等）**予以保留**，以保持原文风格。第 9 章「超级个体」为作者前瞻议论，非史料断言。
+
+---
+
+## 参考文献
+
+1. Mell, P., & Grance, T. (2011). *The NIST Definition of Cloud Computing* (NIST Special Publication 800-145). National Institute of Standards and Technology. <https://doi.org/10.6028/NIST.SP.800-145>
 2. Popek, G. J., & Goldberg, R. P. (1974). Formal requirements for virtualizable third generation architectures. *Communications of the ACM*, 17(7), 412–421. <https://doi.org/10.1145/361011.361073>
 3. Cloud Native Computing Foundation. (2018). *CNCF Cloud Native Definition v1.0*. <https://github.com/cncf/toc/blob/main/DEFINITION.md>
-4. The Linux Foundation / CNCF. (2015, July 21). Cloud Native Computing Foundation 成立及相关公告（与 Kubernetes 1.0 同期）。参见 CNCF 公告归档：<https://www.cncf.io/announcements/2015/06/21/new-cloud-native-computing-foundation-to-drive-alignment-among-container-technologies/>（URL 路径日期与正文发布日可能不一致，以公告正文为准）。
+4. Cloud Native Computing Foundation. (2015, June 21). *New Cloud Native Computing Foundation to Drive Alignment Among Container Technologies*. <https://www.cncf.io/announcements/2015/06/21/new-cloud-native-computing-foundation-to-drive-alignment-among-container-technologies/>
 5. Turing, A. M. (1936/1937). On computable numbers, with an application to the Entscheidungsproblem. *Proceedings of the London Mathematical Society*, s2-42(1), 230–265.
 6. von Neumann, J. (1945). *First Draft of a Report on the EDVAC*. Moore School of Electrical Engineering, University of Pennsylvania.
-7. Dean, J., & Ghemawat, S. (2004). MapReduce: Simplified data processing on large clusters. *OSDI*.
-8. Ghemawat, S., Gobioff, H., & Leung, S.-T. (2003). The Google File System. *SOSP*.
+7. Ghemawat, S., Gobioff, H., & Leung, S.-T. (2003). The Google File System. *SOSP*.
+8. Dean, J., & Ghemawat, S. (2004). MapReduce: Simplified data processing on large clusters. *OSDI*.
 9. Chang, F., et al. (2006). Bigtable: A distributed storage system for structured data. *OSDI*.
-10. Amazon Web Services. (2006). Amazon S3 / Amazon EC2 service announcements and documentation（Amazon Simple Storage Service；Elastic Compute Cloud）. 参见 AWS 官方文档：<https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html>
+10. Amazon Web Services. (2006). Amazon S3 / Amazon EC2 发布与文档（Simple Storage Service；Elastic Compute Cloud）. <https://docs.aws.amazon.com/>
 11. Ritchie, D. M., & Thompson, K. (1974). The UNIX time-sharing system. *Communications of the ACM*, 17(7), 365–375.
-12. Raymond, E. S. (1999). *The Cathedral and the Bazaar*. O'Reilly.（对应正文所述开源协作模式）
+12. Raymond, E. S. (1999). *The Cathedral and the Bazaar*. O'Reilly.
+13. Greenberger, M. (1964, May). The computers of tomorrow. *The Atlantic Monthly*. <https://www.theatlantic.com/magazine/archive/1964/05/the-computers-of-tomorrow/658239/>
+14. McCarthy, J. (1959, January 1). Memorandum to P. M. Morse proposing time-sharing. <http://jmc.stanford.edu/computing-science/timesharing-memo.html>
+15. Strachey, C. (1959). Time sharing in large fast computers. *Proceedings of the International Conference on Information Processing* (UNESCO). 影印参见 <https://archive.org/details/large-fast-computers>
+16. Torvalds, L. (1994, March 14). Linux 1.0 announcement. `comp.os.linux.announce`.
 
-**声明**：正文为技术史叙事整理（第二版）；References 用于核对关键事实与业界定义。若正文叙述与原始文献冲突，以原始文献为准。
+**声明**：正文为技术史叙事整理；References 用于核对关键事实与业界定义。若正文叙述与原始文献冲突，以原始文献为准。
