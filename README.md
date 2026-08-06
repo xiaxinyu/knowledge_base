@@ -81,22 +81,34 @@ AI 降低了「写出代码」的边际成本，却未必提高组织交付—�
 knowledge_base/
 │
 ├── 取势 · 史 · 源流
-│   └── 云计算与可编程思想的长河
-│       （从穿孔纸带到云原生与 AIGC）
+│   └── cloud-computing-chronicle.md
+│       云计算与可编程思想的长河（从穿孔纸带到云原生与 AIGC）
 │
 ├── 明道 · 构 · 骨架
-│   ├── 企业架构：战略如何翻译为可执行的经营与 IT 安排
-│   ├── 服务架构：单体、SOA、微服务、云原生、无服务——复杂度的代际迁移
-│   ├── 分布式理论：CAP / BASE 与 Paxos、Raft、ZAB——取舍、共识与场景
-│   └── Kubernetes 设计哲学：声明式 API、控制循环与分层自愈
+│   ├── enterprise-architecture.md
+│   │   企业架构：战略如何翻译为可执行的经营与 IT 安排
+│   ├── service-architecture.md
+│   │   服务架构：单体、SOA、微服务、云原生、无服务——复杂度的代际迁移
+│   ├── distributed-systems.md
+│   │   分布式理论：CAP / BASE 与 Paxos、Raft、ZAB——取舍、共识与场景
+│   └── kubernetes-philosophy.md
+│       Kubernetes 设计哲学：声明式 API、控制循环与分层自愈
 │
 ├── 明道 · 治 · 秩序
-│   └── 信息与技术治理：价值是否被创造，风险是否被优化，资源是否被善用
+│   └── cobit-governance.md
+│       信息与技术治理：价值是否被创造，风险是否被优化，资源是否被善用
 │
 └── 优术 · 智 · 新章
-    ├── 设计哲学：从 Unix 管道到 Agent——无状态、可组合、可观察
-    ├── 工程范式：AI 提效个人易，组织变革难——角色、组织、工艺、流程、资产与工具、治理
-    └── SRE/DevOps × LLM/SLM/Agent：如何分工并结合，以及 MTTR 的可验证压缩机制
+    ├── unix-to-agent.md
+    │   设计哲学：从 Unix 管道到 Agent——无状态、可组合、可观察
+    ├── ai-engineering-paradigm.md
+    │   工程范式：AI 提效个人易，组织变革难——角色、组织、工艺、流程、资产与工具、治理
+    ├── ai-sre-agents.md
+    │   SRE/DevOps × LLM/SLM/Agent：分工、结合与 MTTR 的可验证压缩
+    ├── frontier-tech-innovation.md
+    │   前沿科技与颠覆式创新
+    └── brand-culture-translation.md
+        东西方文化与价值对接：品牌的文化译介
 ```
 
 
