@@ -124,7 +124,7 @@ AI 降低了「写出代码」的边际成本，却未必提高组织交付—�
 | `strategy` | 竞争战略 | 产业冲击、护城河与路径选择 |
 | `translation` | 跨界译介 | 价值、符号与叙事如何跨语境传递 |
 
-新增文章时：先定区号，再在该域内取下一个空序号，最后用「主题 + 体裁」命名。例如下一篇云史补篇应为 `11-…-chronicle.md`，下一篇治理专论应为 `32-…-framework.md`。预留区号：**60–69 文化与品牌**（若 `50-strategy` 中译介类文稿增多，再独立成区），**70–79 运营与质量**，**80–89 安全与风险**，**90–99 方法与元知识**。
+新增文章时：先定区号，再在该域内取下一个空序号，最后用「主题 + 体裁」命名。例如下一篇史补篇应为 `12-…-chronicle.md`，下一篇治理专论应为 `32-…-framework.md`。预留区号：**60–69 文化与品牌**（若 `50-strategy` 中译介类文稿增多，再独立成区），**70–79 运营与质量**，**80–89 安全与风险**，**90–99 方法与元知识**。
 
 ### 文稿目录
 
@@ -132,8 +132,10 @@ AI 降低了「写出代码」的边际成本，却未必提高组织交付—�
 knowledge_base/
 │
 ├── 10-chronicle/                          取势 · 史 · 源流
-│   └── 10-computing-cloud-chronicle.md
-│       可编程计算到云计算的编年（穿孔纸带 → 云原生与 AIGC）
+│   ├── 10-computing-cloud-chronicle.md
+│   │   可编程计算到云计算的编年（穿孔纸带 → 云原生与 AIGC）
+│   └── 11-information-theory-chronicle.md
+│       信息论编年：从通信实践到香农极限，再到容量、压缩、纠错与学习
 │
 ├── 20-architecture/                       明道 · 构 · 骨架
 │   ├── 20-enterprise-architecture-treatise.md
@@ -169,6 +171,7 @@ knowledge_base/
 | 编号 | 文稿 | 核心命题 |
 |------|------|----------|
 | 10 | [Computing Cloud Chronicle](./10-chronicle/10-computing-cloud-chronicle.md) | 计算能力如何从专用机械变为按需共享资源池 |
+| 11 | [Information Theory Chronicle](./10-chronicle/11-information-theory-chronicle.md) | 信息如何被度量，并成为数字通信与统计学习的共同语言 |
 | 20 | [Enterprise Architecture Treatise](./20-architecture/20-enterprise-architecture-treatise.md) | 战略如何翻译为可执行的经营与 IT 安排 |
 | 21 | [Service Architecture Evolution](./20-architecture/21-service-architecture-evolution.md) | 复杂度不会消失，只会代际转移 |
 | 22 | [Distributed Consistency Treatise](./20-architecture/22-distributed-consistency-treatise.md) | 跨节点之后，强一致与持续可用如何取舍 |
