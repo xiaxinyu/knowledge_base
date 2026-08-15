@@ -7,7 +7,7 @@
 > **Kubernetes 不是一次性编排脚本，而是一台「分布式控制计算机」：**  
 > 以 etcd 为真相源，以声明式 API 为协调语言，以可失败的控制循环持续逼近期望态；控制面短暂失联时，数据面尽量按上次指令继续服务。[1][12][18]
 
-全文可与本库 [《服务架构演进》](./service-architecture.md)（复杂度如何转移）、[《分布式系统理论》](./distributed-systems.md)（CAP / Raft）对照阅读。关键史实与论断尽量对齐一手文献，文末附参考文献。
+全文可与本库 [《服务架构演进》](./21-service-architecture-evolution.md)（复杂度如何转移）、[《分布式一致性专论》](./22-distributed-consistency-treatise.md)（CAP / Raft）对照阅读。关键史实与论断尽量对齐一手文献，文末附参考文献。
 
 ---
 

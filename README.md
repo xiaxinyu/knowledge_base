@@ -12,7 +12,7 @@
 
 本库不是笔记的堆积场，而是思想的炼金炉。
 
-技术日新月异，工具朝生暮死；真正值得长久保存的，不是某一版本的配置，而是**何以如此**的理解——历史从何处来，结构因何而立，治理凭何而信，智能向何处去。
+技术日新月异，工具朝生暮死；真正值得长久保存的，不是某一版本的配置，而是**何以如此**的理解——历史从何处来，结构因何而立，治理凭何而信，智能向何处去，价值凭何而胜。
 
 道家言「无为而无不为」：并非无所作为，而是不逆势妄为、不离道炫术。面对无尽知识，庄子叹「吾生也有涯，而知也无涯」——与其追逐浪尖上的名词，不如循势而行、据道而立、以术而成。本库所志，正在于此三境：
 
@@ -30,7 +30,7 @@
 
 ## 这是什么
 
-一座面向**数字时代工程与治理**的个人知识库，以道家「取势 · 明道 · 优术」为认知骨架，贯注四条交织的线索：
+一座面向**数字时代工程与治理**的个人知识库，以道家「取势 · 明道 · 优术」为认知骨架，贯注五条交织的线索：
 
 | 线索 | 所问 | 对应境界 | 精神 |
 |------|------|----------|------|
@@ -38,6 +38,7 @@
 | **构** | 系统如何立身？ | 明道 | 复杂度不灭，唯有转移 |
 | **治** | 技术如何可信？ | 明道 | 价值、风险、资源三者平衡 |
 | **智** | 智能如何协作？ | 优术 | 工具放大能力，亦放大缺陷 |
+| **略** | 价值如何取胜？ | 优术 | 产业穿透与跨文化译介 |
 
 文章力求：**概念界定清晰、史实可核验、判断有出处、路径可试点**。华丽不在辞藻，而在思想的严密；哲理不在空谈，而在对现实约束的诚实。
 
@@ -65,7 +66,7 @@
 
 《庄子·养生主》庖丁解牛：「依乎天理……因其固然。」术者，道在事上的落实。
 
-AI 降低了「写出代码」的边际成本，却未必提高组织交付——个人之术已进，组织之道未立，则吞吐会被评审、联调与治理吸收。优术，不是堆砌更多工具，而是让角色、工艺、流程、资产、平台与护栏，共同承接被放大的速度。
+AI 降低了「写出代码」的边际成本，却未必提高组织交付——个人之术已进，组织之道未立，则吞吐会被评审、联调与治理吸收。优术，不是堆砌更多工具，而是让角色、工艺、流程、资产、平台与护栏，共同承接被放大的速度；亦让竞争战略与文化译介，把技术能力写成可被市场理解的价值。
 
 > **优术，是对落地的忠诚**：无势之术是盲动，无道之术是投机；有势有道，术乃可精。
 
@@ -77,49 +78,108 @@ AI 降低了「写出代码」的边际成本，却未必提高组织交付—�
 
 库中文稿，不按日期罗列，而按**取势 → 明道 → 优术**的认知进阶排布——如登山之径，先观云起，再识山骨，终习登法。
 
-```
-knowledge_base/
-│
-├── 取势 · 史 · 源流
-│   └── cloud-computing-chronicle.md
-│       云计算与可编程思想的长河（从穿孔纸带到云原生与 AIGC）
-│
-├── 明道 · 构 · 骨架
-│   ├── enterprise-architecture.md
-│   │   企业架构：战略如何翻译为可执行的经营与 IT 安排
-│   ├── service-architecture.md
-│   │   服务架构：单体、SOA、微服务、云原生、无服务——复杂度的代际迁移
-│   ├── distributed-systems.md
-│   │   分布式理论：CAP / BASE 与 Paxos、Raft、ZAB——取舍、共识与场景
-│   └── kubernetes-philosophy.md
-│       Kubernetes 设计哲学：声明式 API、控制循环与分层自愈
-│
-├── 明道 · 治 · 秩序
-│   └── cobit-governance.md
-│       信息与技术治理：价值是否被创造，风险是否被优化，资源是否被善用
-│
-└── 优术 · 智 · 新章
-    ├── unix-to-agent.md
-    │   设计哲学：从 Unix 管道到 Agent——无状态、可组合、可观察
-    ├── ai-engineering-paradigm.md
-    │   工程范式：AI 提效个人易，组织变革难——角色、组织、工艺、流程、资产与工具、治理
-    ├── ai-sre-agents.md
-    │   SRE/DevOps × LLM/SLM/Agent：分工、结合与 MTTR 的可验证压缩
-    ├── frontier-tech-innovation.md
-    │   前沿科技与颠覆式创新
-    └── brand-culture-translation.md
-        东西方文化与价值对接：品牌的文化译介
-```
+物理目录用 **Johnny Decimal** 分区：十位为知识域，个位为域内顺序，中间预留空号，便于日后插入而不打乱既有编号。
 
+| 区号 | 目录 | 境界 | 线索 | 所问 |
+|------|------|------|------|------|
+| **10** | `10-chronicle/` | 取势 | 史 | 计算从何而来？ |
+| **20** | `20-architecture/` | 明道 | 构 | 系统如何立身？ |
+| **30** | `30-governance/` | 明道 | 治 | 技术如何可信？ |
+| **40** | `40-paradigm/` | 优术 | 智 | 智能如何协作？ |
+| **50** | `50-strategy/` | 优术 | 略 | 价值如何取胜？ |
 
-四层与三境相映射：
+五区与三境相映射：
 
 1. **不知势，则易惑于新潮**——把偶然当必然，把营销当定律。  
 2. **不知道，则易困于细节**——见树木而不见森林，修局部而损全局；系统能跑，却不知为谁创造价值。  
 3. **不精术，则易止于空谈**——道理俱在，却无试点路径、无度量、无护栏。  
-4. **有术而无道无势，则易速败**——用昨日的协作方式，承接今日被放大的吞吐。
+4. **有术而无道无势，则易速败**——用昨日的协作方式，承接今日被放大的吞吐。  
+5. **有智而无略，则易工于器而疏于局**——交付变快，却不知在产业与市场中立于何处。
 
 《大学》曰：「物有本末，事有终始，知所先后，则近道矣。」本库目录，即此「本末终始」之序——**势为先，道为中，术为成。**
+
+### 命名约定
+
+文件名格式：
+
+```
+{区号}{序号}-{主题}-{体裁}.md
+```
+
+- **区号 + 序号**：决定阅读顺序与聚类位置；同域内按认知依赖递增（先概念，后演进，再原则，再落地）。  
+- **主题**：IT / 企业管理通行术语，点明文章核心对象，不用口语或过宽的词（如 `tech`、`notes`）。  
+- **体裁（genre）**：标明文章的知识形态，便于扫读与日后检索。
+
+| 体裁 | 含义 | 适用 |
+|------|------|------|
+| `chronicle` | 编年叙事 | 长时段技术史 |
+| `treatise` | 系统专论 | 概念、理论、实践的完整梳理 |
+| `evolution` | 代际演进 | 风格或架构如何一代代迁移 |
+| `doctrine` | 设计原则 | 不可轻易动摇的设计哲学 |
+| `framework` | 治理框架 | 可实施的标准与控制目标 |
+| `case-study` | 实证案例 | 单一组织的诊断、改进与回测 |
+| `philosophy` | 思想脉络 | 从工程传统到当代形态的连续推理 |
+| `paradigm` | 范式提案 | 新的组织 / 工程操作系统 |
+| `playbook` | 落地手册 | 分工、架构、试点顺序与度量 |
+| `strategy` | 竞争战略 | 产业冲击、护城河与路径选择 |
+| `translation` | 跨界译介 | 价值、符号与叙事如何跨语境传递 |
+
+新增文章时：先定区号，再在该域内取下一个空序号，最后用「主题 + 体裁」命名。例如下一篇云史补篇应为 `11-…-chronicle.md`，下一篇治理专论应为 `32-…-framework.md`。预留区号：**60–69 文化与品牌**（若 `50-strategy` 中译介类文稿增多，再独立成区），**70–79 运营与质量**，**80–89 安全与风险**，**90–99 方法与元知识**。
+
+### 文稿目录
+
+```
+knowledge_base/
+│
+├── 10-chronicle/                          取势 · 史 · 源流
+│   └── 10-computing-cloud-chronicle.md
+│       可编程计算到云计算的编年（穿孔纸带 → 云原生与 AIGC）
+│
+├── 20-architecture/                       明道 · 构 · 骨架
+│   ├── 20-enterprise-architecture-treatise.md
+│   │   企业架构专论：战略如何翻译为可执行的经营与 IT 安排
+│   ├── 21-service-architecture-evolution.md
+│   │   服务架构演进：单体、SOA、微服务、云原生、无服务——复杂度的代际迁移
+│   ├── 22-distributed-consistency-treatise.md
+│   │   分布式一致性专论：ACID / CAP / BASE 与 Paxos、Raft、ZAB
+│   └── 23-kubernetes-control-plane-doctrine.md
+│       Kubernetes 控制面原则：声明式 API、控制循环与分层自愈
+│
+├── 30-governance/                         明道 · 治 · 秩序
+│   ├── 30-cobit-it-governance-framework.md
+│   │   COBIT 信息与技术治理：价值、风险、资源三者平衡
+│   └── 31-platform-service-quality-case-study.md
+│       微服务平台运营质量案例：SERVQUAL 差距、TQM 根因与 PDCA 闭环
+│
+├── 40-paradigm/                           优术 · 智 · 新章
+│   ├── 40-unix-agent-stateless-philosophy.md
+│   │   无状态设计哲学：从 Unix 管道到 Agent——可组合、可观察
+│   ├── 41-ai-engineering-paradigm.md
+│   │   AI 工程范式：个人提效易、组织变革难——5+2 操作系统
+│   └── 42-agentic-sre-operations-playbook.md
+│       智能体化 SRE 手册：SLM / LLM / Agent 分工与 MTTR 的可验证压缩
+│
+└── 50-strategy/                           优术 · 略 · 格局
+    ├── 50-ai-industry-disruption-strategy.md
+    │   AI 产业穿透与竞争战略：死亡之谷、智能体与企业操作系统
+    └── 51-brand-cultural-translation.md
+        品牌文化译介：文化折扣、文化溢价与符号—叙事—价值三层战略
+```
+
+| 编号 | 文稿 | 核心命题 |
+|------|------|----------|
+| 10 | [Computing Cloud Chronicle](./10-chronicle/10-computing-cloud-chronicle.md) | 计算能力如何从专用机械变为按需共享资源池 |
+| 20 | [Enterprise Architecture Treatise](./20-architecture/20-enterprise-architecture-treatise.md) | 战略如何翻译为可执行的经营与 IT 安排 |
+| 21 | [Service Architecture Evolution](./20-architecture/21-service-architecture-evolution.md) | 复杂度不会消失，只会代际转移 |
+| 22 | [Distributed Consistency Treatise](./20-architecture/22-distributed-consistency-treatise.md) | 跨节点之后，强一致与持续可用如何取舍 |
+| 23 | [Kubernetes Control-Plane Doctrine](./20-architecture/23-kubernetes-control-plane-doctrine.md) | 编排平台是持续收敛的分布式控制计算机 |
+| 30 | [COBIT IT Governance Framework](./30-governance/30-cobit-it-governance-framework.md) | 技术是否创造可验证的经营结果 |
+| 31 | [Platform Service Quality Case Study](./30-governance/31-platform-service-quality-case-study.md) | 平台质量如何被定义、证明并改成经营结果 |
+| 40 | [Unix–Agent Stateless Philosophy](./40-paradigm/40-unix-agent-stateless-philosophy.md) | 工具应职责明确、可组合、可观察；遗忘有时强于记忆 |
+| 41 | [AI Engineering Paradigm](./40-paradigm/41-ai-engineering-paradigm.md) | 个人变快之后，组织有无新的协作与治理来承接 |
+| 42 | [Agentic SRE Operations Playbook](./40-paradigm/42-agentic-sre-operations-playbook.md) | 压缩 MTTR 中可并行、可检索、可证据化的时间段 |
+| 50 | [AI Industry Disruption Strategy](./50-strategy/50-ai-industry-disruption-strategy.md) | 预测成本下降不自动等于好决策；护城河转向数据与流程 |
+| 51 | [Brand Cultural Translation](./50-strategy/51-brand-cultural-translation.md) | 跨文化少打折扣、多造溢价 |
 
 ---
 
@@ -141,7 +201,7 @@ knowledge_base/
 
 《周易》有言：「穷则变，变则通，通则久。」《道德经》则曰：「反者道之动。」
 
-计算在变，架构在变，治理在变，人机关系亦在变。不变的是求真的态度：承认复杂度不会消失，承认组织比个人更难改造，承认遗忘有时比记忆更强大，承认治理是信任的语言而非审计的枷锁。
+计算在变，架构在变，治理在变，人机关系在变，竞争的语言亦在变。不变的是求真的态度：承认复杂度不会消失，承认组织比个人更难改造，承认遗忘有时比记忆更强大，承认治理是信任的语言而非审计的枷锁。
 
 取势以观变，明道以守正，优术以成事——三者合一，方可在数字时代的湍流中，既不妄动，亦不僵滞。
 
