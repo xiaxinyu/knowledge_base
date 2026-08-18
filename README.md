@@ -178,7 +178,7 @@ knowledge_base/
 | 21 | [Service Architecture Evolution](./20-architecture/21-service-architecture-evolution.md) | 复杂度不会消失，只会代际转移 |
 | 22 | [Distributed Consistency Treatise](./20-architecture/22-distributed-consistency-treatise.md) | 跨节点之后，强一致与持续可用如何取舍 |
 | 23 | [Kubernetes Control-Plane Doctrine](./20-architecture/23-kubernetes-control-plane-doctrine.md) | 编排平台是持续收敛的分布式控制计算机 |
-| 24 | [Calico Networking Treatise](./20-architecture/24-calico-networking-treatise.md) | Pod 网络如何用「节点即路由器」的纯路由落地，何时退回封装 |
+| 24 | [Calico Networking Treatise](./20-architecture/24-calico-networking-treatise.md) | Pod 网络如何用「节点即路由器」落地；Service 与 kube-proxy 如何分工 / 替代 |
 | 30 | [COBIT IT Governance Framework](./30-governance/30-cobit-it-governance-framework.md) | 技术是否创造可验证的经营结果 |
 | 31 | [Platform Service Quality Case Study](./30-governance/31-platform-service-quality-case-study.md) | 平台质量如何被定义、证明并改成经营结果 |
 | 40 | [Unix–Agent Stateless Philosophy](./40-paradigm/40-unix-agent-stateless-philosophy.md) | 工具应职责明确、可组合、可观察；遗忘有时强于记忆 |
