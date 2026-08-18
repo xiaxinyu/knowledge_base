@@ -1,4 +1,4 @@
-# Calico 网络专论：节点即路由器与包的路径
+# Calico 三层网络专论：控制面写表与内核转发
 
 > Calico 之名源自 Felix（卡通形象「菲力猫」），由 Metaswitch 于 2015 年发起，后由 Tigera 维护并以开源形式进入 CNCF 生态。它把数据中心网络的老问题——「容器之间如何互通」——收敛到一个最朴素的答案：**让每台节点即一台路由器**。
 
@@ -25,7 +25,7 @@
 |--|--|
 | **取舍** | [1. 问题与 Calico 的取舍](#1-问题与-calico-的取舍) |
 | **控制面** | [2. 节点控制面：三个进程 + CNI](#2-节点控制面三个进程--cni) · [2.5 CNI 配置](#25-cni-配置kubelet-如何调用-calico) |
-| **数据面** | [3. 数据面：Pod 包的路径](#3-数据面pod-包的路径) · [4. Service 与 kube-proxy](#4-service-与-kube-proxy) · [4.1 kube-proxy](#41-kube-proxy节点上的-service-控制器) · [4.2 DNAT](#42-dnatvip-如何变成-endpoint) |
+| **数据面** | [3. 数据面：Pod 包的路径](#3-数据面pod-包的路径) · [4. Service 与 kube-proxy](#4-service-与-kube-proxy) · [4.1 kube-proxy](#41-kube-proxy节点上的-service-控制器) · [4.2 DNAT 与 conntrack](#42-dnat-与-conntrackvip-如何变成-endpoint) |
 | **路由与地址** | [5. 路由如何装上](#5-路由如何装上) · [6. 地址分配与封装](#6-地址分配与封装) |
 | **落地** | [7. 选型与排查](#7-选型与排查) |
 | **收束** | [8. 总结](#8-总结) · [9. 参考文献](#9-参考文献) |
@@ -34,11 +34,14 @@
 flowchart TB
   classDef cp fill:#eef6e8,stroke:#5a8a3a,color:#2f4f1f
   classDef dp fill:#e8f1fa,stroke:#3b6ea5,color:#1f3a5f
+  classDef peer fill:#f0e8fa,stroke:#6a3a8a,color:#3a1f5f
 
   subgraph CP["控制面 - 写状态，不转发包"]
     DS["datastore"]:::cp
-    Agents["Felix / confd / BIRD<br>（默认另有 kube-proxy）"]:::cp
-    DS --> Agents
+    Felix["Felix"]:::cp
+    BIRD["confd / BIRD"]:::cp
+    DS --> Felix
+    DS --> BIRD
   end
 
   subgraph DP["数据面 - Linux 内核 - 查表转发"]
@@ -49,10 +52,13 @@ flowchart TB
     F --- A
   end
 
-  Agents -->|"编程"| DP
-  Peer["BGP 对等体或 ToR"]:::cp
-  Agents <-->|"通告与学习路由"| Peer
+  Felix -->|"编程本机"| DP
+  BIRD -->|"写远端路由"| F
+  Peer["BGP 对等体或 ToR"]:::peer
+  BIRD <-->|"通告与学习"| Peer
 ```
+
+kube-proxy 同属控制面（watch API、写本机 Service 规则），不在 `calico-node` 内，见 §4。
 
 ---
 
@@ -69,7 +75,7 @@ Kubernetes 对网络的要求很简洁：每个 Pod 一个 IP，任意两个 Pod
 
 二者都跑在同一张 **underlay** 上——即节点之间已有的二层/三层网络或 VPC。差别只在：原生路由把 **Pod IP 原样交给 underlay**；overlay 再封一层，让 underlay **只看见节点 IP**。业界与 Tigera 也常把前者叫 underlay 组网、后者叫 overlay 组网，但这是组网方式的简称，不是说「不封装 = underlay 这张网」。[5][10]
 
-Calico 的**设计本意**是第二条：每台节点即一台 vRouter，转发交给 Linux 内核；「该 Pod IP 位于哪台机器」由 BGP 在节点间分发。[10] 仅当 underlay 无法转发 Pod IP（公有云跨子网、交换机不可控）时，才退回 IPIP / VXLAN overlay。[5] 须与**安装器默认**区分：Operator 安装时 IP 池封装默认为 IPIP（§6.2）。
+Calico 的**设计本意**是第二条：每台节点即一台路由器，转发交给 Linux 内核；「该 Pod IP 位于哪台机器」由 BGP 在节点间分发。[10] 仅当 underlay 无法转发 Pod IP（公有云跨子网、交换机不可控）时，才退回 IPIP / VXLAN overlay。[5] 须与**安装器默认**区分：Operator 安装时 IP 池封装默认为 IPIP（§6.2）。
 
 ### 1.1 宏观视角：控制面与数据面
 
@@ -106,7 +112,7 @@ flowchart TB
   classDef peer fill:#f0e8fa,stroke:#6a3a8a,color:#3a1f5f
 
   subgraph CTRL["网络控制面 - 写状态，不转发包"]
-    Store["datastore<br>kdd 即 K8s API，后端为 K8s 的 etcd<br>etcd 模式为 Calico 专用 etcd"]:::store
+    Store["datastore<br>kdd 或专用 etcd"]:::store
     Felix["Felix<br>写接口、本机路由、策略"]:::proc
     Confd["confd<br>生成 BIRD 配置"]:::proc
     BIRD["BIRD<br>BGP 客户端"]:::proc
@@ -205,11 +211,12 @@ Operator 安装不走这份 ConfigMap，而由 `Installation` CR 生成等价文
 flowchart LR
   classDef store fill:#fff3e0,stroke:#b8860b,color:#5a4200
   classDef proc fill:#eef6e8,stroke:#5a8a3a,color:#2f4f1f
+  classDef disk fill:#f4eee4,stroke:#8a7048,color:#4a3a20
   classDef dplane fill:#e8f1fa,stroke:#3b6ea5,color:#1f3a5f
 
   CM["ConfigMap<br>calico-config"]:::store
   Init["calico-node init<br>渲染占位符"]:::proc
-  Disk["etc/cni/net.d<br>10-calico.conflist"]:::dplane
+  Disk["节点磁盘上的 CNI 配置"]:::disk
   KL["kubelet<br>CNI ADD 或 DEL"]:::proc
   Plug["calico 插件链"]:::proc
   NetObj["veth、IPAM、endpoint"]:::dplane
@@ -377,7 +384,7 @@ sequenceDiagram
   RT->>POL: 过 NetworkPolicy
   POL->>V2: 放行
   V2->>A2: 进入 A2
-  Note over A1,A2: 全程不离开 Node A，不经物理网卡、隧道、BGP
+  Note over A1,A2: 全程不离开 Node A；查表与策略钩子在内核中交错
 ```
 
 | 步 | 发生什么 | 谁事先写好的 |
@@ -417,10 +424,10 @@ sequenceDiagram
   participant B as Pod B
 
   A1->>NA: src=10.65.0.24 dst=10.65.0.21
-  NA->>NA: 查表 via 172.18.203.126 dev eth0
-  NA->>W: 包仍为 Pod IP，下一跳 Node B
-  W->>NB: 送到 172.18.203.126
-  NB->>NB: 查表 10.65.0.21 走本机 veth（Felix 写入）
+  NA->>NA: 查表 via 172.18.203.126，出口 eth0
+  NA->>W: L3 仍为 Pod IP，下一跳 Node B
+  W->>NB: 帧到达 Node B，目的 IP 未改
+  NB->>NB: 查表 10.65.0.21 走本机 veth
   NB->>B: 进入 Pod B
   Note over A1,B: 链路上 L3 源与目的始终为 Pod IP
 ```
@@ -446,21 +453,18 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
   participant A1 as Pod A1
-  participant NA as Node A FIB
-  participant T0 as Node A tunl0
+  participant NA as Node A 内核
   participant W as 物理网络
-  participant T1 as Node B tunl0
-  participant NB as Node B FIB
+  participant NB as Node B 内核
   participant B as Pod B
 
-  A1->>NA: dst=10.65.0.21
-  NA->>NA: 查表走 tunl0，下一跳 Node B
-  NA->>T0: 内核追加外层节点 IP
-  T0->>W: 外层 172.18.203.10 到 172.18.203.126，再出物理网卡
-  W->>T1: 送到 Node B
-  T1->>NB: 解封装，露出原包
-  NB->>B: 本机路由送入 Pod B
-  Note over T0,T1: 外层 proto=4；下一跳 Node B 已由 BGP 写入 FIB
+  A1->>NA: src=10.65.0.24 dst=10.65.0.21
+  NA->>NA: 查表 via Node B，出口 tunl0
+  NA->>W: 外层 172.18.203.10 到 172.18.203.126，proto=4
+  W->>NB: 外层送到 Node B
+  NB->>NB: tunl0 解封装，本机路由送入 veth
+  NB->>B: 进入 Pod B
+  Note over A1,B: 链路上外层为节点 IP；内层仍为 Pod IP
 ```
 
 | 位置 | FIB 表示意 | 写入者 |
@@ -519,30 +523,29 @@ kube-proxy 是**每台节点上的 Service 控制器**（通常为 `kube-system`
 ```mermaid
 flowchart LR
   classDef app fill:#fdeee8,stroke:#c46a2a,color:#5f2f10
-  classDef kp fill:#fff3e0,stroke:#b8860b,color:#5a4200
+  classDef kern fill:#e8f1fa,stroke:#3b6ea5,color:#1f3a5f
   classDef cal fill:#eef6e8,stroke:#5a8a3a,color:#2f4f1f
-  classDef dplane fill:#e8f1fa,stroke:#3b6ea5,color:#1f3a5f
 
-  Pod["Pod 访问<br>dst=ClusterIP"]:::app
-  KP["kube-proxy 规则<br>VIP 到 Endpoint Pod IP"]:::kp
-  RT["Calico 路由与策略<br>Pod IP 到节点或 veth"]:::cal
-  Dst["目标 Pod"]:::dplane
+  Pod["A1 发出<br>dst 为 ClusterIP"]:::app
+  NF["内核 nat 表<br>kube-proxy 事先写入"]:::kern
+  RT["FIB 与策略<br>Calico 事先写入"]:::cal
+  Dst["目的 Pod B"]:::app
 
-  Pod -->|"Service DNAT"| KP
-  KP -->|"目的变为 Pod IP"| RT
-  RT -->|"按第3节送达"| Dst
+  Pod -->|"DNAT"| NF
+  NF -->|"目的已是 Pod IP"| RT
+  RT -->|"按 Pod 路径送达"| Dst
 ```
 
 可观察结论：**访问 Service 时，先过 kube-proxy 写下的 DNAT，再进入 Calico 已装好的 Pod 路由与策略。** 查不通时，先分清卡在「VIP 没翻译」还是「Pod IP 走不到」。
 
-### 4.2 DNAT：VIP 如何变成 Endpoint
+### 4.2 DNAT 与 conntrack：VIP 如何变成 Endpoint
 
 **DNAT（Destination Network Address Translation，目的地址转换）** 改写数据包的**目的** IP（常连同目的端口）。相对的是 **SNAT**（Source NAT，源地址转换），改写**源** IP。kube-proxy 默认 iptables 模式下，Service 靠的就是 DNAT。[18]
 
 | | 改写 | 在 Service 路径上的用途 |
 |--|------|--------------------------|
 | **DNAT** | 目的地址与端口 | ClusterIP / NodePort → 某个 Endpoint 的 Pod IP:Port |
-| **SNAT / MASQUERADE** | 源地址 | NodePort 且 `externalTrafficPolicy: Cluster` 时常见：让回程回到做了 DNAT 的那台节点，以免应答绕开 conntrack |
+| **SNAT / MASQUERADE** | 源地址 | NodePort 且 `externalTrafficPolicy: Cluster` 时常见：把源改成节点 IP，使回程必经本机 |
 
 ClusterIP（如 `10.96.0.50`）是**虚地址**：不配在任何网卡上，FIB 里也没有「去这个 IP 从哪块网卡出去」。客户端把包发给它之后，必须在**查路由之前**把目的改成真实 Endpoint，后面才能走 §3 的 Pod 路径。执行改写的是内核 netfilter（或 IPVS / eBPF），不是 kube-proxy 进程。[13][18]
 
@@ -563,7 +566,16 @@ Node A DNAT src=10.65.0.24     dst=10.65.0.21:8080   （目的换成 Endpoint B�
 此后        按 §3 送到 Node B，进入 Pod B
 ```
 
-回程靠 **conntrack**：内核记住「这次连接曾把 `10.96.0.50:80` 改成 `10.65.0.21:8080`」。B 的应答是 `src=10.65.0.21 dst=10.65.0.24`，回到 Node A 后源被改回 ClusterIP，A1 看见的对端仍是 `10.96.0.50`。故客户端始终只与 VIP 对话，不必知道 Endpoint 是谁、会不会换人。
+**conntrack（connection tracking，连接跟踪）** 是内核模块 `nf_conntrack` 维护的流表，按五元组记下每条连接及其 NAT 结果。DNAT 规则主要作用于**首包**（`NEW`）；同一连接的后续包和回程包查这张表，而不是再走一遍 `KUBE-SVC-*` 做负载均衡。[19] 它不是 kube-proxy 写入的规则，而是 netfilter 做 NAT 时自动建立的**数据面状态**。
+
+| | 正向（A1 → Service） | 反向（B → A1） |
+|--|----------------------|----------------|
+| 改写 | DNAT：目的 VIP → Endpoint | conntrack **自动反向**：源 Endpoint → VIP |
+| 发生在哪 | 做 DNAT 的节点（此处 Node A） | **必须仍经过 Node A** |
+
+B 的应答是 `src=10.65.0.21 dst=10.65.0.24`。回到 Node A 后，conntrack 把源改回 `10.96.0.50`，A1 看见的对端仍是 VIP。若回程不经过 Node A，表项用不上，客户端会看到源是 Pod IP，TCP 对不上而失败——这正是 NodePort 在 `externalTrafficPolicy: Cluster` 下要 SNAT 的原因：正向把源改成节点 IP，回程目的就是本机，必经这份 conntrack。
+
+IPVS 自有连接表，语义相同。eBPF 数据面则把等价状态放进 BPF maps（§4.4）。表满（`nf_conntrack_count` 触顶）时表现为随机断连，与「规则没写上」不同。
 
 因此三条路径必须分开：
 
@@ -572,8 +584,6 @@ Node A DNAT src=10.65.0.24     dst=10.65.0.21:8080   （目的换成 Endpoint B�
 | Pod IP ↔ Pod IP（§3） | 否 | Calico（FIB / 策略） |
 | 访问 ClusterIP / NodePort | **DNAT**（可能再加 SNAT） | kube-proxy 或 eBPF |
 | Overlay 封装 | 不是 NAT；是再套一层头 | IPIP / VXLAN（§3.4、§6.2） |
-
-IPVS 模式不走上述 iptables DNAT 链，但语义相同：VIP → 真实服务器。eBPF 数据面把等价映射放进 BPF maps，不再依赖 kube-proxy（§4.4）。
 
 ### 4.3 故障对照（标准 Linux 数据面）
 
@@ -611,7 +621,7 @@ kubectl patch felixconfiguration default --type merge \
 |------|----------------|
 | Pod IP 互通，ClusterIP 不通 | DNAT 未发生（§4.2）：kube-proxy 未运行 / 规则缺失；或 eBPF 未就绪却已关 kube-proxy |
 | ClusterIP 通，跨节点 Pod IP 不通 | Calico 路由/BGP/封装问题（§3、§5），与 kube-proxy 无关 |
-| 连上 VIP 但回程源地址对不上、连接重置 | conntrack / SNAT：回程未经过做 DNAT 的节点（§4.2） |
+| 连上 VIP 但回程源地址对不上、连接重置 | 回程未经过做 DNAT 那台节点的 conntrack；或需 SNAT（§4.2） |
 | eBPF 开启后 CPU 很高、iptables 抖动 | kube-proxy 仍在跑，且 `bpfKubeProxyIptablesCleanupEnabled=true` [14] |
 | NodePort 日志里源 IP 是节点 IP | 标准数据面 + `externalTrafficPolicy: Cluster` 的 SNAT；要保留源 IP 用 Local，或考虑 eBPF [13] |
 
@@ -622,6 +632,8 @@ kubectl get felixconfiguration default -o yaml | grep -E 'bpf|linuxDataplane|dat
 
 # Service 规则是否存在（iptables 模式）
 iptables-save -c | grep -E 'KUBE-SERVICES|KUBE-SEP' | head
+# 本机是否已有该 VIP 的连接跟踪
+grep 10.96.0.50 /proc/net/nf_conntrack | head
 ```
 
 ---
@@ -637,6 +649,7 @@ iptables-save -c | grep -E 'KUBE-SERVICES|KUBE-SEP' | head
 | veth 这对虚拟网线 | **CNI** 创建（合同见 §2.5）；Felix 再写 ARP、转发等属性 [1][3] | 包进出 Pod |
 | 路由表（FIB） | **本机 Pod**：Felix；**其他节点上的 Pod**：默认 BIRD（VXLAN 池则为 Felix）[2][5] | 决定下一跳与出口网卡 |
 | 策略链（iptables / eBPF） | **Felix**（NetworkPolicy） | 决定放行或丢弃 |
+| **conntrack** | 内核在 NAT 时自动建立（§4.2） | 同一连接后续包与回程的反向改写 |
 | Service 链（`KUBE-*` / IPVS / nft） | **kube-proxy**（默认）；eBPF 模式下改由 Calico [13] | VIP → Endpoint |
 
 ### 5.2 控制面时序：新建 Pod 之后
@@ -755,6 +768,7 @@ AKS 网卡常显示 1500，underlay 实际更接近 1400；开启 WireGuard 时�
 | 两 Pod IP 不通 | 数据面路由 / BGP / 封装（§3、§5）：`ip route get` |
 | Pod 卡在 `ContainerCreating`，事件含 CNI | 节点 `/etc/cni/net.d/`、`/var/log/calico/cni/cni.log`；对照 ConfigMap（§2.5） |
 | Pod IP 通，ClusterIP 不通 | Service DNAT 未发生：kube-proxy 或 eBPF（§4.2、§4.5） |
+| 能访问 VIP 但回程异常 | 做 DNAT 节点上的 conntrack / 是否缺 SNAT（§4.2） |
 | eBPF 后 CPU 高、iptables 抖动 | 是否与 kube-proxy 双跑（§4.4） |
 | 通但策略不符预期 | Felix 策略链 / NetworkPolicy |
 
@@ -764,7 +778,7 @@ kind: IPPool
 metadata:
   name: default-ipv4-ippool
 spec:
-  cidr: 192.168.0.0/16
+  cidr: 10.65.0.0/16
   blockSize: 26
   ipipMode: CrossSubnet    # Always | CrossSubnet | Never
   vxlanMode: Never
@@ -811,7 +825,7 @@ Calico 的设计可收成一句：**控制面写表，数据面查表；转发�
 - **「Calico 默认不封装」**——设计本意是原生路由；Operator 安装时 IP 池封装默认为 IPIP（§6.2）。
 - **「开了 IPIP 就不用 BGP」**——BGP 管下一跳，IPIP 管是否封装（§3.4、§6.2）。
 - **「Felix / kube-proxy 转发数据包」**——二者写表；转发在内核（§1.1、§3）。
-- **「访问 Service 也没有 NAT」**——Pod 互访不做 NAT；ClusterIP 是虚地址，须 DNAT 成 Endpoint（§4.2）。封装也不是 NAT。
+- **「访问 Service 也没有 NAT」**——Pod 互访不做 NAT；ClusterIP 须 DNAT 成 Endpoint，回程靠 conntrack 反向转换（§4.2）。封装也不是 NAT。
 - **「Calico 替代了 kube-proxy」**——默认不替代；仅 eBPF 数据面才宜禁用 kube-proxy（§4）。
 - **「`calico-config` 就是全部网络配置」**——它只是 kubelet 调用 CNI 的合同，外加 `calico-node` 的 backend 选择；封装、IP 池、BGP 对等体在 datastore 的 CRD 里（§2.5、§6）。
 
@@ -845,4 +859,5 @@ Calico 的设计可收成一句：**控制面写表，数据面查表；转发�
 | [16] | CNCF, *CNI Specification*. https://www.cni.dev/docs/spec/ | `cniVersion`、`plugins` 链式调用 |
 | [17] | CNCF, *portmap* / *bandwidth* plugins. https://www.cni.dev/plugins/current/meta/portmap/ · https://www.cni.dev/plugins/current/meta/bandwidth/ | `hostPort` 与带宽注解 |
 | [18] | Kubernetes, *Service*. https://kubernetes.io/docs/concepts/services-networking/service/ | ClusterIP 虚地址；kube-proxy iptables/IPVS DNAT |
+| [19] | Netfilter, *Connection Tracking System*. https://wiki.nftables.org/wiki-nftables/index.php/Connection_Tracking_System | `nf_conntrack`：NAT 流表与反向转换 |
 

@@ -7,7 +7,7 @@
 > **Kubernetes 不是一次性编排脚本，而是一台「分布式控制计算机」：**  
 > 以 etcd 为真相源，以声明式 API 为协调语言，以可失败的控制循环持续逼近期望态；控制面短暂失联时，数据面尽量按上次指令继续服务。[1][12][18]
 
-全文可与本库 [《服务架构演进》](./21-service-architecture-evolution.md)（复杂度如何转移）、[《分布式一致性专论》](./22-distributed-consistency-treatise.md)（CAP / Raft）、[《Calico 网络专论》](./24-calico-networking-treatise.md)（网络控制面如何写表；kubelet 经 CNI 调用插件）对照阅读。关键史实与论断尽量对齐一手文献，文末附参考文献。
+全文可与本库 [《服务架构演进》](./21-service-architecture-evolution.md)（复杂度如何转移）、[《分布式一致性专论》](./22-distributed-consistency-treatise.md)（CAP / Raft）、[《Calico 三层网络专论》](./24-calico-l3-dataplane-treatise.md)（网络控制面如何写表；kubelet 经 CNI 调用插件）对照阅读。关键史实与论断尽量对齐一手文献，文末附参考文献。
 
 ---
 
@@ -145,7 +145,7 @@ Kubernetes 是可移植、可扩展的**开源平台**，用于管理容器化�
 
 | 类别 | 典型组件 | 边界 |
 |------|----------|------|
-| 网络 / DNS | Calico、Cilium、CoreDNS | 插件实现；kubelet 经 CNI 调用。Calico 合同见 [《Calico 网络专论》](./24-calico-networking-treatise.md) §2.5 |
+| 网络 / DNS | Calico、Cilium、CoreDNS | 插件实现；kubelet 经 CNI 调用。Calico 合同见 [《Calico 三层网络专论》](./24-calico-l3-dataplane-treatise.md) §2.5 |
 | 工作负载入口 | Ingress、云 LB、MetalLB | 业务流量，**非**控制面入口 |
 | 可观测 / 网格 | Prometheus、Istio | 周边生态 |
 
@@ -250,7 +250,7 @@ flowchart LR
 | **kube-controller-manager** | 内置控制器 | 同上[22] |
 | **cloud-controller-manager** | 云厂商对接 | 可水平扩展[18] |
 
-节点侧：kubelet、可选 kube-proxy、容器运行时。[18] kubelet 创建/删除 Pod 时读取节点 `/etc/cni/net.d/` 下的 CNI 配置并调用插件——网络不在核心控制面内，正是 §4.3 / §6「平台的平台」的边界；Calico 侧合同见 [专论 §2.5](./24-calico-networking-treatise.md#25-cni-配置kubelet-如何调用-calico)。kube-proxy 把 Service 虚地址 DNAT 成 Endpoint，见 [专论 §4.2](./24-calico-networking-treatise.md#42-dnatvip-如何变成-endpoint)。
+节点侧：kubelet、可选 kube-proxy、容器运行时。[18] kubelet 创建/删除 Pod 时读取节点 `/etc/cni/net.d/` 下的 CNI 配置并调用插件——网络不在核心控制面内，正是 §4.3 / §6「平台的平台」的边界；Calico 侧合同见 [专论 §2.5](./24-calico-l3-dataplane-treatise.md#25-cni-配置kubelet-如何调用-calico)。kube-proxy 把 Service 虚地址 DNAT 成 Endpoint，见 [专论 §4.2](./24-calico-l3-dataplane-treatise.md#42-dnat-与-conntrackvip-如何变成-endpoint)。
 
 | 平面 | 定义 | 故障含义 |
 |------|------|----------|
