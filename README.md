@@ -166,8 +166,10 @@ knowledge_base/
 └── 50-strategy/                           优术 · 略 · 格局
     ├── 50-ai-industry-disruption-strategy.md
     │   AI 产业穿透与竞争战略：死亡之谷、智能体与企业操作系统
-    └── 51-brand-cultural-translation.md
-        品牌文化译介：文化折扣、文化溢价与符号—叙事—价值三层战略
+    ├── 51-brand-cultural-translation.md
+    │   品牌文化译介：文化折扣、文化溢价与符号—叙事—价值三层战略
+    └── 52-token-economics-treatise.md
+        Token 经济学专论：稀疏计算如何把 Token 做成智能经济的底层货币
 ```
 
 | 编号 | 文稿 | 核心命题 |
@@ -186,6 +188,7 @@ knowledge_base/
 | 42 | [Agentic SRE Operations Playbook](./40-paradigm/42-agentic-sre-operations-playbook.md) | 压缩 MTTR 中可并行、可检索、可证据化的时间段 |
 | 50 | [AI Industry Disruption Strategy](./50-strategy/50-ai-industry-disruption-strategy.md) | 预测成本下降不自动等于好决策；护城河转向数据与流程 |
 | 51 | [Brand Cultural Translation](./50-strategy/51-brand-cultural-translation.md) | 跨文化少打折扣、多造溢价 |
+| 52 | [Token Economics Treatise](./50-strategy/52-token-economics-treatise.md) | Token 先因稀疏计算而廉价，再因商业与金融化成为底层货币；无法被 Token 化的判断才有剩余溢价 |
 
 ---
 
