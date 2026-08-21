@@ -9,9 +9,17 @@
 
 全文可与本库 [《服务架构演进》](./21-service-architecture-evolution.md)（复杂度如何转移）、[《分布式一致性专论》](./22-distributed-consistency-treatise.md)（CAP / Raft）、[《Calico 三层网络专论》](./24-calico-l3-dataplane-treatise.md)（网络控制面如何写表；kubelet 经 CNI 调用插件）对照阅读。关键史实与论断尽量对齐一手文献，文末附参考文献。
 
+## 摘要
+
+Kubernetes 应被理解为持续收敛的分布式控制计算机，而不是一次性编排脚本。etcd 为真相源，声明式 API 为协调语言，控制器按当前态与期望态的偏差调谐；控制面可以短暂失败，数据面按上次指令尽量保持静态稳定。全文从 Borg → Omega 谱系与「平台的平台」定位，写到分层高可用、API Server 负载均衡、CRD / Operator 与能力边界。可与本库 21、22、24 对照：编排原则、一致性取舍与网络写表是同一台控制计算机的不同平面。
+
+**关键词：** Kubernetes；声明式 API；控制循环；etcd；静态稳定
+
 ---
 
 ## 目录
+
+- [摘要](#摘要)
 
 **背景与定位**
 

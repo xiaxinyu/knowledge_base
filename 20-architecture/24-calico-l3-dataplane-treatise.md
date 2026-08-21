@@ -17,9 +17,17 @@
 | **Node B** | `172.18.203.126` | Pod B `10.65.0.21` |
 | **Service** | ClusterIP `10.96.0.50:80` | Endpoint B `10.65.0.21:8080`（§4） |
 
+## 摘要
+
+Calico 把「容器如何互通」收成一句：每台节点即一台路由器。控制面（Felix、confd、BIRD，以及默认的 kube-proxy）只把路由、策略与 Service 规则写入内核；数据面是 FIB、veth、iptables 或 eBPF，真正转发的是 Linux。正文分开三条路径：同机 / 跨机原生路由 / IPIP overlay；Service 虚地址须先 DNAT，回程靠 conntrack。设计本意是不封装；Operator 安装时 IP 池默认 IPIP，二者不可混为一谈。可与 23 对照：编排控制面如何收敛，网络控制面如何写表。
+
+**关键词：** Calico；FIB；BGP；DNAT；conntrack；IPIP
+
 ---
 
 ## 目录
+
+- [摘要](#摘要)
 
 | | |
 |--|--|
