@@ -6,7 +6,7 @@
 
 > **NIST 对云计算的定义（行业通行基准）**  
 > Cloud computing is a model for enabling ubiquitous, convenient, on-demand network access to a shared pool of configurable computing resources… composed of five essential characteristics, three service models, and four deployment models.  
-> — Mell & Grance, *The NIST Definition of Cloud Computing*, NIST SP 800-145 (2011) [1]  
+> — Mell & Grance, *The NIST Definition of Cloud Computing*, NIST SP 800-145 (2011) [^nist-cloud]
 >  
 > 五类基本特征：按需自助、广泛网络访问、资源池、快速弹性、可度量服务。  
 > 三类服务模型：**IaaS** / **PaaS** / **SaaS**。  
@@ -287,7 +287,7 @@ UNIX 和 C 语言的结合是一个伟大的时刻，在此之前，使用汇编
 该论文尽管基于简化的假设，但上述条件仍为评判一个计算机体系结构是否能够有效地支持虚拟化提供了一个便利方法，也为设计可虚拟化的计算机架构给出了指导原则。为未来 40 多年的虚拟化技术的快速演进奠定了理论基础：定义了什么样的技术才能叫做虚拟化，什么样的条件才能满足虚拟化的定义。
 
 > **专业补充（VMM 判定）**
-> Popek & Goldberg（1974）给出可虚拟化的充分条件：敏感指令集应为特权指令集的子集，并要求 **资源控制（Resource Control）**、**等价性（Equivalence）**、**效率性（Efficiency）** 三类性质 [[2]](#references)。业界常以此区分“可高效虚拟化的体系结构”与需二进制翻译 / 半虚拟化的路径。
+> Popek & Goldberg（1974）给出可虚拟化的充分条件：敏感指令集应为特权指令集的子集，并要求 **资源控制（Resource Control）**、**等价性（Equivalence）**、**效率性（Efficiency）** 三类性质 [^popek-goldberg1974]。业界常以此区分"可高效虚拟化的体系结构"与需二进制翻译 / 半虚拟化的路径。
 
 同时，Gerald J. Popek 和 Robert P. Goldberg 还在论文中介绍了两种 Hypervisor 类型。
 
@@ -568,7 +568,7 @@ int    $0x80
 这一学术定义，揭示了云计算的本质是一种新型的商业模式，其次才是技术创新。
 
 > **专业补充（与 NIST 对齐）**
-> 学术史上“Cloud Computing”一词的出现早于产业大规模落地；而 **NIST SP 800-145（2011）** 给出了至今仍被监管、采购与架构文档广泛引用的操作性定义（五特征 / 三服务模型 / 四部署模型）[[1]](#references)。阅读后文 AWS / Azure / GCP 时，可用该框架对照其产品属于 IaaS、PaaS 或 SaaS。
+> 学术史上"Cloud Computing"一词的出现早于产业大规模落地；而 **NIST SP 800-145（2011）** 给出了至今仍被监管、采购与架构文档广泛引用的操作性定义（五特征 / 三服务模型 / 四部署模型）[^nist-cloud]。阅读后文 AWS / Azure / GCP 时，可用该框架对照其产品属于 IaaS、PaaS 或 SaaS。
 
 *拉姆纳特·K·切拉帕（Ramnath K. Chellappa）*
 
@@ -709,7 +709,7 @@ Salesforce 的客户后来包括通用电气、荷兰航空、部分法国银行
 CNCF 中托管的一系列项目，都致力于云原生应用整个生命周期的管理，从部署平台、日志收集、Service Mesh（服务网格）、服务发现、分布式追踪、监控以及安全等各个领域通过开源软件为我们提供一整套解决方案。CNCF 的成立标志着进入云原生时代。
 
 > **专业补充（CNCF 定义）**
-> CNCF 对云原生的表述强调：在现代动态环境（公有 / 私有 / 混合云）中构建可弹性扩展的应用；代表性技术包括**容器、服务网格、微服务、不可变基础设施与声明式 API** [[3]](#references)。Kubernetes 于 2015 年前后作为种子项目进入 CNCF 治理，是编排层事实标准之一 [[4]](#references)。
+> CNCF 对云原生的表述强调：在现代动态环境（公有 / 私有 / 混合云）中构建可弹性扩展的应用；代表性技术包括**容器、服务网格、微服务、不可变基础设施与声明式 API** [^cncf-definition]。Kubernetes 于 2015 年前后作为种子项目进入 CNCF 治理，是编排层事实标准之一 [^cncf-announcement]。
 
 早期，关于云原生的定义一直处于百家争鸣的状况。
 
@@ -835,21 +835,36 @@ AIGC 技术将会以集约式算力中心为基础，站在云计算商业和服
 
 ## 参考文献
 
-1. Mell, P., & Grance, T. (2011). *The NIST Definition of Cloud Computing* (NIST Special Publication 800-145). National Institute of Standards and Technology. <https://doi.org/10.6028/NIST.SP.800-145>
-2. Popek, G. J., & Goldberg, R. P. (1974). Formal requirements for virtualizable third generation architectures. *Communications of the ACM*, 17(7), 412–421. <https://doi.org/10.1145/361011.361073>
-3. Cloud Native Computing Foundation. (2018). *CNCF Cloud Native Definition v1.0*. <https://github.com/cncf/toc/blob/main/DEFINITION.md>
-4. Cloud Native Computing Foundation. (2015, June 21). *New Cloud Native Computing Foundation to Drive Alignment Among Container Technologies*. <https://www.cncf.io/announcements/2015/06/21/new-cloud-native-computing-foundation-to-drive-alignment-among-container-technologies/>
-5. Turing, A. M. (1936/1937). On computable numbers, with an application to the Entscheidungsproblem. *Proceedings of the London Mathematical Society*, s2-42(1), 230–265.
-6. von Neumann, J. (1945). *First Draft of a Report on the EDVAC*. Moore School of Electrical Engineering, University of Pennsylvania.
-7. Ghemawat, S., Gobioff, H., & Leung, S.-T. (2003). The Google File System. *SOSP*.
-8. Dean, J., & Ghemawat, S. (2004). MapReduce: Simplified data processing on large clusters. *OSDI*.
-9. Chang, F., et al. (2006). Bigtable: A distributed storage system for structured data. *OSDI*.
-10. Amazon Web Services. (2006). Amazon S3 / Amazon EC2 发布与文档（Simple Storage Service；Elastic Compute Cloud）. <https://docs.aws.amazon.com/>
-11. Ritchie, D. M., & Thompson, K. (1974). The UNIX time-sharing system. *Communications of the ACM*, 17(7), 365–375.
-12. Raymond, E. S. (1999). *The Cathedral and the Bazaar*. O'Reilly.
-13. Greenberger, M. (1964, May). The computers of tomorrow. *The Atlantic Monthly*. <https://www.theatlantic.com/magazine/archive/1964/05/the-computers-of-tomorrow/658239/>
-14. McCarthy, J. (1959, January 1). Memorandum to P. M. Morse proposing time-sharing. <http://jmc.stanford.edu/computing-science/timesharing-memo.html>
-15. Strachey, C. (1959). Time sharing in large fast computers. *Proceedings of the International Conference on Information Processing* (UNESCO). 影印参见 <https://archive.org/details/large-fast-computers>
-16. Torvalds, L. (1994, March 14). Linux 1.0 announcement. `comp.os.linux.announce`.
+[^nist-cloud]: Mell, P., & Grance, T. (2011). *The NIST Definition of Cloud Computing* (NIST Special Publication 800-145). National Institute of Standards and Technology. <https://doi.org/10.6028/NIST.SP.800-145>
+
+[^popek-goldberg1974]: Popek, G. J., & Goldberg, R. P. (1974). Formal requirements for virtualizable third generation architectures. *Communications of the ACM*, 17(7), 412–421. <https://doi.org/10.1145/361011.361073>
+
+[^cncf-definition]: Cloud Native Computing Foundation. (2018). *CNCF Cloud Native Definition v1.0*. <https://github.com/cncf/toc/blob/main/DEFINITION.md>
+
+[^cncf-announcement]: Cloud Native Computing Foundation. (2015, June 21). *New Cloud Native Computing Foundation to Drive Alignment Among Container Technologies*. <https://www.cncf.io/announcements/2015/06/21/new-cloud-native-computing-foundation-to-drive-alignment-among-container-technologies/>
+
+[^turing1936]: Turing, A. M. (1936/1937). On computable numbers, with an application to the Entscheidungsproblem. *Proceedings of the London Mathematical Society*, s2-42(1), 230–265.
+
+[^vonneumann1945]: von Neumann, J. (1945). *First Draft of a Report on the EDVAC*. Moore School of Electrical Engineering, University of Pennsylvania.
+
+[^gfs2003]: Ghemawat, S., Gobioff, H., & Leung, S.-T. (2003). The Google File System. *SOSP*.
+
+[^mapreduce2004]: Dean, J., & Ghemawat, S. (2004). MapReduce: Simplified data processing on large clusters. *OSDI*.
+
+[^bigtable2006]: Chang, F., et al. (2006). Bigtable: A distributed storage system for structured data. *OSDI*.
+
+[^aws-docs]: Amazon Web Services. (2006). Amazon S3 / Amazon EC2 发布与文档（Simple Storage Service；Elastic Compute Cloud）. <https://docs.aws.amazon.com/>
+
+[^unix1974]: Ritchie, D. M., & Thompson, K. (1974). The UNIX time-sharing system. *Communications of the ACM*, 17(7), 365–375.
+
+[^raymond-cathedral]: Raymond, E. S. (1999). *The Cathedral and the Bazaar*. O'Reilly.
+
+[^greenberger1964]: Greenberger, M. (1964, May). The computers of tomorrow. *The Atlantic Monthly*. <https://www.theatlantic.com/magazine/archive/1964/05/the-computers-of-tomorrow/658239/>
+
+[^mccarthy1959]: McCarthy, J. (1959, January 1). Memorandum to P. M. Morse proposing time-sharing. <http://jmc.stanford.edu/computing-science/timesharing-memo.html>
+
+[^strachey1959]: Strachey, C. (1959). Time sharing in large fast computers. *Proceedings of the International Conference on Information Processing* (UNESCO). 影印参见 <https://archive.org/details/large-fast-computers>
+
+[^linux-1.0]: Torvalds, L. (1994, March 14). Linux 1.0 announcement. `comp.os.linux.announce`.
 
 **声明**：正文为技术史叙事整理；References 用于核对关键事实与业界定义。若正文叙述与原始文献冲突，以原始文献为准。

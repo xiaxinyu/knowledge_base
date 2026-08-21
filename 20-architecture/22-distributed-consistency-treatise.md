@@ -38,6 +38,7 @@
 16. [参考文献](#16-参考文献)
 
 ```mermaid
+%% 分布式一致性主线：ACID → CAP 分叉为 BASE(AP) 与 共识(CP) → 并存选型
 flowchart TB
   ACID["① 单机基线：ACID<br/>事务内强正确"]
   CAP["② 分布式边界：CAP / PACELC<br/>分区时 C 与 A 不可兼得"]
@@ -66,7 +67,7 @@ flowchart TB
 
 适用范围（全文通用）：
 
-1. 讨论对象是**共享数据系统**：节点互联，并对同一逻辑状态提供读写或命令执行。[1][2]
+1. 讨论对象是**共享数据系统**：节点互联，并对同一逻辑状态提供读写或命令执行。[^gilbert-lynch-cap][^gilbert-lynch-perspectives]
 2. **共识 ≠ 最终一致**：共识要求对某值 / 某日志槽位达成**唯一决定**；最终一致只承诺分歧会收敛。
 3. Paxos / Raft / ZAB 默认**崩溃—恢复**模型（非拜占庭）：消息可丢、可迟、可重，但不被恶意篡改。
 
@@ -97,7 +98,7 @@ flowchart TB
 | **范围** | 一次事务提交后的状态合法性 | 多副本之间的即时可见性 |
 | **常见混淆** | 以为满足 ACID 就自动满足 CAP 的 C | 多副本异步复制时，库仍可有 ACID 事务，但跨副本读可能旧 |
 
-> **一句话**：ACID 管「这一笔事务在语义上对不对」；CAP 的 C 管「你读到的是不是集群认定的最新写」。二者相关，但不是同一个 C。[1][9]
+> **一句话**：ACID 管「这一笔事务在语义上对不对」；CAP 的 C 管「你读到的是不是集群认定的最新写」。二者相关，但不是同一个 C。[^gilbert-lynch-cap][^pritchett-base]
 
 ### 2.3 单机假设一旦被打破
 
@@ -116,15 +117,15 @@ flowchart TB
 
 | 时间 | 事件 | 说明 |
 |------|------|------|
-| 约 1998–1999 | Eric Brewer 提出 CAP 思想 | 源于宽域集群等实践中「可用性优先、事后调和」[3] |
-| 2000 | Brewer 在 PODC 提出猜想 | Brewer’s Conjecture [4] |
-| 2002 | Gilbert & Lynch 形式化证明 | 猜想成为定理 [1] |
+| 约 1998–1999 | Eric Brewer 提出 CAP 思想 | 源于宽域集群等实践中「可用性优先、事后调和」[^brewer-cap-twelve-years] |
+| 2000 | Brewer 在 PODC 提出猜想 | Brewer's Conjecture [^brewer-podc-2000] |
+| 2002 | Gilbert & Lynch 形式化证明 | 猜想成为定理 [^gilbert-lynch-cap] |
 
 ### 3.2 三条性质
 
 | 字母 | 名称 | 含义 |
 |------|------|------|
-| **C** | Consistency | 读返回**最近一次成功写入**（或错误）；形式化上接近线性一致读写共享存储。[1][2] |
+| **C** | Consistency | 读返回**最近一次成功写入**（或错误）；形式化上接近线性一致读写共享存储。[^gilbert-lynch-cap][^gilbert-lynch-perspectives] |
 | **A** | Availability | **非故障节点**对请求在有限时间内给出响应。 |
 | **P** | Partition Tolerance | 节点间消息可任意丢失或延迟；系统仍须给出明确的 C/A 策略。 |
 
@@ -132,7 +133,7 @@ flowchart TB
 
 ### 3.3 为何工程上强调 CP / AP
 
-真实多机网络无法从概率上消除分区。宣称同时保证 C 与 A 却否认 P，等于假设网络永不分裂。[5]
+真实多机网络无法从概率上消除分区。宣称同时保证 C 与 A 却否认 P，等于假设网络永不分裂。[^hale-sacrifice-pt]
 
 | 组合 | 分区时的典型行为 | 相对 ACID 的直观 |
 |------|------------------|------------------|
@@ -144,13 +145,13 @@ flowchart TB
 
 ### 3.4 一句话
 
-> 在可能发生网络分区的共享数据系统中，**不可能同时保证线性一致读写与对每个请求的持续可用性**。[1]
+> 在可能发生网络分区的共享数据系统中，**不可能同时保证线性一致读写与对每个请求的持续可用性**。[^gilbert-lynch-cap]
 
 ---
 
 ## 4. CAP 的现代理解与常见误区
 
-Brewer（2012）指出「三选二」容易误导：[3]
+Brewer（2012）指出「三选二」容易误导：[^brewer-cap-twelve-years]
 
 1. **分区少见**：无分区时应尽量同时做好 C 与 A。
 2. **粒度很细**：不同子系统、操作、数据项可做不同选择——这为后文「ACID 与 BASE 并存」埋下伏笔。
@@ -160,13 +161,13 @@ Brewer（2012）指出「三选二」容易误导：[3]
 
 | 误区 | 更准确的说法 |
 |------|----------------|
-| 「永远只能保住两项」 | 定理约束的是**分区期间**的极限。[3] |
-| 「可以放弃 P」 | 共享数据分布式系统不能假装网络完美。[5] |
-| 「一致性 = 最终相同」 | CAP 的 C 通常指强一致；最终一致是弱模型。[1][6] |
+| 「永远只能保住两项」 | 定理约束的是**分区期间**的极限。[^brewer-cap-twelve-years] |
+| 「可以放弃 P」 | 共享数据分布式系统不能假装网络完美。[^hale-sacrifice-pt] |
+| 「一致性 = 最终相同」 | CAP 的 C 通常指强一致；最终一致是弱模型。[^gilbert-lynch-cap][^vogels-ec] |
 | 「可用性 = 低延迟」 | CAP 的 A 是「能响应」；延迟是另一 SLA 维度。 |
 | 「某产品永远 CP/AP」 | 读模式、超时、法定人数、客户端缓存都会改变实际体验。 |
 
-**PACELC**（Abadi）：即使没有分区（Else），系统仍常在延迟（L）与一致性（C）之间权衡。[7]  
+**PACELC**（Abadi）：即使没有分区（Else），系统仍常在延迟（L）与一致性（C）之间权衡。[^abadi-pacelc]  
 CAP 管「分区时怎么办」；PACELC 提醒「平时也要为延迟付账」。
 
 ---
@@ -184,7 +185,7 @@ CAP 管「分区时怎么办」；PACELC 提醒「平时也要为延迟付账」
 2. 如何容忍副本间的**中间状态**？  
 3. 如何保证在无新更新时**最终收敛**？
 
-**BASE** 正是对这些问题的工程语言。它由 eBay 的 Dan Pritchett（2008）系统阐述，标题即 *BASE: An ACID Alternative*——明确把自己放在与 ACID **对照、而非替换一切事务**的位置上。[9]
+**BASE** 正是对这些问题的工程语言。它由 eBay 的 Dan Pritchett（2008）系统阐述，标题即 *BASE: An ACID Alternative*——明确把自己放在与 ACID **对照、而非替换一切事务**的位置上。[^pritchett-base]
 
 | 缩写 | 全称 | 要点 |
 |------|------|------|
@@ -196,7 +197,7 @@ CAP 管「分区时怎么办」；PACELC 提醒「平时也要为延迟付账」
 
 - **响应时间损失**：搜索从亚秒退化为数秒仍可返回。
 - **功能损失**：大促关闭非核心入口，保住下单主链路。
-- **故障隔离**：用户按库分片后，一台库故障只影响约 20% 用户，而非全站不可用。[9]
+- **故障隔离**：用户按库分片后，一台库故障只影响约 20% 用户，而非全站不可用。[^pritchett-base]
 
 ### 5.2 软状态（Soft State）
 
@@ -204,17 +205,17 @@ CAP 管「分区时怎么办」；PACELC 提醒「平时也要为延迟付账」
 
 ### 5.3 最终一致性（Eventual Consistency）
 
-若没有新更新，经过足够长时间（取决于延迟、负载、复制拓扑、冲突解决），所有副本收敛，客户端最终读到最新值。[6][9]
+若没有新更新，经过足够长时间（取决于延迟、负载、复制拓扑、冲突解决），所有副本收敛，客户端最终读到最新值。[^vogels-ec][^pritchett-base]
 
 日常例子：关系库**异步主从复制**——复制完成前从库可能读旧值；这并不否定主库上的 ACID 事务，只是把「跨副本可见性」推迟了。
 
-> **与 ACID 的关系（本路径）**：BASE 不是否定 ACID，而是说——在大规模分区数据上，**不必对每一次跨分区操作都用悲观的强一致事务收尾**；可用乐观设计换扩展性，再用应用层手段把状态拉回一致。[9]
+> **与 ACID 的关系（本路径）**：BASE 不是否定 ACID，而是说——在大规模分区数据上，**不必对每一次跨分区操作都用悲观的强一致事务收尾**；可用乐观设计换扩展性，再用应用层手段把状态拉回一致。[^pritchett-base]
 
 ---
 
 ## 6. 最终一致性的客户端语义
 
-「最终一致」只描述终点。工程还必须约定：**收敛过程中客户端允许看到什么。** Vogels（2009）归纳了常用模型：[6]
+「最终一致」只描述终点。工程还必须约定：**收敛过程中客户端允许看到什么。** Vogels（2009）归纳了常用模型：[^vogels-ec]
 
 | 模型 | 含义 | 典型诉求 |
 |------|------|----------|
@@ -224,19 +225,20 @@ CAP 管「分区时怎么办」；PACELC 提醒「平时也要为延迟付账」
 | **单调读** Monotonic read | 一旦读到某版本，后续读不应更旧 | 时间不倒流 |
 | **单调写** Monotonic write | 同一进程的写按序被系统串行化 | 避免后写被更早状态覆盖 |
 
-读己写 / 单调读常依赖客户端粘滞，或客户端携带版本号丢弃过旧响应。[6]
+读己写 / 单调读常依赖客户端粘滞，或客户端携带版本号丢弃过旧响应。[^vogels-ec]
 
 ---
 
 ## 7. CP 路径与复制状态机
 
-选定 **CP**，意味着分区期间宁可拒绝部分请求，也要保住强一致。工程标准骨架是 **复制状态机（Replicated State Machine）**：[10][11]
+选定 **CP**，意味着分区期间宁可拒绝部分请求，也要保住强一致。工程标准骨架是 **复制状态机（Replicated State Machine）**：[^ongaro-raft][^lamport-paxos-simple]
 
 1. 客户端命令进入**复制日志**；  
 2. 共识模块保证各副本日志最终包含**相同顺序的相同命令**；  
 3. 确定性状态机按日志顺序执行 → 各副本状态与输出一致。
 
 ```mermaid
+%% 复制状态机模型：客户端 → 领导者 → 共识 → 各副本按序执行
 flowchart LR
   Client["客户端"] --> Leader["领导者 / Primary"]
   Leader --> Log1["日志 1"]
@@ -249,9 +251,9 @@ flowchart LR
 
 | 概念 | 说明 |
 |------|------|
-| **共识（Consensus）** | 对单个值达成一致：只选被提议的值；只选一个值；只有真正被选定后才可被学习。[11] |
+| **共识（Consensus）** | 对单个值达成一致：只选被提议的值；只选一个值；只有真正被选定后才可被学习。[^lamport-paxos] |
 | **多数派 / 法定人数（Quorum）** | 任意两个多数派必相交 → 不会选出两个不同值。 |
-| **原子广播（Atomic Broadcast）** | 向全体可靠投递同一消息序列；与共识在异步系统中可互相归约。ZAB 属此类。[12] |
+| **原子广播（Atomic Broadcast）** | 向全体可靠投递同一消息序列；与共识在异步系统中可互相归约。ZAB 属此类。[^junqueira-zab] |
 | **容错规模** | \(2f+1\) 节点通常可容忍 \(f\) 个崩溃（多数派可达时仍可推进）。 |
 
 > **与 ACID 的关系（本路径）**：复制状态机追求的是——在分布式故障下，让集群**表现得像一台可靠的确定性服务器**。客户端眼中的「提交成功」，通常对应「命令已获多数派确认并进入可执行前缀」。这与单机 ACID 的「提交」不同构，但**目标相近：对外给出强正确的顺序状态演进**。
@@ -262,14 +264,14 @@ Paxos / Raft / ZAB 都在这一层，把「强一致复制」落成可实现的�
 
 ## 8. FLP：为何共识必须借助超时
 
-Fischer、Lynch、Paterson（1985）证明：在**完全异步**、进程可能崩溃、消息最终送达的模型中，**不存在**能同时保证安全性与必然终止性的确定性共识算法——即便只有一个进程可能故障。[13]
+Fischer、Lynch、Paterson（1985）证明：在**完全异步**、进程可能崩溃、消息最终送达的模型中，**不存在**能同时保证安全性与必然终止性的确定性共识算法——即便只有一个进程可能故障。[^flp1985]
 
 | 性质 | 能否绝对保证 | 工程含义 |
 |------|--------------|----------|
 | **安全性 Safety** | 可以 | 「绝不达成错误决定」——协议不变量必须守住 |
 | **活性 Liveness** | 纯异步下不能仅靠确定性算法保证 | 实践用**超时、随机化、部分同步**推进 |
 
-因此 Raft / Paxos / ZAB 都用超时选主：超时影响可用性与收敛速度；**不能**靠错误时钟破坏已提交结果的安全性（Raft 明确：timing 不用于保证日志一致性）。[10]
+因此 Raft / Paxos / ZAB 都用超时选主：超时影响可用性与收敛速度；**不能**靠错误时钟破坏已提交结果的安全性（Raft 明确：timing 不用于保证日志一致性）。[^ongaro-raft]
 
 ---
 
@@ -280,13 +282,13 @@ Fischer、Lynch、Paterson（1985）证明：在**完全异步**、进程可能�
 | 项目 | 内容 |
 |------|------|
 | **提出者** | Leslie Lamport |
-| **经典文献** | *The Part-Time Parliament*（1998）[14]；*Paxos Made Simple*（2001）[11] |
+| **经典文献** | *The Part-Time Parliament*（1998）[^lamport-parliament]；*Paxos Made Simple*（2001）[^lamport-paxos] |
 | **解决什么** | 异步、非拜占庭网络中的共识；可经多实例构成复制状态机 |
 | **家族** | Single-decree（单值）→ Multi-Paxos（日志序列，工程变体多） |
 
 ### 9.2 角色与安全目标
 
-三类角色（可兼任）：**Proposer、Acceptor、Learner**。[11]
+三类角色（可兼任）：**Proposer、Acceptor、Learner**。[^lamport-paxos]
 
 1. 只有被提议的值可被选定；  
 2. 至多选定一个值；  
@@ -310,14 +312,14 @@ Fischer、Lynch、Paterson（1985）证明：在**完全异步**、进程可能�
 
 ### 9.4 Multi-Paxos 与工程现实
 
-将共识实例编号为槽位 \(1,2,3,\ldots\)，即可实现状态机命令序列。[11]  
+将共识实例编号为槽位 \(1,2,3,\ldots\)，即可实现状态机命令序列。[^lamport-paxos]  
 稳态下选出 **distinguished proposer（Leader）** 后，多数槽位可跳过重复 Phase 1，主要支付 Phase 2 成本。
 
 | 优势 | 局限 |
 |------|------|
 | 理论奠基深，正确性论述完整 | 单值抽象与「日志」直觉有距离 |
-| 影响 Chubby 等一代系统 | Multi-Paxos 细节文献中常不统一 [10] |
-| 变体丰富（如 Fast Paxos） | 多 Proposer 活锁需靠选主保证进度 [11] |
+| 影响 Chubby 等一代系统 | Multi-Paxos 细节文献中常不统一 [^ongaro-raft] |
+| 变体丰富（如 Fast Paxos） | 多 Proposer 活锁需靠选主保证进度 [^lamport-paxos] |
 
 **典型场景**：强一致元数据 / 锁 / 配置内核；教学与形式化参照；数据库内部 Paxos 系模块。  
 **选型提示**：从零做可维护日志复制，现代工程更常直接选 Raft；对接存量 Paxos 系或特定变体时再深入本家族。
@@ -331,7 +333,7 @@ Fischer、Lynch、Paterson（1985）证明：在**完全异步**、进程可能�
 | 项目 | 内容 |
 |------|------|
 | **提出者** | Diego Ongaro、John Ousterhout |
-| **文献** | *In Search of an Understandable Consensus Algorithm*（USENIX ATC 2014）[10] |
+| **文献** | *In Search of an Understandable Consensus Algorithm*（USENIX ATC 2014）[^ongaro-raft] |
 | **目标** | 与（multi-）Paxos **结果等价、效率相当**，但更易理解与实现 |
 | **分解** | Leader 选举 + 日志复制 + 安全性（+ 成员变更） |
 
@@ -346,17 +348,17 @@ Fischer、Lynch、Paterson（1985）证明：在**完全异步**、进程可能�
 ### 10.3 三个子问题
 
 **(1) Leader 选举**  
-超时无心跳 → 自增 term 成 Candidate 拉票；获多数成为 Leader 并发心跳；**随机化超时**降低分票。[10]
+超时无心跳 → 自增 term 成 Candidate 拉票；获多数成为 Leader 并发心跳；**随机化超时**降低分票。[^ongaro-raft]
 
 **(2) 日志复制**  
 客户端只写 Leader；Leader 追加并并行 AppendEntries；复制到多数派后 **commit** 并应用到状态机；用 `prevLogIndex/prevLogTerm` 对齐日志，禁止随意空洞。
 
 **(3) 安全性**  
-- **Election Restriction**：Candidate 日志须至少与投票者一样新，才能获票——新 Leader 必含已提交条目。[10]  
+- **Election Restriction**：Candidate 日志须至少与投票者一样新，才能获票——新 Leader 必含已提交条目。[^ongaro-raft]  
 - Leader 只追加、只向下游复制。  
 - 对前任 term 条目的提交有额外限制。  
 
-成员变更用 **Joint Consensus**：过渡期同时满足新旧配置多数派。[10]
+成员变更用 **Joint Consensus**：过渡期同时满足新旧配置多数派。[^ongaro-raft]
 
 ### 10.4 场景与边界
 
@@ -377,19 +379,19 @@ Fischer、Lynch、Paterson（1985）证明：在**完全异步**、进程可能�
 | 项目 | 内容 |
 |------|------|
 | **全称** | ZooKeeper Atomic Broadcast |
-| **文献** | Junqueira、Reed、Serafini，*DSN 2011* [12] |
+| **文献** | Junqueira、Reed、Serafini，*DSN 2011* [^junqueira-zab] |
 | **载体** | Apache ZooKeeper 复制内核 |
 | **问题形态** | **主备下的原子广播**，而非泛化的「任意节点提议单值」叙述 |
 
-Primary 执行客户端操作，将增量事务经 ZAB 广播给 Backup；Backup 按序投递并应用。[12][15]
+Primary 执行客户端操作，将增量事务经 ZAB 广播给 Backup；Backup 按序投递并应用。[^junqueira-zab][^hunt-zookeeper]
 
 ### 11.2 为何不能直接套用「朴素多槽 Paxos」叙述
 
 1. 事务对前缀有**依赖**：投递 \(B\) 前必须已投递其所依赖前缀。  
 2. 需要**多个 outstanding** 操作且保持前缀序。  
-3. 按槽位独立达成一致时，可能选出**违反依赖**的序列；「批量 + 单飞行」又伤吞吐或延迟。[12]
+3. 按槽位独立达成一致时，可能选出**违反依赖**的序列；「批量 + 单飞行」又伤吞吐或延迟。[^junqueira-zab]
 
-故强调 **Primary Order（主序）**，称 **PO atomic broadcast**。[12]
+故强调 **Primary Order（主序）**，称 **PO atomic broadcast**。[^junqueira-zab]
 
 ### 11.3 三阶段
 
@@ -399,11 +401,11 @@ Primary 执行客户端操作，将增量事务经 ZAB 广播给 Backup；Backup
 | **Synchronization** | 新主与多数派对齐历史；**完成前不广播新变更** |
 | **Broadcast** | 广播新事务，多数确认后 commit |
 
-事务标识常为 **(epoch, counter)**，便于快速判断缺什么、从谁恢复。[12]
+事务标识常为 **(epoch, counter)**，便于快速判断缺什么、从谁恢复。[^junqueira-zab]
 
 ### 11.4 与 ZooKeeper 对外语义
 
-写路径依赖 ZAB 总序；**默认读**可走任意节点，可能稍旧；更强一致读需 `sync` 等——**写偏 CP，读可放宽**。[15]
+写路径依赖 ZAB 总序；**默认读**可走任意节点，可能稍旧；更强一致读需 `sync` 等——**写偏 CP，读可放宽**。[^hunt-zookeeper]
 
 **典型场景**：选主、锁、配置、小规模强一致元数据。  
 ZAB 深度绑定 ZK 事务模型；新系统若只需通用复制日志，更常选 Raft。
@@ -438,7 +440,7 @@ ZAB 深度绑定 ZK 事务模型；新系统若只需通用复制日志，更常
 | **代价** | 锁、协调、法定人数延迟 | 应用复杂：幂等、冲突合并、审计 |
 | **适合** | 资金、强约束库存、主从切换、监管 | 足迹、计数、推荐候选、可补偿通知 |
 
-Pritchett 把 BASE 写成 *An ACID Alternative*，用意是：**在分区与规模压力下，为可用性打开设计空间**；并不是宣称账本也可以随便最终一致。[9]
+Pritchett 把 BASE 写成 *An ACID Alternative*，用意是：**在分区与规模压力下，为可用性打开设计空间**；并不是宣称账本也可以随便最终一致。[^pritchett-base]
 
 ### 13.2 并存的典型切法
 
@@ -490,7 +492,7 @@ Pritchett 把 BASE 写成 *An ACID Alternative*，用意是：**在分区与规�
 | **etcd / Consul** | Raft，偏 CP | 无多数派则不能提交 | 服务发现、KV、配置 |
 | **Eureka** | 非多数派共识，偏 AP | 可返回陈旧注册表 | 可接受短暂脏读的发现 |
 
-> **纠正**：Consul 不是 CA；共识层基于 Raft，法定人数不足时写入不可用。[8]
+> **纠正**：Consul 不是 CA；共识层基于 Raft，法定人数不足时写入不可用。[^hashicorp-consul]
 
 ### 14.4 协议怎么选
 
@@ -516,11 +518,11 @@ Pritchett 把 BASE 写成 *An ACID Alternative*，用意是：**在分区与规�
 按主线回收全文：
 
 1. **ACID** 给出单机事务正确性基线；其 C 与 CAP 的 C 不是同一概念。  
-2. **CAP** 界定分区下强一致与可用性的极限；工程必须正视 **P**。[1][3][5]  
-3. **PACELC** 提醒无分区时仍常在延迟与一致性之间权衡。[7]  
-4. **BASE + 最终一致语义** 是 **AP 路径**的工程语言。[6][9]  
-5. **复制状态机 + 多数派共识** 是 **CP 路径**的标准骨架；**FLP** 说明活性依赖超时等假设。[10][11][13]  
-6. **Paxos / Raft / ZAB** 分别从单值共识、可理解日志复制、主备原子广播逼近同一目标。[10][11][12]  
+2. **CAP** 界定分区下强一致与可用性的极限；工程必须正视 **P**。[^gilbert-lynch-cap][^brewer-cap12][^hale-cpt]  
+3. **PACELC** 提醒无分区时仍常在延迟与一致性之间权衡。[^abadi-pacelc]  
+4. **BASE + 最终一致语义** 是 **AP 路径**的工程语言。[^vogels-ec][^pritchett-base]  
+5. **复制状态机 + 多数派共识** 是 **CP 路径**的标准骨架；**FLP** 说明活性依赖超时等假设。[^ongaro-raft][^lamport-paxos][^flp1985]  
+6. **Paxos / Raft / ZAB** 分别从单值共识、可理解日志复制、主备原子广播逼近同一目标。[^ongaro-raft][^lamport-paxos][^junqueira-zab]  
 7. **真实系统按数据并存**：账本偏 ACID/CP，可补偿链路偏 BASE/AP。  
 8. **选型顺序**：业务代价 → 是否共享写 → CP/AP → 是否需要共识 → 选具体协议。
 
@@ -528,37 +530,37 @@ Pritchett 把 BASE 写成 *An ACID Alternative*，用意是：**在分区与规�
 
 ## 16. 参考文献
 
-1. Seth Gilbert, Nancy Lynch. “Brewer’s Conjecture and the Feasibility of Consistent, Available, Partition-Tolerant Web Services.” *ACM SIGACT News*, 33(2), 2002. DOI: [10.1145/564585.564601](https://doi.org/10.1145/564585.564601)
+[^gilbert-lynch-cap]: Seth Gilbert, Nancy Lynch. "Brewer's Conjecture and the Feasibility of Consistent, Available, Partition-Tolerant Web Services." *ACM SIGACT News*, 33(2), 2002. DOI: [10.1145/564585.564601](https://doi.org/10.1145/564585.564601)
 
-2. Seth Gilbert, Nancy Lynch. “Perspectives on the CAP Theorem.” *IEEE Computer*, 45(2), 2012. [PDF](https://groups.csail.mit.edu/tds/papers/Gilbert/Brewer2.pdf)
+[^gilbert-lynch-perspectives]: Seth Gilbert, Nancy Lynch. "Perspectives on the CAP Theorem." *IEEE Computer*, 45(2), 2012. [PDF](https://groups.csail.mit.edu/tds/papers/Gilbert/Brewer2.pdf)
 
-3. Eric Brewer. “CAP Twelve Years Later: How the ‘Rules’ Have Changed.” *IEEE Computer*, 45(2), 2012. DOI: [10.1109/MC.2012.37](https://doi.org/10.1109/MC.2012.37)
+[^brewer-cap12]: Eric Brewer. "CAP Twelve Years Later: How the 'Rules' Have Changed." *IEEE Computer*, 45(2), 2012. DOI: [10.1109/MC.2012.37](https://doi.org/10.1109/MC.2012.37)
 
-4. Eric A. Brewer. “Towards Robust Distributed Systems.” Invited Talk, *PODC 2000*.
+[^brewer-podc2000]: Eric A. Brewer. "Towards Robust Distributed Systems." Invited Talk, *PODC 2000*.
 
-5. Coda Hale. “You Can’t Sacrifice Partition Tolerance.” 2010. [https://codahale.com/you-cant-sacrifice-partition-tolerance/](https://codahale.com/you-cant-sacrifice-partition-tolerance/)
+[^hale-cpt]: Coda Hale. "You Can't Sacrifice Partition Tolerance." 2010. [https://codahale.com/you-cant-sacrifice-partition-tolerance/](https://codahale.com/you-cant-sacrifice-partition-tolerance/)
 
-6. Werner Vogels. “Eventually Consistent.” *ACM Queue* / *CACM*, 2009. [https://queue.acm.org/detail.cfm?id=1466448](https://queue.acm.org/detail.cfm?id=1466448)
+[^vogels-ec]: Werner Vogels. "Eventually Consistent." *ACM Queue* / *CACM*, 2009. [https://queue.acm.org/detail.cfm?id=1466448](https://queue.acm.org/detail.cfm?id=1466448)
 
-7. Daniel J. Abadi. “Consistency Tradeoffs in Modern Distributed Database System Design: CAP is Only Part of the Story.” *IEEE Computer*, 45(2), 2012.
+[^abadi-pacelc]: Daniel J. Abadi. "Consistency Tradeoffs in Modern Distributed Database System Design: CAP is Only Part of the Story." *IEEE Computer*, 45(2), 2012.
 
-8. HashiCorp. Consul Consensus / Raft. [https://developer.hashicorp.com/consul/docs/concept/consensus](https://developer.hashicorp.com/consul/docs/concept/consensus)
+[^hashicorp-consul]: HashiCorp. Consul Consensus / Raft. [https://developer.hashicorp.com/consul/docs/concept/consensus](https://developer.hashicorp.com/consul/docs/concept/consensus)
 
-9. Dan Pritchett. “BASE: An ACID Alternative.” *ACM Queue*, 6(3), 2008. [https://queue.acm.org/detail.cfm?id=1394128](https://queue.acm.org/detail.cfm?id=1394128)
+[^pritchett-base]: Dan Pritchett. "BASE: An ACID Alternative." *ACM Queue*, 6(3), 2008. [https://queue.acm.org/detail.cfm?id=1394128](https://queue.acm.org/detail.cfm?id=1394128)
 
-10. Diego Ongaro, John Ousterhout. “In Search of an Understandable Consensus Algorithm.” *USENIX ATC 2014*. [https://raft.github.io/raft.pdf](https://raft.github.io/raft.pdf)
+[^ongaro-raft]: Diego Ongaro, John Ousterhout. "In Search of an Understandable Consensus Algorithm." *USENIX ATC 2014*. [https://raft.github.io/raft.pdf](https://raft.github.io/raft.pdf)
 
-11. Leslie Lamport. “Paxos Made Simple.” *ACM SIGACT News*, 32(4), 2001. [https://www.lamport.org/pubs/paxos-simple.pdf](https://www.lamport.org/pubs/paxos-simple.pdf)
+[^lamport-paxos]: Leslie Lamport. "Paxos Made Simple." *ACM SIGACT News*, 32(4), 2001. [https://www.lamport.org/pubs/paxos-simple.pdf](https://www.lamport.org/pubs/paxos-simple.pdf)
 
-12. Flavio P. Junqueira, Benjamin C. Reed, Marco Serafini. “Zab: High-performance Broadcast for Primary-Backup Systems.” *DSN 2011*. DOI: [10.1109/DSN.2011.5958223](https://doi.org/10.1109/DSN.2011.5958223)
+[^junqueira-zab]: Flavio P. Junqueira, Benjamin C. Reed, Marco Serafini. "Zab: High-performance Broadcast for Primary-Backup Systems." *DSN 2011*. DOI: [10.1109/DSN.2011.5958223](https://doi.org/10.1109/DSN.2011.5958223)
 
-13. Michael J. Fischer, Nancy A. Lynch, Michael S. Paterson. “Impossibility of Distributed Consensus with One Faulty Process.” *Journal of the ACM*, 32(2), 1985. DOI: [10.1145/3149.214121](https://doi.org/10.1145/3149.214121)
+[^flp1985]: Michael J. Fischer, Nancy A. Lynch, Michael S. Paterson. "Impossibility of Distributed Consensus with One Faulty Process." *Journal of the ACM*, 32(2), 1985. DOI: [10.1145/3149.214121](https://doi.org/10.1145/3149.214121)
 
-14. Leslie Lamport. “The Part-Time Parliament.” *ACM TOCS*, 16(2), 1998.
+[^lamport-parliament]: Leslie Lamport. "The Part-Time Parliament." *ACM TOCS*, 16(2), 1998.
 
-15. Patrick Hunt et al. “ZooKeeper: Wait-free Coordination for Internet-scale Systems.” *USENIX ATC 2010*.
+[^hunt-zookeeper]: Patrick Hunt et al. "ZooKeeper: Wait-free Coordination for Internet-scale Systems." *USENIX ATC 2010*.
 
-16. Apache ZooKeeper 文档：Zab / Internals（宜与 [12] 对照）。
+[^zookeeper-docs]: Apache ZooKeeper 文档：Zab / Internals（宜与 [^junqueira-zab] 对照）。
 
 ---
 

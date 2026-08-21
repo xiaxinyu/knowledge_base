@@ -42,6 +42,7 @@
 16. [参考文献](#16-参考文献)
 
 ```mermaid
+%% K8s 设计全景：背景→原则→落地→总结
 flowchart TB
   Ctx["背景<br/>时代条件 · 谱系 · 定位"]
   Prin["原则<br/>真相源 · 收敛 · 静稳 · 平台"]
@@ -221,8 +222,8 @@ Omega 曾让受信组件直连存储；Kubernetes 改为：**仅 API Server 访�
 > **纪律二**：高可用不是「控制面永不挂」，而是「控制面挂了，正在服务的世界尽量不塌」。
 
 ```mermaid
+%% 调谐循环：用户写 spec → apiserver → 控制器对比当前态与期望态 → 驱动趋近
 flowchart LR
-  User["写入期望 spec"]
   API["API Server"]
   ETCD["etcd · Raft"]
   Ctrl["Controllers · 选主"]
@@ -310,6 +311,7 @@ Informer 先 `LIST` 再 `WATCH`——**缓存是运行模型**；调谐必须**�
 | **—** | 控制面 / 数据面分离 | 纪律二：静态稳定 |
 
 ```mermaid
+%% K8s 控制平面分层：etcd 真相层 → API 层 → 控制器层 → 工作节点层
 flowchart TB
   L1["① 真相层 etcd"]
   L2["② 入口层 API + L4 LB"]

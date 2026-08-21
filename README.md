@@ -192,6 +192,102 @@ knowledge_base/
 
 ---
 
+## 推荐阅读路径
+
+不同角色与目标，推荐不同的切入顺序。不必从头读到尾——选一条最贴近你当下需求的路径开始。
+
+### 路径一：技术架构师 / 平台工程师
+
+> 目标：理解系统如何立身、如何设计可久的架构。
+
+1. **10** Computing Cloud Chronicle — 先知计算演进脉络
+2. **21** Service Architecture Evolution — 再看架构代际迁移
+3. **22** Distributed Consistency Treatise — 理解跨节点的取舍
+4. **23** Kubernetes Control-Plane Doctrine — 进入编排平台的设计原则
+5. **24** Calico L3 Dataplane Treatise — 深入数据面的工程实现
+6. **40** Unix–Agent Stateless Philosophy — 回扣设计哲学
+
+### 路径二：IT 治理 / CIO / 审计
+
+> 目标：理解技术如何被治理、价值如何被验证。
+
+1. **20** Enterprise Architecture Treatise — 先看战略如何翻译为安排
+2. **30** COBIT IT Governance Framework — 再看治理框架如何落地
+3. **31** Platform Service Quality Case Study — 看服务质量如何被度量与改进
+4. **50** AI Industry Disruption Strategy — 最后看 AI 对治理的冲击
+
+### 路径三：AI 工程负责人 / 研发管理者
+
+> 目标：理解 AI 如何改变工程组织、如何承接被放大的速度。
+
+1. **40** Unix–Agent Stateless Philosophy — 先理解工具设计哲学
+2. **41** AI Engineering Paradigm — 再看 5+2 新范式
+3. **42** Agentic SRE Operations Playbook — 看运维侧如何智能体化
+4. **50** AI Industry Disruption Strategy — 最后看战略层面的竞争重构
+
+### 路径四：品牌 / 战略负责人
+
+> 目标：理解 AI 穿透产业的深度与品牌跨文化的路径。
+
+1. **50** AI Industry Disruption Strategy — 先看产业穿透四层模型
+2. **51** Brand Cultural Translation — 再看品牌文化译介三层框架
+3. **11** Information Theory Chronicle — 回看信息的度量如何成为智能的基础
+
+### 路径五：快速浏览（30 分钟版）
+
+> 目标：不深入细节，只抓每篇核心判断。
+
+每篇文档开头都有 `>` 引用的"直接答案"——只读这些，15 篇约 30 分钟可扫完。若某篇引起兴趣，再沿目录深入。
+
+---
+
+## 术语表
+
+本库使用的缩写与专业术语，首次出现时标注全称。以下为全库统一的首选写法。
+
+| 缩写 | 全称 | 首选中文 | 含义 |
+|------|------|----------|------|
+| AIGC | AI-Generated Content | AI 生成内容 | 由人工智能生成的文本、图像、代码等内容 |
+| ACID | Atomicity, Consistency, Isolation, Durability | 原子性·一致性·隔离性·持久性 | 数据库事务的四个基本保证 |
+| APO | Align, Plan and Organize | 对齐·规划与组织 | COBIT 管理领域之一 |
+| BAI | Build, Acquire and Implement | 构建·获取与实施 | COBIT 管理领域之一 |
+| CAP | Consistency, Availability, Partition tolerance | 一致性·可用性·分区容忍性 | 分布式系统的三个基本保证（CAP 定理） |
+| CI/CD | Continuous Integration / Continuous Delivery | 持续集成 / 持续交付 | 自动化构建、测试与发布的工程实践 |
+| CNI | Container Network Interface | 容器网络接口 | Kubernetes 网络插件标准 |
+| COBIT | Control Objectives for Information and Related Technology | 信息及相关技术控制目标 | ISACA 发布的 IT 治理与管理框架 |
+| DDD | Domain-Driven Design | 领域驱动设计 | 以业务领域为核心的软件设计方法论 |
+| DSS | Deliver, Service and Support | 交付·服务与支持 | COBIT 管理领域之一 |
+| DORA | DevOps Research and Assessment | DevOps 研究与评估 | Google Cloud 主导的软件交付绩效研究 |
+| EA | Enterprise Architecture | 企业架构 | 将战略翻译为可执行 IT 安排的方法论 |
+| EDM | Evaluate, Direct and Monitor | 评价·指导·监督 | COBIT 治理领域 |
+| FDE | Forward Deployed Engineer | 前置交付工程师 | 嵌入业务现场的工程师角色（源自 Palantir） |
+| FinOps | Cloud Financial Operations | 云财务运营 | 云成本的可见、可归因与可优化实践 |
+| GAP | Gap Index | 差距指数 | SERVQUAL 中期望与感知的差距度量 |
+| HITL | Human in the Loop | 人在环上 | 人在 AI/Agent 决策回路中保留审核权 |
+| IaC | Infrastructure as Code | 基础设施即代码 | 用声明式代码管理基础设施配置 |
+| IaaS | Infrastructure as a Service | 基础设施即服务 | 云计算服务模型之一 |
+| LLM | Large Language Model | 大语言模型 | 基于大规模文本训练的生成式 AI 模型 |
+| MEA | Monitor, Evaluate and Assess | 监控·评估与考核 | COBIT 管理领域之一 |
+| MCP | Model Context Protocol | 模型上下文协议 | Agent 连接外部工具与数据的标准协议 |
+| MTTR | Mean Time to Repair / Restore | 平均恢复时间 | 从故障发生到恢复的平均时长 |
+| MTTD | Mean Time to Detect | 平均检测时间 | 从故障发生到被检测到的平均时长 |
+| PaaS | Platform as a Service | 平台即服务 | 云计算服务模型之一 |
+| RACI | Responsible, Accountable, Consulted, Informed | 负责·当责·咨询·知会 | 权责分配矩阵 |
+| RAG | Retrieval-Augmented Generation | 检索增强生成 | 先检索再生成的 AI 架构 |
+| RPO | Recovery Point Objective | 恢复点目标 | 灾难后可容忍的最大数据丢失量 |
+| RTO | Recovery Time Objective | 恢复时间目标 | 灾难后系统恢复的最长时间要求 |
+| SaaS | Software as a Service | 软件即服务 | 云计算服务模型之一 |
+| SLA | Service Level Agreement | 服务水平协议 | 服务提供方与消费方之间的约定 |
+| SLM | Small Language Model | 小语言模型 | 参数量较小、可私有化部署的语言模型 |
+| SLO | Service Level Objective | 服务水平目标 | 内部设定的可用性或性能目标 |
+| SRE | Site Reliability Engineering | 站点可靠性工程 | Google 提出的运维工程方法论 |
+| SERVQUAL | Service Quality Model | 服务质量模型 | 基于期望-感知差距的服务质量评估方法 |
+| TCO | Total Cost of Ownership | 总体拥有成本 | 资本支出 + 运营支出的全生命周期成本 |
+| TQM | Total Quality Management | 全面质量管理 | 以顾客为中心、全员参与的持续改进方法论 |
+| ZAB | ZooKeeper Atomic Broadcast | ZooKeeper 原子广播协议 | ZooKeeper 使用的分布式共识协议 |
+
+---
+
 ## 读写之道
 
 读写亦循三境：

@@ -9,7 +9,7 @@
 > **香农对通信系统的抽象（1948）**  
 > 信源 → 编码器 → 信道（含噪声）→ 译码器 → 信宿。  
 > 信息：消除不确定性的量；基本单位为 **bit**（binary digit）。  
-> 两个核心极限：信源编码——无损压缩的平均码长不能低于熵；信道编码——可靠传输速率不能高于信道容量。只要速率低于容量，就存在编码使误差概率可以任意小；一旦超过容量，可靠通信不可能。[1]
+> 两个核心极限：信源编码——无损压缩的平均码长不能低于熵；信道编码——可靠传输速率不能高于信道容量。只要速率低于容量，就存在编码使误差概率可以任意小；一旦超过容量，可靠通信不可能。[^shannon1948]
 
 ---
 
@@ -87,7 +87,7 @@
 
 ## 2. 1948 年前后：香农为何能给出信息的数学定义
 
-1948 年，香农的 *A Mathematical Theory of Communication*（中译常作《通信的数学理论》）在《贝尔系统技术杂志》分两期刊出。[1] 很多人把它看作一位天才灵光一现的成果。但纵观科学史，几乎所有伟大的理论都不是偶然诞生的。牛顿曾说："如果我看得更远，那是因为站在巨人的肩膀上。"香农也是如此。
+1948 年，香农的 *A Mathematical Theory of Communication*（中译常作《通信的数学理论》）在《贝尔系统技术杂志》分两期刊出。[^shannon1948] 很多人把它看作一位天才灵光一现的成果。但纵观科学史，几乎所有伟大的理论都不是偶然诞生的。牛顿曾说："如果我看得更远，那是因为站在巨人的肩膀上。"香农也是如此。
 
 信息论的诞生，并不是因为 1948 年突然出现了一位天才，而是因为通信技术的发展、数学工具的成熟，以及工程实践的迫切需求，在这一刻汇聚到了一起。
 
@@ -102,7 +102,7 @@
 - 面对噪声，怎样才能保证信息准确到达？
 - 如果只有有限的带宽，怎样才能让更多用户同时通信？
 
-在香农之前，哈里·奈奎斯特（Harry Nyquist, 1924）已讨论电报速率与带宽的关系；拉尔夫·哈特利（Ralph Hartley, 1928）已用对数度量「信息量」。[2][3] 他们给出了关键线索，但尚未把噪声、编码与可靠通信的极限写成统一理论。
+在香农之前，哈里·奈奎斯特（Harry Nyquist, 1924）已讨论电报速率与带宽的关系；拉尔夫·哈特利（Ralph Hartley, 1928）已用对数度量「信息量」。[^nyquist1924][^hartley1928] 他们给出了关键线索，但尚未把噪声、编码与可靠通信的极限写成统一理论。
 
 这些问题看似属于工程技术，实际上却需要一种新的数学综合来回答。经验可以改进设备，却无法告诉人们通信有没有极限。通信的发展，第一次走到了完整理论的前面。
 
@@ -124,7 +124,7 @@
 
 这个人，就是克劳德·香农。
 
-香农 1916 年生于密歇根。他在密歇根大学同时修读电气工程与数学，随后在麻省理工学院完成硕士与博士学业。1938 年发表的开关电路论文，用布尔代数分析继电器电路，已经显示出他把工程问题彻底数学化的能力。[4] 纯数学家擅长建立理论，却未必了解通信工程中的真实问题；工程师熟悉设备，却往往缺乏抽象能力。香农恰好兼具两者。
+香农 1916 年生于密歇根。他在密歇根大学同时修读电气工程与数学，随后在麻省理工学院完成硕士与博士学业。1938 年发表的开关电路论文，用布尔代数分析继电器电路，已经显示出他把工程问题彻底数学化的能力。[^shannon1938] 纯数学家擅长建立理论，却未必了解通信工程中的真实问题；工程师熟悉设备，却往往缺乏抽象能力。香农恰好兼具两者。
 
 1941 年，他进入当时世界通信技术最先进的研究机构——贝尔实验室。这里聚集着通信领域最优秀的科学家和工程师。每天，他们都在研究电话网络、交换系统、信号传输和噪声问题。奈奎斯特与哈特利的工作，本来就出自这一传统。
 
@@ -166,7 +166,7 @@
 
 香农指出，真正的信息与数据并不完全相同。很多数据都是重复的、冗余的。1948 年的信源编码定理主要约束**无损压缩**：平均码长不能低于熵；熵越低，可压缩空间越大。例如，一张蓝天的照片，大面积像素颜色几乎一致；一段语音中，连续的静音部分并不需要完整保存；一部电影，相邻画面的变化通常也很有限。
 
-JPEG、MP3、MP4 等格式让互联网真正进入大众生活，但它们大量利用的是人眼、人耳不敏感的成分，属于**有损压缩**。其理论背景更接近香农后来发展的率失真思想：在可接受的失真下，用尽可能低的速率描述信源。[5]
+JPEG、MP3、MP4 等格式让互联网真正进入大众生活，但它们大量利用的是人眼、人耳不敏感的成分，属于**有损压缩**。其理论背景更接近香农后来发展的率失真思想：在可接受的失真下，用尽可能低的速率描述信源。[^shannon1959]
 
 可以说，没有信源编码与率失真这套语言，今天的在线视频、直播与海量图像分发，会缺少清晰的设计上限与评价尺度。
 
@@ -184,7 +184,7 @@ JPEG、MP3、MP4 等格式让互联网真正进入大众生活，但它们大量
 
 训练一个大语言模型，本质上是在学习下一个词元的条件分布。如果模型预测得越准确，不确定性就越低；预测得越差，不确定性就越高。训练中广泛使用的交叉熵，衡量的正是预测分布与经验分布之间的偏离。
 
-机器学习中的交叉熵损失函数、互信息、KL 散度，都来自信息论或其直接延伸。[6] 互信息用于衡量变量之间的关联程度；KL 散度用于比较两个概率分布的差异。
+机器学习中的交叉熵损失函数、互信息、KL 散度，都来自信息论或其直接延伸。[^cover-thomas2006] 互信息用于衡量变量之间的关联程度；KL 散度用于比较两个概率分布的差异。
 
 换句话说，当代人工智能改变世界的是工程与数据规模，但它的重要数学接口，仍然可以追溯到 1948 年前后形成的那套语言。
 
@@ -252,12 +252,18 @@ JPEG、MP3、MP4 等格式让互联网真正进入大众生活，但它们大量
 
 ## 参考文献
 
-1. Shannon, C. E. (1948). A mathematical theory of communication. *Bell System Technical Journal*, 27(3), 379–423; 27(4), 623–656.
-2. Nyquist, H. (1924). Certain factors affecting telegraph speed. *Bell System Technical Journal*, 3(2), 324–346.
-3. Hartley, R. V. L. (1928). Transmission of information. *Bell System Technical Journal*, 7(3), 535–563.
-4. Shannon, C. E. (1938). A symbolic analysis of relay and switching circuits. *Transactions of the American Institute of Electrical Engineers*, 57(12), 713–723.
-5. Shannon, C. E. (1959). Coding theorems for a discrete source with a fidelity criterion. *IRE National Convention Record*, 4, 142–163.
-6. Cover, T. M., & Thomas, J. A. (2006). *Elements of Information Theory* (2nd ed.). Wiley.
-7. Shannon, C. E., & Weaver, W. (1949). *The Mathematical Theory of Communication*. University of Illinois Press.
+[^shannon1948]: Shannon, C. E. (1948). A mathematical theory of communication. *Bell System Technical Journal*, 27(3), 379–423; 27(4), 623–656.
+
+[^nyquist1924]: Nyquist, H. (1924). Certain factors affecting telegraph speed. *Bell System Technical Journal*, 3(2), 324–346.
+
+[^hartley1928]: Hartley, R. V. L. (1928). Transmission of information. *Bell System Technical Journal*, 7(3), 535–563.
+
+[^shannon1938]: Shannon, C. E. (1938). A symbolic analysis of relay and switching circuits. *Transactions of the American Institute of Electrical Engineers*, 57(12), 713–723.
+
+[^shannon1959]: Shannon, C. E. (1959). Coding theorems for a discrete source with a fidelity criterion. *IRE National Convention Record*, 4, 142–163.
+
+[^cover-thomas2006]: Cover, T. M., & Thomas, J. A. (2006). *Elements of Information Theory* (2nd ed.). Wiley.
+
+[^shannon-weaver1949]: Shannon, C. E., & Weaver, W. (1949). *The Mathematical Theory of Communication*. University of Illinois Press.
 
 **声明**：正文为思想史叙事整理；参考文献用于核对关键事实与定义。若正文叙述与原始文献冲突，以原始文献为准。

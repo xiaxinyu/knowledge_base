@@ -38,9 +38,9 @@
 
 | 来源 | 定义要点 |
 |------|----------|
-| **The Open Group（TOGAF）** | EA 描述企业中业务、数据、应用与技术等组成部分及其相互关系，并通过架构开发方法（ADM）指导从愿景到实施的迭代过程。[1] |
-| **MIT CISR（Ross / Weill / Robertson）** | EA 是企业业务流程与 IT 能力的**组织逻辑（organizing logic）**，反映企业经营模式（operating model）对流程**集成与标准化**的要求；架构首先是**战略执行基础**，而不只是 IT 技术设计。[2] |
-| **Tamm 等（学术综述）** | EA 是对企业业务流程与 IT 系统及其相互关系、共享程度的高层定义与表达，旨在支撑组织未来目标，并给出迈向目标架构的路线图。[15] |
+| **The Open Group（TOGAF）** | EA 描述企业中业务、数据、应用与技术等组成部分及其相互关系，并通过架构开发方法（ADM）指导从愿景到实施的迭代过程。[^togaf] |
+| **MIT CISR（Ross / Weill / Robertson）** | EA 是企业业务流程与 IT 能力的**组织逻辑（organizing logic）**，反映企业经营模式（operating model）对流程**集成与标准化**的要求；架构首先是**战略执行基础**，而不只是 IT 技术设计。[^ross-ea-strategy] |
+| **Tamm 等（学术综述）** | EA 是对企业业务流程与 IT 系统及其相互关系、共享程度的高层定义与表达，旨在支撑组织未来目标，并给出迈向目标架构的路线图。[^tamm-eabm] |
 
 > **一句话**：企业架构要回答的，不是「用什么技术」，而是「企业按什么方式运转，以及 IT 如何稳定支撑这种方式」。
 
@@ -77,7 +77,7 @@
 
 很多人第一次接触 EA，会以为「企业架构 = 画几张架构图」。这是最常见、也最昂贵的误解。
 
-Zachman 1987 年提出的框架，本质上是一种用于系统描述的**分类体系（taxonomy）**，作者明确指出该文讨论的是架构描述，并不等于完整战略规划方法论。[3]  
+Zachman 1987 年提出的框架，本质上是一种用于系统描述的**分类体系（taxonomy）**，作者明确指出该文讨论的是架构描述，并不等于完整战略规划方法论。[^zachman1987]
 后续 TOGAF、FEAF 等，才把「怎么描述」扩展为「怎么开发、怎么治理、怎么落地」。
 
 ### 2.1 三项核心价值
@@ -90,7 +90,7 @@ Zachman 1987 年提出的框架，本质上是一种用于系统描述的**分�
 
 ### 2.2 EA 如何带来组织收益：四个「价值使能器」
 
-Tamm 等学者在综述大量 EA 文献后提出 **EA Benefits Model（EABM）**：EA 并不直接「变出利润」，而是通过改善四个使能器，间接带来更低成本、更高敏捷性与更可靠的运营平台：[15]
+Tamm 等学者在综述大量 EA 文献后提出 **EA Benefits Model（EABM）**：EA 并不直接「变出利润」，而是通过改善四个使能器，间接带来更低成本、更高敏捷性与更可靠的运营平台：[^tamm-eabm]
 
 | 使能器 | 含义 | 对应你日常能看到的变化 |
 |--------|------|------------------------|
@@ -99,11 +99,11 @@ Tamm 等学者在综述大量 EA 文献后提出 **EA Benefits Model（EABM）**
 | **资源组合优化（Resource Portfolio Optimisation）** | 系统与能力组合更合理，减少重复 | 少买功能重叠的系统 |
 | **资源互补性（Resource Complementarity）** | 业务能力与 IT 能力相互增强 | 上新业务更快、返工更少 |
 
-研究也指出：规模大、IT 环境复杂、经营模式需要较高标准化与集成的组织，通常更能从 EA 中获益。[15]
+研究也指出：规模大、IT 环境复杂、经营模式需要较高标准化与集成的组织，通常更能从 EA 中获益。[^tamm-eabm]
 
 ### 2.3 经营模式决定架构形态（MIT CISR）
 
-Ross 等人强调：先想清楚企业经营模式对「集成」和「标准化」的要求，再设计企业架构。[2]
+Ross 等人强调：先想清楚企业经营模式对「集成」和「标准化」的要求，再设计企业架构。[^ross-ea-strategy]
 
 一个简化理解是：
 
@@ -136,7 +136,7 @@ Ross 等人强调：先想清楚企业经营模式对「集成」和「标准化
 
 **背景**：大型机普及，信息系统激增，标准不一，数据孤岛与重复建设凸显。
 
-**里程碑**：1987 年，IBM 的 John A. Zachman 在 *IBM Systems Journal* 发表 *A Framework for Information Systems Architecture*，提出多视角矩阵式描述框架，成为 EA 领域公认开山之作。[3]
+**里程碑**：1987 年，IBM 的 John A. Zachman 在 *IBM Systems Journal* 发表 *A Framework for Information Systems Architecture*，提出多视角矩阵式描述框架，成为 EA 领域公认开山之作。[^zachman1987]
 
 **阶段特征**：重心仍是**信息系统架构描述**。
 
@@ -146,11 +146,11 @@ Ross 等人强调：先想清楚企业经营模式对「集成」和「标准化
 
 **关键里程碑**
 
-1. **1995 年**：The Open Group 以美国国防部 **TAFIM** 为基础发布 **TOGAF Version 1**，并持续演进 **ADM**。[1][4]  
+1. **1995 年**：The Open Group 以美国国防部 **TAFIM** 为基础发布 **TOGAF Version 1**，并持续演进 **ADM**。[^togaf][^togaf-history]
    > 早期 TOGAF 更偏技术 / 平台架构；后续版本逐步强化业务与信息体系。
-2. **1996 年**：美国《克林格—科恩法案》（**Clinger-Cohen Act**, P.L. 104-106）要求联邦机构 CIO 建立并维护一体化信息技术架构。[5]
-3. **1999 年 9 月**：联邦 CIO 委员会发布 **FEAF** Version 1.1，提出跨机构架构构造方法，并包含业务、数据、应用、技术等视角。[5][6]
-4. **2003/2004 年**：美国国防部发布 **DoDAF** 1.0（此前长期使用 C4ISR Architecture Framework）。[7]
+2. **1996 年**：美国《克林格—科恩法案》（**Clinger-Cohen Act**, P.L. 104-106）要求联邦机构 CIO 建立并维护一体化信息技术架构。[^clinger-cohen]
+3. **1999 年 9 月**：联邦 CIO 委员会发布 **FEAF** Version 1.1，提出跨机构架构构造方法，并包含业务、数据、应用、技术等视角。[^clinger-cohen][^feaf]
+4. **2003/2004 年**：美国国防部发布 **DoDAF** 1.0（此前长期使用 C4ISR Architecture Framework）。[^dodaf]
 
 **阶段特征**：从「怎么描述」升级为「怎么实施与治理」，目标转向业务与 IT 对齐。
 
@@ -158,14 +158,14 @@ Ross 等人强调：先想清楚企业经营模式对「集成」和「标准化
 
 **里程碑**
 
-1. **2009 年 2 月**：发布 **TOGAF 9**，进一步强化业务导向，并系统阐述业务、数据、应用、技术四类相关架构。[1][8]  
+1. **2009 年 2 月**：发布 **TOGAF 9**，进一步强化业务导向，并系统阐述业务、数据、应用、技术四类相关架构。[^togaf][^togaf9]
    > 四大域并非 TOGAF 9「从零发明」；FEAF 等体系已有相近表述，TOGAF 9 使其成为更稳固的全球共识表达。
-2. 银行业实践中，TOGAF 常与行业内容框架结合使用。例如 The Open Group 与 **BIAN**（Banking Industry Architecture Network）发布协作白皮书：TOGAF 提供通用方法，BIAN 提供银行服务参考内容，可加速银行架构工作并提升一致性。[16]
+2. 银行业实践中，TOGAF 常与行业内容框架结合使用。例如 The Open Group 与 **BIAN**（Banking Industry Architecture Network）发布协作白皮书：TOGAF 提供通用方法，BIAN 提供银行服务参考内容，可加速银行架构工作并提升一致性。[^togaf-bian]
 3. 中国在 2000 年后逐步引入相关方法，金融、电信、能源等行业率先落地。
 
 ### 3.5 数字化转型期：2010 年至今
 
-云原生、大数据、微服务、中台快速迭代，传统重型 EA「周期长、响应慢」的问题暴露。The Open Group 也发布了面向数字企业与敏捷交付的系列指南。[1]
+云原生、大数据、微服务、中台快速迭代，传统重型 EA「周期长、响应慢」的问题暴露。The Open Group 也发布了面向数字企业与敏捷交付的系列指南。[^togaf]
 
 | 变化 | 说明 |
 |------|------|
@@ -177,7 +177,7 @@ Ross 等人强调：先想清楚企业经营模式对「集成」和「标准化
 
 ## 4. 四大架构域的构成
 
-在 TOGAF 等主流框架中，企业架构通常覆盖四类相互关联的架构域。[1][8]
+在 TOGAF 等主流框架中，企业架构通常覆盖四类相互关联的架构域。[^togaf][^togaf9]
 
 先澄清两个容易矛盾的点：
 
@@ -226,7 +226,7 @@ Ross 等人强调：先想清楚企业经营模式对「集成」和「标准化
 | Opportunities & Solutions / Migration Planning | 路线图与迁移 |
 | Implementation Governance / Architecture Change Management | 落地治理与持续变更 |
 
-企业不必机械跑完全流程，但**「先业务、再信息系统、再技术、再迁移治理」**的节奏，比「先买平台」稳健得多。[1]
+企业不必机械跑完全流程，但**「先业务、再信息系统、再技术、再迁移治理」**的节奏，比「先买平台」稳健得多。[^togaf]
 
 ---
 
@@ -364,7 +364,7 @@ Ross 等人强调：先想清楚企业经营模式对「集成」和「标准化
 | 3 | 建设数据架构 | 统一标准、口径与数据流 |
 | 4 | 完善技术架构与软件架构 | 保障稳定运行与可持续演进 |
 
-> 与 TOGAF ADM「先业务、再信息系统（数据+应用）、再技术」总体节奏一致；可按痛点裁剪，但不宜长期倒置。[1]
+> 与 TOGAF ADM「先业务、再信息系统（数据+应用）、再技术」总体节奏一致；可按痛点裁剪，但不宜长期倒置。[^togaf]
 
 ---
 
@@ -412,7 +412,7 @@ Ross 等人强调：先想清楚企业经营模式对「集成」和「标准化
 
 ### 7.2 中小金融：中邮消费金融的「三步走」
 
-中小金融机构常面临预算与人力约束，难复制大型银行的重型 EA。中邮消费金融公开介绍了一套轻量化路径：[12]
+中小金融机构常面临预算与人力约束，难复制大型银行的重型 EA。中邮消费金融公开介绍了一套轻量化路径：[^zhongyou-ea]
 
 | 步骤 | 做法 | 架构含义 |
 |------|------|----------|
@@ -428,7 +428,7 @@ Ross 等人强调：先想清楚企业经营模式对「集成」和「标准化
 
 **问题从哪来**
 
-公开报道显示，IT 蓝图启动前，中国银行面临核心系统版本不统一（多版本并存）、数据集中度不足、系统偏「以账户为中心」等瓶颈；新产品推广周期长，科技对业务支撑不足。[9]
+公开报道显示，IT 蓝图启动前，中国银行面临核心系统版本不统一（多版本并存）、数据集中度不足、系统偏「以账户为中心」等瓶颈；新产品推广周期长，科技对业务支撑不足。[^boc-itblueprint]
 
 **做了什么**
 
@@ -448,7 +448,7 @@ Ross 等人强调：先想清楚企业经营模式对「集成」和「标准化
 | 数据架构 | 客户信息集中、全行唯一客户号等 |
 | 技术 / 基础设施 | 「两地三中心」等运维体系规划 |
 
-> **准确表述**：这是大型银行信息化 / IT 架构转型的标杆工程，为企业架构在中国落地提供了重要实践土壤；不宜简单说成「完整照搬某一国际 EA 框架」。[9]
+> **准确表述**：这是大型银行信息化 / IT 架构转型的标杆工程，为企业架构在中国落地提供了重要实践土壤；不宜简单说成「完整照搬某一国际 EA 框架」。[^boc-itblueprint]
 
 ---
 
@@ -456,7 +456,7 @@ Ross 等人强调：先想清楚企业经营模式对「集成」和「标准化
 
 **痛点**：传统闭源 ERP 架构封闭、核心逻辑不可见，企业在管理自主权与长期演进上承压。
 
-**做法（公开披露）**[17]
+**做法（公开披露）**[^unicom-erp]
 
 - 2022 年启动 ERP 自研攻坚，联通数科主导研发「同舟 ERP」  
 - 贯通**人力、财务、供应链**三大核心价值链，集成九大关键业务模块  
@@ -478,7 +478,7 @@ Ross 等人强调：先想清楚企业经营模式对「集成」和「标准化
 
 ### 7.5 电信金融场景：中国电信财司系统国产化重构
 
-中国电信公开披露，其财务公司新一代数智金融系统（「辰玑」等相关品牌与平台）实现从底层基础设施到上层应用的全栈国产化与自主可控，面向资金管理、风险管控与金融服务流程。[18]
+中国电信公开披露，其财务公司新一代数智金融系统（「辰玑」等相关品牌与平台）实现从底层基础设施到上层应用的全栈国产化与自主可控，面向资金管理、风险管控与金融服务流程。[^telecom-finance]
 
 **架构视角解读**
 
@@ -495,9 +495,9 @@ Ross 等人强调：先想清楚企业经营模式对「集成」和「标准化
 
 ### 7.6 基础设施运营：中国铁塔的「战略—价值流—能力产品化」
 
-中国铁塔在数字化建设中提出「五化」运营体系（专业化、集约化、精益化、高效化、数字化），并通过数字化平台提升资产管理与运营效率；同时拓展「数字塔」等对外服务能力。[19]
+中国铁塔在数字化建设中提出「五化」运营体系（专业化、集约化、精益化、高效化、数字化），并通过数字化平台提升资产管理与运营效率；同时拓展「数字塔」等对外服务能力。[^chinatower-digital]
 
-中国信通院相关观察报告进一步将其 EA 实践概括为：基于战略规划与价值流分析，推动**数智化能力产品化**——业务架构界定核心能力，应用架构以中台化实现「能力即服务」，数据架构推进数据能力产品化，技术架构支撑能力封装与生态开放。[20]
+中国信通院相关观察报告进一步将其 EA 实践概括为：基于战略规划与价值流分析，推动**数智化能力产品化**——业务架构界定核心能力，应用架构以中台化实现「能力即服务」，数据架构推进数据能力产品化，技术架构支撑能力封装与生态开放。[^caict-ea-report]
 
 **架构视角解读**
 
@@ -515,7 +515,7 @@ Ross 等人强调：先想清楚企业经营模式对「集成」和「标准化
 
 ### 7.7 制造集团：中国一汽「5A」企业架构
 
-中国一汽公开介绍，参考 TOGAF 方法论，结合自身数字化转型需求，形成以业务单元为核心的 **5A** 架构体系：[21]
+中国一汽公开介绍，参考 TOGAF 方法论，结合自身数字化转型需求，形成以业务单元为核心的 **5A** 架构体系：[^faw-5a]
 
 | 架构 | 含义 |
 |------|------|
@@ -564,12 +564,12 @@ Ross 等人强调：先想清楚企业经营模式对「集成」和「标准化
 
 **萌芽期关键事实**
 
-- 中行 IT 蓝图（见 7.3）[9]  
-- 2010 年 IDC 调查：超过 **73%** 大型 / 超大型受访企业已开始或已构建企业架构；TOGAF 认知度与接受度较高（约 37.5% 企业构建时会选择 TOGAF）。[10]
+- 中行 IT 蓝图（见 7.3）[^boc-itblueprint]  
+- 2010 年 IDC 调查：超过 **73%** 大型 / 超大型受访企业已开始或已构建企业架构；TOGAF 认知度与接受度较高（约 37.5% 企业构建时会选择 TOGAF）。[^idc-2010]
 
 **数智化阶段关键事实**
 
-- 2023 年国资委通报：89 家央企明确数字化转型发展规划；90 多家组建「一把手」负责机制；要求业务 / 数据 / 应用 / 技术架构融合一致。[11]
+- 2023 年国资委通报：89 家央企明确数字化转型发展规划；90 多家组建「一把手」负责机制；要求业务 / 数据 / 应用 / 技术架构融合一致。[^sasac-digital2023]
 
 ### 8.2 行业画像
 
@@ -646,8 +646,8 @@ Ross 等人强调：先想清楚企业经营模式对「集成」和「标准化
 
 > **业务、应用、数据、技术是否形成清晰协同，并能落实到可维护的软件实现。**
 
-Tamm 等的研究提醒我们：EA 通过「对齐、信息可用、资源优化、能力互补」创造价值；[15]  
-Ross 等的研究提醒我们：先匹配经营模式，再谈架构形态；[2]  
+Tamm 等的研究提醒我们：EA 通过「对齐、信息可用、资源优化、能力互补」创造价值；[^tamm-eabm]  
+Ross 等的研究提醒我们：先匹配经营模式，再谈架构形态；[^ross-ea-strategy]  
 中国实践则提醒我们：在集团管控与信创约束下，EA 必须本土化裁剪，才能既正确又可用。
 
 > **企业架构不是画图比赛，而是用业务 →（数据 ∥ 应用）→ 技术，并向下落到软件实现的贯通体系，把战略翻译成可执行的全局协同框架。**
@@ -660,57 +660,57 @@ Ross 等的研究提醒我们：先匹配经营模式，再谈架构形态；[2]
 
 > 文中统计与案例均尽量采用可公开核验来源；企业成效表述以官方 / 权威媒体披露为准，避免过度外推。
 
-1. The Open Group. *The TOGAF® Standard*. [https://www.opengroup.org/togaf](https://www.opengroup.org/togaf) / [https://publications.opengroup.org/c220](https://publications.opengroup.org/c220)
+[^togaf]: The Open Group. *The TOGAF® Standard*. [https://www.opengroup.org/togaf](https://www.opengroup.org/togaf) / [https://publications.opengroup.org/c220](https://publications.opengroup.org/c220)
 
-2. Jeanne W. Ross, Peter Weill, David C. Robertson. *Enterprise Architecture as Strategy: Creating a Foundation for Business Execution*. Harvard Business School Press, 2006.  
+[^ross-ea-strategy]: Jeanne W. Ross, Peter Weill, David C. Robertson. *Enterprise Architecture as Strategy: Creating a Foundation for Business Execution*. Harvard Business School Press, 2006.  
    MIT CISR: [https://cisr.mit.edu/publication/enterprise-architecture-as-strategy](https://cisr.mit.edu/publication/enterprise-architecture-as-strategy)
 
-3. John A. Zachman. “A Framework for Information Systems Architecture.” *IBM Systems Journal*, 26(3), 1987, 276–292. DOI: [10.1147/sj.263.0276](https://doi.org/10.1147/sj.263.0276)
+[^zachman1987]: John A. Zachman. "A Framework for Information Systems Architecture." *IBM Systems Journal*, 26(3), 1987, 276–292. DOI: [10.1147/sj.263.0276](https://doi.org/10.1147/sj.263.0276)
 
-4. The Open Group. TOGAF 历史说明：1995 年 Version 1 基于美国国防部 TAFIM（见 TOGAF 标准引言）.
+[^togaf-history]: The Open Group. TOGAF 历史说明：1995 年 Version 1 基于美国国防部 TAFIM（见 TOGAF 标准引言）.
 
-5. U.S. Congress. *Clinger-Cohen Act of 1996* (P.L. 104-106)；及相关联邦架构监管材料（可检索 GAO）：[https://www.gao.gov](https://www.gao.gov)
+[^clinger-cohen]: U.S. Congress. *Clinger-Cohen Act of 1996* (P.L. 104-106)；及相关联邦架构监管材料（可检索 GAO）：[https://www.gao.gov](https://www.gao.gov)
 
-6. Chief Information Officers Council. *Federal Enterprise Architecture Framework, Version 1.1*, September 1999.
+[^feaf]: Chief Information Officers Council. *Federal Enterprise Architecture Framework, Version 1.1*, September 1999.
 
-7. U.S. Department of Defense. *DoD Architecture Framework (DoDAF) Version 1.0*, 2003/2004.
+[^dodaf]: U.S. Department of Defense. *DoD Architecture Framework (DoDAF) Version 1.0*, 2003/2004.
 
-8. The Open Group. *TOGAF® Version 9*（2009）. [https://publications.opengroup.org/g091](https://publications.opengroup.org/g091)
+[^togaf9]: The Open Group. *TOGAF® Version 9*（2009）. [https://publications.opengroup.org/g091](https://publications.opengroup.org/g091)
 
-9. 中国银行「IT 蓝图」公开报道（2003 年启动，约 2011 年新一代核心全辖上线）：  
+[^boc-itblueprint]: 中国银行「IT 蓝图」公开报道（2003 年启动，约 2011 年新一代核心全辖上线）：  
    [https://www.bankofchina.com/aboutboc/ab8/201201/t20120111_1669779.html](https://www.bankofchina.com/aboutboc/ab8/201201/t20120111_1669779.html)
 
-10. IDC.《架构企业未来——2010 企业架构中国管理者调查报告》公开转述：  
+[^idc-2010]: IDC.《架构企业未来——2010 企业架构中国管理者调查报告》公开转述：  
     [https://www.prnasia.com/story/29147-1.shtml](https://www.prnasia.com/story/29147-1.shtml)
 
-11. 国务院国资委「深入推进国有企业数字化转型专题会」（2023-06-27）相关通报转载：  
+[^sasac-digital2023]: 国务院国资委「深入推进国有企业数字化转型专题会」（2023-06-27）相关通报转载：  
     [https://gzw.taian.gov.cn/art/2023/6/30/art_178900_10294440.html](https://gzw.taian.gov.cn/art/2023/6/30/art_178900_10294440.html)
 
-12. 中邮消费金融.「以企业架构为引擎，探索中小金融机构数智化转型新路径」：  
+[^zhongyou-ea]: 中邮消费金融.「以企业架构为引擎，探索中小金融机构数智化转型新路径」：  
     [https://www.youcash.com/zuixingdongtai/77947.html](https://www.youcash.com/zuixingdongtai/77947.html)
 
-13. ISO/IEC/IEEE 42010. *Systems and software engineering — Architecture description*.
+[^iso-42010]: ISO/IEC/IEEE 42010. *Systems and software engineering — Architecture description*.
 
-14. 国务院国资委等.《国有企业数字化转型工作指南》等政策文件（规划内容通常包含业务 / 应用 / 技术 / 数据等架构安排）.
+[^sasac-guide]: 国务院国资委等.《国有企业数字化转型工作指南》等政策文件（规划内容通常包含业务 / 应用 / 技术 / 数据等架构安排）.
 
-15. Toomas Tamm, Peter B. Seddon, Graeme Shanks, Peter Reynolds. “How Does Enterprise Architecture Add Value to Organisations?” *Communications of the Association for Information Systems*, 28, 2011. DOI: [10.17705/1CAIS.02810](https://doi.org/10.17705/1CAIS.02810)
+[^tamm-eabm]: Toomas Tamm, Peter B. Seddon, Graeme Shanks, Peter Reynolds. "How Does Enterprise Architecture Add Value to Organisations?" *Communications of the Association for Information Systems*, 28, 2011. DOI: [10.17705/1CAIS.02810](https://doi.org/10.17705/1CAIS.02810)
 
-16. The Open Group / BIAN. TOGAF 与 BIAN 协作白皮书相关介绍：  
+[^togaf-bian]: The Open Group / BIAN. TOGAF 与 BIAN 协作白皮书相关介绍：  
     [https://blog.opengroup.org/2012/08/30/togaf-and-bian-a-strong-proposition-for-the-banking-industry/](https://blog.opengroup.org/2012/08/30/togaf-and-bian-a-strong-proposition-for-the-banking-industry/)
 
-17. 人民网等关于中国联通「同舟 ERP」的报道：  
+[^unicom-erp]: 人民网等关于中国联通「同舟 ERP」的报道：  
     [http://finance.people.com.cn/n1/2026/0114/c1004-40645351.html](http://finance.people.com.cn/n1/2026/0114/c1004-40645351.html)
 
-18. 中国电信关于财司数智金融系统 / 「辰玑」相关公开报道，例如：  
+[^telecom-finance]: 中国电信关于财司数智金融系统 / 「辰玑」相关公开报道，例如：  
     [https://www.chinatelecom.com.cn/ct/news/jtxw/161366.html](https://www.chinatelecom.com.cn/ct/news/jtxw/161366.html)
 
-19. 国务院国资委网站转载：中国铁塔数字化建设与「五化」运营体系：  
+[^chinatower-digital]: 国务院国资委网站转载：中国铁塔数字化建设与「五化」运营体系：  
     [http://www.sasac.gov.cn/n2588025/n2588124/c30220496/content.html](http://www.sasac.gov.cn/n2588025/n2588124/c30220496/content.html)
 
-20. 中国信息通信研究院.《企业架构实践与创新观察报告》（含中国铁塔等案例观察）：  
+[^caict-ea-report]: 中国信息通信研究院.《企业架构实践与创新观察报告》（含中国铁塔等案例观察）：  
     [https://www.caict.ac.cn/kxyj/qwfb/ztbg/202602/P020260213391813440785.pdf](https://www.caict.ac.cn/kxyj/qwfb/ztbg/202602/P020260213391813440785.pdf)
 
-21. 中国一汽「以业务单元为核心的 5A 架构」相关公开介绍（参考 TOGAF，扩展 BA/IA/AA/TA/SA）.
+[^faw-5a]: 中国一汽「以业务单元为核心的 5A 架构」相关公开介绍（参考 TOGAF，扩展 BA/IA/AA/TA/SA）.
 
 ---
 

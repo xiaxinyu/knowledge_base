@@ -31,8 +31,8 @@
 | **收束** | [8. 总结](#8-总结) · [9. 参考文献](#9-参考文献) |
 
 ```mermaid
+%% Calico 控制面与数据面分离：Felix/BIRD/confd 写入内核，数据面包转发由内核完成
 flowchart TB
-  classDef cp fill:#eef6e8,stroke:#5a8a3a,color:#2f4f1f
   classDef dp fill:#e8f1fa,stroke:#3b6ea5,color:#1f3a5f
   classDef peer fill:#f0e8fa,stroke:#6a3a8a,color:#3a1f5f
 
