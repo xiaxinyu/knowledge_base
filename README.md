@@ -97,7 +97,7 @@ knowledge_base/
 └── 50-strategy/        优术 · 略
 ```
 
-同域内按认知依赖递增：先概念，后演进，再原则，再落地。`50` 三篇不是上下卷，而是同一问的三个切面——**局、译、币**：产业如何被穿透，意义如何跨文化传递，Token 如何成为智能经济的计量单位。
+同域内按认知依赖递增：先概念，后演进，再原则，再落地。`50` 四篇不是上下卷，而是同一问的四个切面——**局、译、币、配**：产业如何被穿透，意义如何跨文化传递，Token 如何成为智能经济的计量单位，资本如何在周期中配置。
 
 | 编号 | 文稿 | 核心命题 |
 |------|------|----------|
@@ -116,6 +116,7 @@ knowledge_base/
 | 50 | [AI Industry Disruption Strategy](./50-strategy/50-ai-industry-disruption-strategy.md) | 预测成本下降不自动等于好决策；护城河转向数据与流程 |
 | 51 | [Brand Cultural Translation](./50-strategy/51-brand-cultural-translation.md) | 跨文化少打折扣、多造溢价 |
 | 52 | [Token Economics Treatise](./50-strategy/52-token-economics-treatise.md) | Token 先因稀疏计算而廉价，再因商业与金融化成为底层货币；无法被 Token 化的判断才有剩余溢价 |
+| 53 | [Li Ka-shing Capital Allocation](./50-strategy/53-li-ka-shing-capital-allocation-treatise.md) | 可迁移的不是某一窗口里的资产，而是低杠杆、逆周期买权利、现金流养活等待、狂热时离场 |
 
 ---
 
@@ -154,12 +155,13 @@ AI 如何改变工程组织、如何承接被放大的速度。
 
 ### 品牌 / 战略负责人
 
-产业穿透、跨文化译介与智能经济计价。
+产业穿透、跨文化译介、智能经济计价与资本配置。
 
 1. **50** 产业穿透四层  
 2. **51** 品牌译介三层  
 3. **52** Token 如何成为计量单位  
-4. **11** 信息如何被度量  
+4. **53** 资本如何在周期中配置  
+5. **11** 信息如何被度量  
 
 ### 速览
 
