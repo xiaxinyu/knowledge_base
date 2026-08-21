@@ -70,7 +70,7 @@
 
 这些逻辑学家包括当时在剑桥的伯特兰·罗素（Bertrand Russell）、阿尔弗雷德·怀特海等，而当时正在剑桥求学的阿兰·图灵（Alan Mathison Turing）也同样被纠缠到这个数学困境中。
 
-直到 1936 年，图灵向伦敦的数学杂志投了一篇题为《On Computable Numbers, with an Application to the Entscheidungsproblem》（论可计算数及其在判定性问题上的应用）的论文。该论文中提到了一种数学模型，该模型讨论的是一种有穷的、构造性的问题的求解思路。
+直到 1936 年，图灵向伦敦的数学杂志投了一篇题为《On Computable Numbers, with an Application to the Entscheidungsproblem》（论可计算数及其在判定性问题上的应用）的论文。该文 1936 年 5 月 28 日收稿，刊于 *Proceedings of the London Mathematical Society* 1936–1937 年卷（故常标为 1936/1937）。[^turing1936] 论文给出一种有穷、构造性的问题求解模型。信息如何被度量，则见香农 1948 年《A Mathematical Theory of Communication》，本库 [《信息论编年》](../11-information-theory-chronicle.md)。
 
 图灵以数学领域的布尔代数（Boolean，True or False）为基础，将逻辑领域中的任意命题（可转化为数学符号）都用一种通用的机器来表示和演算，并且能按照一定的规则推导出结论，即：将论据（输入）基于某种规则（指令集）来进行论证（计算）之后就肯定能得到结论（输出）。这就是可计算性理论，是一种严格的逻辑和数学框架，限定了什么样的问题是可求解的，什么样的问题是不可求解的。能在通用图灵机上模拟的计算能力，即后世所谓**图灵完备（Turing-complete）**。
 
@@ -702,7 +702,7 @@ Salesforce 的客户后来包括通用电气、荷兰航空、部分法国银行
 
 2013 年，Pivotal 公司（敏捷开发领域的领导者）的 Matt Stine 首次提出云原生（CloudNative）的概念。
 
-2014 年，**Kubernetes** 容器编排平台也正式发布。Kubernetes 项目的初衷，就是为了提供一种方便、快速、优雅地 Containers 管理平台。
+2014 年 6 月，Google 开源 **Kubernetes** 容器编排平台。项目的初衷，是提供一种方便、快速、优雅的容器管理方式。
 
 2015 年，为了对抗当时大红大紫的 Docker 公司在容器圈一家独大的局面，同时也是出于对容器技术将会对传统 IT 生产运营模式带来变革的深刻理解。由 Google、Red Hat 以及 Microsoft 等大型云计算厂商牵头成立了 **CNCF（Cloud Native Computing Foundation，云原生计算基金会）**，隶属于 Linux 基金会旗下，致力于培育和维护一个厂商中立的开源生态社区，并以此来推广云原生技术。而 Kubernetes 则是 CNCF 托管的第一个开源项目。
 
@@ -843,7 +843,7 @@ AIGC 技术将会以集约式算力中心为基础，站在云计算商业和服
 
 [^cncf-announcement]: Cloud Native Computing Foundation. (2015, June 21). *New Cloud Native Computing Foundation to Drive Alignment Among Container Technologies*. <https://www.cncf.io/announcements/2015/06/21/new-cloud-native-computing-foundation-to-drive-alignment-among-container-technologies/>
 
-[^turing1936]: Turing, A. M. (1936/1937). On computable numbers, with an application to the Entscheidungsproblem. *Proceedings of the London Mathematical Society*, s2-42(1), 230–265.
+[^turing1936]: Turing, A. M. (1936/1937). On computable numbers, with an application to the Entscheidungsproblem. *Proceedings of the London Mathematical Society*, s2-42(1), 230–265. <https://doi.org/10.1112/plms/s2-42.1.230>
 
 [^vonneumann1945]: von Neumann, J. (1945). *First Draft of a Report on the EDVAC*. Moore School of Electrical Engineering, University of Pennsylvania.
 

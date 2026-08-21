@@ -34,6 +34,8 @@
 
 ## 1. 概念与定位
 
+> **本节要点：** COBIT 回答企业层信息与技术的价值、风险与资源三问，对象不只是信息部门内部活动。
+
 ### 1.1 定义
 
 COBIT（Control Objectives for Information and Related Technology，信息及相关技术控制目标）是面向企业的信息与技术治理和管理一体化框架，由 ISACA（国际信息系统审计协会）发布并持续维护。[1][2]
@@ -80,6 +82,8 @@ COBIT（Control Objectives for Information and Related Technology，信息及相
 
 ## 2. 治理与管理的分离
 
+> **本节要点：** 治理层定方向与问责，管理层做执行；二者必须分离，否则 IT 会既当裁判又当运动员。
+
 治理与管理分离是 COBIT 最核心的结构特征，也是理解后续全部内容的前提。[1][2]
 
 | 维度 | 治理 Governance | 管理 Management |
@@ -101,11 +105,13 @@ COBIT（Control Objectives for Information and Related Technology，信息及相
 
 可记为：治理决定正确的事，管理把事做正确。
 
-安哥拉国家银行（BNA）在基于 COBIT 2019 推进 I&T 治理改进后，一个重要组织认知变化是：良好的信息与技术治理并不只是信息部门的责任；当治理有效时，I&T 能够推动组织文化转变，并让全组织共同参与价值创造。[16] 这正是治理与管理分离之后应出现的结果：责任上移到治理层，执行落到管理层，而不是全部挤压给 IT 运维团队。
+安哥拉国家银行（Banco Nacional de Angola，BNA）在基于 COBIT 2019 推进 I&T 治理改进后，一个重要组织认知变化是：良好的信息与技术治理并不只是信息部门的责任；当治理有效时，I&T 能够推动组织文化转变，并让全组织共同参与价值创造。[16] 这正是治理与管理分离之后应出现的结果：责任上移到治理层，执行落到管理层，而不是全部挤压给 IT 运维团队。
 
 ---
 
 ## 3. 问题域与组织责任
+
+> **本节要点：** 先把经营问题映射到对应目标与责任人，再谈控制活动；RACI 是把「该谁拍板」说清楚的工具。
 
 ### 3.1 COBIT 回应的三类经营问题
 
@@ -145,6 +151,8 @@ COBIT 的作用，正是将 I&T 从技术部门内部事务提升为企业治理
 ---
 
 ## 4. 核心原则
+
+> **本节要点：** 价值导向、整体系统、动态治理与裁剪，是后面四十个目标都要服从的几条纪律。
 
 ### 4.1 价值导向
 
@@ -198,6 +206,8 @@ Al Rajhi Bank 在建立 IT 治理职能并应对监管与审计要求时，之�
 ---
 
 ## 5. 核心模型：五大领域与四十个目标
+
+> **本节要点：** 一个治理域 EDM 加四个管理域 APO / BAI / DSS / MEA，覆盖从战略决策到日常运营的闭环。
 
 COBIT 2019 由 1 个治理领域与 4 个管理领域构成，覆盖战略决策到日常运营的闭环。[1][2]
 
@@ -292,6 +302,8 @@ BAI 关注从需求、方案、变更到切换的全过程。很多“上线即�
 ---
 
 ## 6. 利用 COBIT 具体做什么
+
+> **本节要点：** 不是「上一个框架」，而是定决策机制、排项目、管上线、保连续、评成熟度、做审计映射这六类具体工作。
 
 很多人读完五大领域后，仍会问：那我下周到底能拿 COBIT 干什么？这一章只回答这个问题。
 
@@ -461,6 +473,8 @@ BAI 关注从需求、方案、变更到切换的全过程。很多“上线即�
 
 ## 7. 实施工具与度量
 
+> **本节要点：** 目标要配组件、权责与度量；没有指标的治理目标，很难进入管理会议。
+
 ### 7.1 目标组件与权责
 
 每个目标通常描述目的、实践与活动，并关联流程、组织结构、政策、信息、文化行为、技能与基础设施等组件。[1] 落地时优先明确三件事：
@@ -508,6 +522,8 @@ BNA 的实践也表明：即便外部监管或区域指引构成强驱动，仍�
 
 ## 8. 与相关框架的关系
 
+> **本节要点：** COBIT 是整合骨架：ISO 38500 管原则，ITIL / ISO 27001 / TOGAF 管细节，彼此不是互相替代。
+
 ### 8.1 分层关系
 
 | 框架 | 层级 | 与 COBIT 的关系 |
@@ -538,6 +554,8 @@ Al Rajhi Bank 的案例很有代表性：该行同时使用 ITIL、PMO 与 ISO/I
 ---
 
 ## 9. 实践案例分析
+
+> **本节要点：** 公开银行与监管案例用来对照「事前设计控制」与「事故后补齐」的代价差；综合场景只说明逻辑，不冒充单一企业细账。
 
 本章区分两类材料：一类是 ISACA 或权威监管文件中可核验的公开实践与处罚案例；另一类是用于说明治理逻辑的综合经营场景。
 
@@ -643,6 +661,8 @@ TSB 案例的关键教训是：数据迁过去了，并不等于治理准备好�
 
 ## 10. 中国应用演进与数字信任
 
+> **本节要点：** 国内路径是从贯标、审计规范到数字信任；COBIT 与 DTEF 应当地图用，而不是当墙上的证书。
+
 ### 10.1 国内实践阶段
 
 中国信息化、数字化与智能化的高速发展期，几乎与 COBIT 的全球演进同期重叠。[6][10][14]
@@ -690,6 +710,8 @@ DTEF（Digital Trust Ecosystem Framework）是 ISACA 的数字信任生态框架
 ---
 
 ## 11. 实施路径与常见问题
+
+> **本节要点：** 90 天最小落地包从真实问题起步；常见失败是为合规而合规、或把框架当成项目清单。
 
 ### 11.1 常见误区
 
@@ -781,12 +803,12 @@ COBIT 的核心贡献，是帮助组织把信息与技术纳入企业治理体�
 6. Mark Thomas. COBIT 三十周年相关论述（关于技术治理的系统性总结；详见作者及 ISACA 公开渠道）.  
 7. ISACA. ITAF: A Professional Practices Framework for IS Audit/Assurance.  
 8. 中国建设银行信息安全管理体系贯标实践相关公开报道. http://www.cfc365.com/case/2014-08-27/12588.shtml  
-9. 建设银行 IT 审计规范体系相关成果介绍（引入 COBIT、ISO 27000、ITIL、CMMI 等）.  
+9. 中国建设银行.「建设 IT 审计规范体系实现内部审计价值增值」（公开成果介绍：引入 COBIT、ISO 27000、ITIL、CMMI 等）. https://www.qikanchina.com/thesis/detail/1951934  
 10. 中国建设银行与 ISACA 金融科技联合创新战略合作公开报道. https://www.prnasia.com/story/253459-1.shtml  
-11. 《银行业 IT 治理最佳实践》相关公开述评与合作成果说明（引用时建议核对正式出版物）.  
+11. 中国建设银行、ISACA、南京审计大学. 《银行业 IT 治理最佳实践》白皮书（2018；正式出版物，引用以版权页为准）. 发布事实见双方战略合作报道：https://www.prnasia.com/story/253459-1.shtml  
 12. ISACA. *COBIT 4.1*（七项信息准则的经典表述来源）.  
 13. COSO. Internal Control — Integrated Framework.  
-14. 陈伟. COBIT 三十年之际的回顾与展望. 2026.  
+14. ISACA 中国区. 《COBIT30周年：三十年之际的回顾与展望》. 2026. https://www.isaca.org.cn/about/newsroom/cobit30%E5%91%A8%E5%B9%B4%EF%BC%9A%E4%B8%89%E5%8D%81%E5%B9%B4%E4%B9%8B%E9%99%85%E7%9A%84%E5%9B%9E%E9%A1%BE%E4%B8%8E%E5%B1%95%E6%9C%9B  同期英文学术纪念见 ISACA, *Celebrating Three Decades of COBIT*: https://www.isaca.org/resources/news-and-trends/newsletters/atisaca/2026/volume-8/celebrating-three-decades-of-cobit
 15. De Haes, S.; Van Grembergen, W.; et al. How Boards Realise IT Governance Transparency. ISACA Journal, 2016. https://www.isaca.org/resources/isaca-journal/issues/2016/volume-3/how-boards-realise-it-governance-transparency-a-study-into-current-practice-of-the-cobit-edm05-proce  
 16. ISACA. Improving Governance at a National Bank With COBIT. ISACA Journal, 2023. https://www.isaca.org/resources/isaca-journal/issues/2023/volume-3/improving-governance-at-a-national-bank-with-cobit  
 17. ISACA. Creating Value With COBIT 5 at a Tokio Marine Group Company. 2014. https://www.isaca.org/resources/news-and-trends/industry-news/2014/creating-value-with-cobit-5-at-a-tokio-marine-group-company  

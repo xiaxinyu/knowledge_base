@@ -1,6 +1,6 @@
 # SRE / DevOps 的智能体化：SLM、LLM、Agent 如何分工，以及 MTTR 的可验证压缩
 
-> 监控加「AI」标签并不自动缩短故障恢复时间。行业真正发生的变化，是把 **SRE 的事故工作流**与 **DevOps 的变更工作流**，改造成可由 **小模型（SLM）、大模型（LLM）、智能体（Agent）** 分工执行的人机系统。可核对的价值，集中在一件事上：**压缩 MTTR 中那些可并行、可检索、可证据化的时间段**——而不是承诺无人值守自愈。
+> 监控加「AI」标签并不自动缩短故障恢复时间。行业真正发生的变化，是把 **SRE 的事故工作流**与 **DevOps 的变更工作流**，改造成可由 **小模型（SLM，Small Language Model）、大模型（LLM，Large Language Model）、智能体（Agent）** 分工执行的人机系统。可核对的价值，集中在一件事上：**压缩平均恢复时间（MTTR，Mean Time to Repair / Restore）中那些可并行、可检索、可证据化的时间段**——而不是承诺无人值守自愈。
 >
 > 本文先交代行业从何而来（监控 → AIOps / Event Intelligence → AI SRE），再锚定 SRE / DORA 等可核验约束，最后给出分工模型、架构与落地顺序。关键数字均为公开案例或研究观察，**须用本组织基线复核**，不可直接当 KPI 保证值。
 
@@ -82,7 +82,7 @@ Thoughtworks 基于 2025 年逾 16 家客户、20 个 PoC（其中 11 个进生�
 | -------- | ---- | -------- |
 | **解释取代打分** | LLM + RAG 产出带引用的假设与时间线 | Thoughtworks：相关 ≠ 解释；高价值在知识与 RCA[^tw-aiops-2025] |
 | **工具调用取代只读聊天** | Agent 并行拉遥测、变更、拓扑、Runbook | OpenDerisk 等工业框架强调 MCP / 工具编排与上下文工程[^openderisk] |
-| **多角色协作取代万能机器人** | Intake / Triage / Investigate / Critic / Scribe | Microsoft Triangle：多 Agent 分诊，生产环境 triage 准确率最高约 **97%**，Time-to-Engage 最高降约 **91%**[^triangle] |
+| **多角色协作取代万能机器人** | Intake / Triage / Investigate / Critic / Scribe | Microsoft Triangle：多 Agent 分诊；ASE 2025 论文所报**特定生产环境**中，triage 准确率最高约 **97%**，Time-to-Engage 最高降约 **91%**——不可外推为通用 SLA[^triangle] |
 | **小而专模型进入诊断核心** | 不必处处堆最大闭源模型 | OpsAgent：约 **14B** 推理核 + 多 Agent，在 OPENRCA 基准与联想生产环境验证可部署性[^opsagent] |
 | **混合确定性—概率性系统** | LLM 出结构化意图，策略引擎执行 | Thoughtworks Learning 4：LLM → JSON → 确定性引擎[^tw-aiops-2025] |
 
@@ -429,7 +429,7 @@ SRE 与 DevOps 拥抱 Agent，本质上是一次**工作流重构**：
 
 [^incident-ai-sre]: incident.io, [*What is AI SRE?*](https://incident.io/blog/what-is-ai-sre-complete-guide-2026)（LLM + RAG 接地基础设施数据；优先调查/文档/协调；自治修复仍有限；人机问责）。
 
-[^triangle]: Zhaoyang Yu et al., [*Triangle: Empowering Incident Triage with Multi-Agent*](https://www.microsoft.com/en-us/research/publication/triangle-empowering-incident-triage-with-multi-agents/), ASE 2025；工程说明见 [Azure Blog](https://azure.microsoft.com/en-us/blog/optimizing-incident-management-with-aiops-using-the-triangle-system/)（生产环境 triage 准确率最高约 97%，Time-to-Engage 最高约降 91%）。
+[^triangle]: Zhaoyang Yu et al., [*Triangle: Empowering Incident Triage with Multi-Agent*](https://www.microsoft.com/en-us/research/publication/triangle-empowering-incident-triage-with-multi-agents/), ASE 2025（会议论文，数字来自 Microsoft 所述特定生产环境，不是跨行业基准）；工程说明见 [Azure Blog](https://azure.microsoft.com/en-us/blog/optimizing-incident-management-with-aiops-using-the-triangle-system/)（triage 准确率最高约 97%，Time-to-Engage 最高约降 91%）。
 
 [^opsagent]: [*From Observability Data to Diagnosis: An Evolving Multi-agent System for Incident Management in Cloud Systems*](https://arxiv.org/abs/2510.24145)（OpsAgent；约 14B 推理核 + 多 Agent；OPENRCA；联想生产部署报告）。
 

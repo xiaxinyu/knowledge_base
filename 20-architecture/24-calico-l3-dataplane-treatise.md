@@ -30,9 +30,12 @@
 | **落地** | [7. 选型与排查](#7-选型与排查) |
 | **收束** | [8. 总结](#8-总结) · [9. 参考文献](#9-参考文献) |
 
+下图为总纲：控制面进程只写状态，Linux 内核查表转发；BGP 只与 BIRD 对等。
+
 ```mermaid
 %% Calico 控制面与数据面分离：Felix/BIRD/confd 写入内核，数据面包转发由内核完成
 flowchart TB
+  classDef cp fill:#eef6e8,stroke:#5a8a3a,color:#2f4f1f
   classDef dp fill:#e8f1fa,stroke:#3b6ea5,color:#1f3a5f
   classDef peer fill:#f0e8fa,stroke:#6a3a8a,color:#3a1f5f
 
@@ -63,6 +66,8 @@ kube-proxy 同属控制面（watch API、写本机 Service 规则），不在 `c
 ---
 
 ## 1. 问题与 Calico 的取舍
+
+> **本节要点：** Kubernetes 要求 Pod IP 直通、不做 NAT；Calico 的本意是原生三层路由，封装只是 underlay 不认 Pod IP 时的退路。
 
 Kubernetes 对网络的要求很简洁：每个 Pod 一个 IP，任意两个 Pod 直接互访，中间不做 NAT。[3] 这只约束 **Pod IP ↔ Pod IP**（§3）。访问 ClusterIP 时，目的是虚地址，内核须先做 DNAT，把目的改成某个 Endpoint 的 Pod IP（§4.2）——那不是对「Pod 互访不做 NAT」的违背。
 
@@ -102,7 +107,11 @@ Calico 的**设计本意**是第二条：每台节点即一台路由器，转发
 
 ## 2. 节点控制面：三个进程 + CNI
 
+> **本节要点：** `calico-node` 里的 Felix、confd、BIRD 只写内核状态；建 veth 与分配 IP 是 kubelet 调用 CNI 完成的。
+
 每个节点上有一个 `calico-node` Pod（镜像 `calico/node`），内含三个常驻进程——它们属于**网络控制面**。此外 kubelet 在创建/删除 Pod 时调用 **CNI 插件**（不属于这三个进程）：分配 IP、创建 veth；Felix 再补齐本机内核状态。[1][3] kubelet 读的不是 API 里的 ConfigMap，而是节点磁盘上由该 ConfigMap 渲染出的 CNI 配置（§2.5）。同节点上通常还有 **kube-proxy**（独立 DaemonSet，不属于 `calico-node`），只编程 Service 虚地址，见 §4。
+
+下图把 Felix、confd、BIRD 与内核对象分开：进程写表，内核不跑这些进程。
 
 ```mermaid
 flowchart TB
@@ -206,6 +215,8 @@ Felix 写策略 **不经过** confd。
 三个进程负责把状态写入内核；**真正在创建/删除 Pod 时被 kubelet 调用的，是 CNI 插件**。manifest / Kubespray 安装把这份合同放在 `kube-system/calico-config` ConfigMap：`calico-node` 的 init 容器把它写到每个节点的 `/etc/cni/net.d/`（并安装 `/opt/cni/bin/` 下的二进制），kubelet 只读磁盘上的那份。[3][15]
 
 Operator 安装不走这份 ConfigMap，而由 `Installation` CR 生成等价文件。下文标本取自 **Kubespray + BGP** 集群（已去掉 `uid`、`resourceVersion`、`last-applied-configuration` 等运行时元数据）。
+
+下图是 ConfigMap 渲染到节点磁盘、再被 kubelet 调用 CNI 的路径。
 
 ```mermaid
 flowchart LR
@@ -317,6 +328,8 @@ calico 插件各字段：
 
 ## 3. 数据面：Pod 包的路径
 
+> **本节要点：** 包经 veth 进主机后查 FIB：同机走对端 veth，跨机不封装则目的仍是 Pod IP，跨机 overlay 再套一层节点 IP。
+
 官方将数据面归纳为：**主机 MAC 答 ARP、按 FIB 转发、用 iptables 或 eBPF 做防火墙。**[2] 无用户态转发进程。注意：内核里路由查找与 iptables 钩子是交错的（PREROUTING → 查 FIB → FORWARD / INPUT → POSTROUTING），下图把 FIB 与策略画成并列对象，避免理解成严格的「先路由后防火墙」流水线。
 
 ### 3.1 veth：Pod 与主机之间的虚拟网线
@@ -326,6 +339,8 @@ calico 插件各字段：
 **veth 是 Linux 内核的一种虚拟网卡，永远成对出现**：两块接口如同一根虚拟网线相连，从一端注入的包会从另一端弹出。两端可置于不同的 network namespace，故 veth 成为连接两个网络命名空间的标准手段。[3]
 
 Calico 在 K8s 中的用法（Pod 创建时由 **CNI 插件**完成，而非 Felix；kubelet 所读配置见 §2.5）：[3]
+
+下图为一对 veth：Pod 内 eth0 与主机 `cali…` 相连，路由与策略发生在主机命名空间。
 
 ```mermaid
 flowchart LR
@@ -368,6 +383,8 @@ flowchart LR
 ### 3.2 同一台机器：A1 → A2
 
 Node A 上 `10.65.0.24 → 10.65.0.25`。此路径不经物理网卡、不经隧道、转发不依赖 BGP。
+
+下图为同机转发的教学路径（内核中路由查找与策略钩子实际交错）。
 
 ```mermaid
 sequenceDiagram
@@ -415,6 +432,8 @@ Node A 的 FIB 中这两条均由 Felix 写入：
 
 判定很直接：包以目的 IP = `10.65.0.21` 离开 Node A 后，能否出现在 Node B 的网卡上。同二层靠 Node B 的 MAC；跨三层靠 underlay 是否已有该 Pod CIDR。能，用不封装；不能，改 overlay。
 
+下图为跨机不封装：链路上 L3 源与目的始终是 Pod IP，改的是下一跳。
+
 ```mermaid
 sequenceDiagram
   participant A1 as Pod A1
@@ -449,6 +468,8 @@ sequenceDiagram
 内层（原包）   10.65.0.24   →  10.65.0.21
 外层（封装头） 172.18.203.10 →  172.18.203.126   proto = 4
 ```
+
+下图为 IPIP overlay：物理链路上外层是节点 IP，内层仍是原 Pod 包。
 
 ```mermaid
 sequenceDiagram
@@ -493,6 +514,8 @@ FIB 出口是 `tunl0`（封装），封装后的外层包仍从物理网卡送�
 
 ## 4. Service 与 kube-proxy
 
+> **本节要点：** ClusterIP 是虚地址，须先 DNAT 再走 §3 的 Pod 路径；默认由 kube-proxy 写规则，eBPF 数据面才宜替代它。
+
 §3 描述的是 **Pod IP ↔ Pod IP** 的数据面路径。应用日常访问的却多是 **Service VIP**（ClusterIP、NodePort、LoadBalancer）。须分开看：**默认 iptables 数据面下，Calico 不替代 kube-proxy；二者协作——kube-proxy 编程 Service 规则，Calico 编程 Pod 路由与策略。**[13]
 
 ### 4.1 kube-proxy：节点上的 Service 控制器
@@ -519,6 +542,8 @@ kube-proxy 是**每台节点上的 Service 控制器**（通常为 `kube-system`
 | **ClusterIP** | 为虚地址写 DNAT / 负载均衡 | Pod 路由、NetworkPolicy、CoreDNS、Ingress、`hostPort`（§2.5） |
 | **NodePort** | 把 `节点IP:nodePort` 导入同一套后端 | 同上 |
 | **LoadBalancer** | 节点侧仍是 ClusterIP + NodePort | 云上的外部地址（cloud-controller / MetalLB 等）；其余同上 |
+
+下图为访问 ClusterIP：先过内核 nat 表做 DNAT，再按已装好的 Pod 路径送达。
 
 ```mermaid
 flowchart LR
@@ -640,6 +665,8 @@ grep 10.96.0.50 /proc/net/nf_conntrack | head
 
 ## 5. 路由如何装上
 
+> **本节要点：** 远端路由由 BGP（或 Felix 写 VXLAN cluster routes）事先写入 FIB；每个数据包只查内核，不再经过 Felix 或 BIRD。
+
 跨机转发成立的前提是：Node A 的 FIB 中**事先**已有「去 `10.65.0.21` 下一跳为 Node B」。这是**控制面**工作；每一个数据包仍只查**数据面**。
 
 ### 5.1 数据面对象由谁编程
@@ -692,6 +719,8 @@ grep 10.96.0.50 /proc/net/nf_conntrack | head
 
 ## 6. 地址分配与封装
 
+> **本节要点：** IPAM 按块（默认 /26）分配；是否封装由 IPPool 决定，与 BGP 不是互斥——BGP 管下一跳，封装管途中要不要再套一层。
+
 ### 6.1 地址分配
 
 Calico IPAM 按块分配给节点，IPv4 默认 **/26**（64 个地址）。块大小仅在创建 IP 池时设定。[6] 是否走这套 IPAM，由 CNI 的 `ipam.type: calico-ipam` 决定（§2.5）；若改成 `host-local` 且 `subnet: usePodCidr`，则改用 Node 的 `podCIDR`。
@@ -736,6 +765,8 @@ Google 云为纯三层网络，**无** CrossSubnet 这一档，要封装则整�
 ---
 
 ## 7. 选型与排查
+
+> **本节要点：** 先问 underlay 是否识别 Pod IP，再分清故障在 Pod 路径还是 Service DNAT。
 
 ### 7.1 选型
 

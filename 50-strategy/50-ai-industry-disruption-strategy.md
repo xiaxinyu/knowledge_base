@@ -111,6 +111,15 @@ AI 时代的竞争战略正在从“规模经济”转向“智能经济”—�
 
 理解 AI 能做什么之后，下一个问题是：它对不同行业的影响深度与速度有何不同？以下四层分析框架，可用于判断 AI 对自身行业的穿透路径。它与咨询机构常用的成熟度分层（如从试点到规模化）互补：前者回答“冲击有多深”，后者回答“组织走了多远”。
 
+下图由浅入深：越往下，冲击越深，组织与商业模式改造越重。
+
+```mermaid
+flowchart TB
+  L1["第一层 效率工具"] --> L2["第二层 体验重构"]
+  L2 --> L3["第三层 决策智能"]
+  L3 --> L4["第四层 系统重塑"]
+```
+
 ### 3.1 第一层：效率工具层
 
 在这一层，AI 被用作提高现有流程效率的工具——它不改变业务的基本逻辑，只让做同样的事情更快、更便宜、更准确。
@@ -432,11 +441,11 @@ AI 时代的领导者，最重要的能力不是给出答案，而是提出正�
 1. Agrawal, A., Gans, J., & Goldfarb, A. *Prediction Machines: The Simple Economics of Artificial Intelligence*. Harvard Business Review Press.
 2. Agrawal, A., Gans, J., & Goldfarb, A. *Power and Prediction: The Disruptive Economics of Artificial Intelligence*. Harvard Business Review Press.
 3. Christensen, C. M. *The Innovator's Dilemma*. Harvard Business Review Press.
-4. McKinsey & Company. *The State of AI*（系列调研，含生成式 AI 普及率、价值实现与 Taker/Shaper/Maker 分类）.
-5. McKinsey Greater China. 《AI 热潮后的冷静思考，如何创造实际价值？》（生成式 AI 价值悖论与规模化路径）.
-6. McKinsey & Company. *Seizing the Agentic AI Advantage*（智能体如何破解价值悖论，以及企业级规模化部署与治理）.
-7. McKinsey Greater China. 《重构企业“操作系统”，跳出试点陷阱，解锁 AI 端到端规模化价值》.
-8. BCG. *Where's the Value in AI?* / *Are You Generating Value from AI? The Widening Gap*（试点占比、核心流程价值集中度与领先者差距）.
+4. McKinsey & Company. *The State of AI*（系列调研，含生成式 AI 普及率、价值实现与 Taker/Shaper/Maker 分类）. https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-state-of-ai  
+5. McKinsey Greater China. 《AI 热潮后的冷静思考，如何创造实际价值？》（生成式 AI 价值悖论与规模化路径）. https://www.mckinsey.com.cn/ai%E7%83%AD%E6%BD%AE%E5%90%8E%E7%9A%84%E5%86%B7%E9%9D%99%E6%80%9D%E8%80%83%EF%BC%8C%E5%A6%82%E4%BD%95%E5%88%9B%E9%80%A0%E5%AE%9E%E9%99%85%E4%BB%B7%E5%80%BC%EF%BC%9F/  
+6. McKinsey & Company. *Seizing the Agentic AI Advantage*（智能体如何破解价值悖论，以及企业级规模化部署与治理）. https://www.mckinsey.com/capabilities/quantumblack/our-insights/seizing-the-agentic-ai-advantage  
+7. McKinsey Greater China. 《重构企业“操作系统”，跳出试点陷阱，解锁 AI 端到端规模化价值》. https://www.mckinsey.com.cn/%e9%87%8d%e6%9e%84%e4%bc%81%e4%b8%9a%e6%93%8d%e4%bd%9c%e7%b3%bb%e7%bb%9f%ef%bc%8c%e8%b7%b3%e5%87%ba%e8%af%95%e7%82%b9%e9%99%b7%e9%98%b1%ef%bc%8c%e8%a7%a3%e9%94%81ai%e7%ab%af%e5%88%b0/  
+8. BCG. *Where's the Value in AI?*（仅约 26% 走出概念验证并开始产生价值，其中约 4% 形成较强价值引擎；领先者约 62% 的 AI 价值来自核心业务过程）. https://www.bcg.com/publications/2024/wheres-value-in-ai  PDF: https://web-assets.bcg.com/75/ab/7ec60ba84385ad89321f8739ecaf/bcg-wheres-the-value-in-ai.pdf 
 9. Peng, S., Kalliamvakou, E., Cihon, P., & Demirer, M. (2023). “The Impact of AI on Developer Productivity: Evidence from GitHub Copilot.” arXiv:2302.06590（受控实验：特定任务完成速度快约 55.8%）.
 10. GitHub Blog. “Research: quantifying GitHub Copilot’s impact on developer productivity and happiness.”（同上实验的公开解读）.
 11. OECD. *OECD AI Principles*（负责任 AI 的国际原则框架）.
