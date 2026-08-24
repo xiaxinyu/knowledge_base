@@ -5,15 +5,16 @@
 先记住总纲：
 
 > **Kubernetes 不是一次性编排脚本，而是一台「分布式控制计算机」：**  
-> 以 etcd 为真相源，以声明式 API 为协调语言，以可失败的控制循环持续逼近期望态；控制面短暂失联时，数据面尽量按上次指令继续服务。[1][12][18]
+> 以 etcd 为真相源，以声明式 API 为协调语言，以可失败的控制循环持续逼近期望态；控制面短暂失联时，数据面尽量按上次指令继续服务。  
+> 调度、自愈、服务发现、滚动发布，并不是四套魔法——**驱动这一切的，是同一个调谐循环。**[1][11][12][18]
 
 全文可与本库 [《服务架构演进》](./21-service-architecture-evolution.md)（复杂度如何转移）、[《分布式一致性专论》](./22-distributed-consistency-treatise.md)（CAP / Raft）、[《Calico 三层网络专论》](./24-calico-l3-dataplane-treatise.md)（网络控制面如何写表；kubelet 经 CNI 调用插件）对照阅读。更长的容器与云原生时间线见 [《云计算发展编年史》](../10-chronicle/10-computing-cloud-chronicle.md) §8。关键史实与论断尽量对齐一手文献，文末附参考文献。
 
 ## 摘要
 
-Kubernetes 应被理解为持续收敛的分布式控制计算机，而不是一次性编排脚本。etcd 为真相源，声明式 API 为协调语言，控制器按当前态与期望态的偏差调谐；控制面可以短暂失败，数据面按上次指令尽量保持静态稳定。全文分三篇：上篇划定问题域与 Borg → Omega 谱系；中篇收束控制模型（一份真相、持续收敛、静态稳定、平台的平台）；下篇落到分层高可用、控制面入口、CRD / Operator 与能力边界。可与本库 21、22、24 对照：编排原则、一致性取舍与网络写表是同一台控制计算机的不同平面。
+Kubernetes 应被理解为持续收敛的分布式控制计算机，而不是一次性编排脚本。etcd 为真相源，声明式 API 为协调语言；每个控制器只问「世界应该什么样 / 现在实际上什么样」，不一致就走一步，然后永远再问一遍。调度、自愈、服务发现与滚动发布，都是这同一个调谐循环作用在不同对象上。控制面可以短暂失败，数据面按上次指令尽量保持静态稳定。全文分三篇：上篇划定问题域与 Borg → Omega 谱系；中篇收束控制模型（一份真相、同一循环、静态稳定、平台的平台）；下篇落到分层高可用、控制面入口、CRD / Operator 与能力边界。可与本库 21、22、24 对照：编排原则、一致性取舍与网络写表是同一台控制计算机的不同平面。
 
-**关键词：** Kubernetes；声明式 API；控制循环；etcd；静态稳定；CNCF
+**关键词：** Kubernetes；声明式 API；调谐循环；etcd；静态稳定；CNCF
 
 ---
 
@@ -33,7 +34,9 @@ Kubernetes 应被理解为持续收敛的分布式控制计算机，而不是一
 4. [前提与核心理念](#4-前提与核心理念)
 5. [一份真相与松耦合协调](#5-一份真相与松耦合协调)
 6. [持续收敛与静态稳定](#6-持续收敛与静态稳定)
+    - [6.1 持续收敛](#61-持续收敛而非一次成功的剧本) · [6.2 调谐循环](#62-调谐循环驱动一切的同一个循环) · [6.3 静态稳定](#63-静态稳定static-stability)
 7. [控制平面与设计原则](#7-控制平面与设计原则)
+    - [7.1 组件](#71-组件与高可用形态) · [7.2 声明式与调谐](#72-声明式与调谐) · [7.3 设计原则](#73-设计原则精要) · [7.4 同一循环](#74-同一循环从-apply-到自愈)
 
 **下篇 · 工程落地**
 
@@ -53,7 +56,7 @@ Kubernetes 应被理解为持续收敛的分布式控制计算机，而不是一
 %% K8s 设计全景：问题域约束原则，原则约束落地
 flowchart TB
   Ctx["上篇 · 问题域<br/>时代条件 · 谱系 · 定位"]
-  Prin["中篇 · 控制模型<br/>真相源 · 收敛 · 静稳 · 平台"]
+  Prin["中篇 · 控制模型<br/>真相源 · 同一循环 · 静稳 · 平台"]
   Eng["下篇 · 工程落地<br/>分层 HA · 入口 · Operator"]
 
   Ctx -->|"明确问题域"| Prin
@@ -75,7 +78,16 @@ flowchart TB
 | **容器不可变** | 镜像成为版本化制品；发布等于替换，而非就地打补丁 | 运行单元可被声明、调度、批量替换 |
 | **复杂度下沉** | 微服务把应用复杂度切开后，运维复杂度上涌（见本库服务架构演进） | 需要把发现、扩缩、自愈从应用层**下沉到基础设施** |
 
-2013 年 Docker 把容器从运维黑科技变成开发者日常工具：笔记本上打包，几乎原封不动搬到服务器。一台机器上几个容器很容易管；横跨成百上千台机器的成千上万个容器，才把「编排」变成所有人的问题——自动化部署、扩缩容、服务发现、故障恢复。谁把它做成通用平台，谁就有机会成为云基础设施的标准。
+2013 年 Docker 把容器从运维黑科技变成开发者日常工具：同一个镜像，在笔记本、CI 和生产里运行结果一致。一台机器上几个容器很容易管——**一个容器是一个程序；一群容器是一个运维问题。** 一旦跨越多台机器，问题立刻成套出现：[1][11]
+
+| 问题 | 若无编排平面 |
+|------|----------------|
+| **放置** | 哪台主机该跑哪个容器？ |
+| **故障** | 主机挂了，谁来补上？ |
+| **发现** | IP 每次重建都变，容器如何找到对方？ |
+| **发布** | 如何零停机换版？新版本坏了如何回滚？ |
+
+这四问有一个共同答案：把期望写进声明，交给持续运行的控制循环。谁把它做成通用平台，谁就有机会成为云基础设施的标准。
 
 上一代「命令式编排 / 手工剧本」在规模下成本急剧上升：故障组合爆炸，逐步脚本既不经济，也不诚实。行业需要的不是更长的 Runbook，而是**把故障当成稳态输入、用持续收敛代替一次性剧本**的控制平面。
 
@@ -218,7 +230,7 @@ Kubernetes 是可移植、可扩展的**开源平台**，用于管理容器化�
 | 工作负载入口 | Ingress、**Gateway API**、云 LB、MetalLB | 业务流量，**非**控制面入口。Gateway API 为下一代入口，见 §2.2 |
 | 可观测 / 网格 | Prometheus、Istio | 周边生态 |
 
-> **要点**：Kubernetes 管「如何声明与收敛」；生态管「具体实现插件」。核心价值是**持续收敛**，而非中心化剧本。
+> **要点**：Kubernetes 管「如何声明与收敛」；生态管「具体实现插件」。核心价值是**同一个调谐循环**（§6.2 / §7.4），而非中心化剧本。
 
 ---
 
@@ -275,6 +287,8 @@ Omega 曾让受信组件直连存储；Kubernetes 改为：**仅 API Server 访�
 
 ## 6. 持续收敛与静态稳定
 
+中篇的枢纽在这里。你在清单里写下工作负载的期望态——「这个镜像在负载均衡后面跑 3 个副本」——然后 Kubernetes 运行一组控制器，持续把集群的实际状态推向期望状态。后面所有组件、自愈与 Operator，都是这个循环的实例。[11][12][40]
+
 ### 6.1 持续收敛，而非一次成功的剧本
 
 | 对比项 | 传统编排器 | Kubernetes |
@@ -283,18 +297,50 @@ Omega 曾让受信组件直连存储；Kubernetes 改为：**仅 API Server 访�
 | 成功标准 | 走完剧本 | 持续逼近期望 |
 | 稳态假设 | 可静止稳态 | 可能长期达不到完全稳态[11] |
 
-配套：**level-based（电平触发）**——正确性只依赖当前观测与期望；边沿触发仅为优化。[12] 丢事件、重启、短暂分区，都设计成「下一轮再对齐」。
+官方用恒温器作类比：你设定目标温度（期望态），房间实际温度是当前态；控制器只负责缩小差距——开或关设备。集群亦然：对象的 `spec` 是一份意图记录（record of intent），`status` 与集群实况是当前态；控制面持续把实际状态推向你写下的期望。[11][40]
 
-### 6.2 静态稳定（Static Stability）
+### 6.2 调谐循环：驱动一切的同一个循环
+
+控制器是一个「只关心一件事」的小程序。它监视集群中某类对象——Deployment、Node、PersistentVolumeClaim、Job……每当对象变化（也会周期性 resync），它只问自己两件事：[11]
+
+1. **这个对象的世界应该是什么样？**（`spec`）
+2. **它现在实际上是什么样？**（观测到的集群状态 / `status`）
+
+两个答案不一致，它就采取**一步**行动来缩小差距，然后重新开始。Kubernetes 内置数十个这样的循环并行运行：一个维持正确数量的 Pod，一个挂载云磁盘，一个在 Pod 来去时更新端点列表，一个清理已完成的 Job。[11][18]
+
+```text
+for {
+    actual  := 获取实际状态
+    desired := 获取期望状态
+    if actual != desired { 把 actual 推向 desired }  // 只走一步
+}
+```
+
+> **要点**：这就是全部诀窍。调度、自愈、服务发现、滚动发布，并不是四套不同的魔法——它们是同一套 watch → diff → act 循环，作用在不同对象上。
+
+```mermaid
+%% 调谐循环：观察 → 对比 → 行动 → 再观察；永不停止
+flowchart LR
+  W["Watch / Resync"] --> D["Diff<br/>spec vs 实况"]
+  D -->|"不一致"| A["Act · 一步"]
+  D -->|"已对齐"| W
+  A --> W
+```
+
+信条是**多简单控制器各管一块**，而不是一个互相缠绕的巨型控制程序。某个环失败，其他环仍可工作；某个控制器用一种资源当期望、用另一种资源去兑现——例如 Job 控制器读 Job、写 Pod。[11]
+
+配套：**level-based（电平触发）**——正确性只依赖当前观测与期望；边沿触发仅为优化。[12] 丢事件、重启、短暂分区，都设计成「下一轮再对齐」。controller-runtime 写明：Reconcile 不是「响应某条删除事件」，而是重新读集群、发现对象已经不在；同一状态跑一次与跑十次，结果应当等价——**调谐必须幂等**。[23]
+
+### 6.3 静态稳定（Static Stability）
 
 缺少新指令时，组件应**继续执行上次被告知的行为**。[12] 与控制面 / 数据面分离同向：数据面在请求路径；控制面可短时中断而不必然中断业务。[10]
 
 > **纪律二**：高可用不是「控制面永不挂」，而是「控制面挂了，正在服务的世界尽量不塌」。
 
-下图为调谐循环：用户写入期望态，控制器持续把当前态推向 spec；控制面短暂失联时，数据面仍按上次指令服务。
+下图把循环嵌回集群：用户写入期望态，控制器持续把当前态推向 spec；控制面短暂失联时，数据面仍按上次指令服务。
 
 ```mermaid
-%% 调谐循环：用户写 spec → apiserver → 控制器对比当前态与期望态 → 驱动趋近
+%% 静态稳定：控制面失联时，数据面按上次指令继续服务
 flowchart LR
   API["API Server"]
   ETCD["etcd · Raft"]
@@ -325,31 +371,36 @@ flowchart LR
 
 节点侧：kubelet、可选 kube-proxy、容器运行时。[18] kubelet 创建/删除 Pod 时读取节点 `/etc/cni/net.d/` 下的 CNI 配置并调用插件——网络不在核心控制面内，正是 §3.3 / §4.2「平台的平台」的边界；Calico 侧合同见 [专论 §2.5](./24-calico-l3-dataplane-treatise.md#25-cni-配置kubelet-如何调用-calico)。kube-proxy 把 Service 虚地址 DNAT 成 Endpoint，见 [专论 §4.2](./24-calico-l3-dataplane-treatise.md#42-dnat-与-conntrackvip-如何变成-endpoint)。
 
+各组件并不互相打电话，只通过 API 读写对象——这是 §5.2 松耦合的落地。分工刻意不对称：
+
+| 角色 | 做什么 | 刻意不做什么 |
+|------|--------|----------------|
+| **apiserver** | 认证、鉴权、校验；唯一读写 etcd；提供 Watch | 不调度、不启动容器 |
+| **scheduler** | 为未绑定 Pod 做过滤 + 打分，写入绑定（`nodeName`）[41] | **不启动任何容器** |
+| **kubelet** | 看见分配给本节点的 Pod，才拉镜像、调运行时、挂卷、跑探针，再把 `status` 写回[18] | 不做全局调度 |
+| **kube-proxy** | 按 EndpointSlice 在本机编程 iptables / IPVS / nftables[43] | 不决定谁该跑 |
+
+调度器改的只是一个字段；kubelet 会「看见」。下一步总是留给下一个循环。[11][41]
+
 | 平面 | 定义 | 故障含义 |
 |------|------|----------|
 | **数据平面** | 请求路径；随请求量扩展 | 须尽量保持可用 |
 | **控制平面** | 资源管理、容错、部署 | 可短时中断[10] |
 
-**Controller** = 持续控制循环；信条是**多简单控制器各管一块**，容忍单环失败。[11]
+**Controller** = §6.2 的持续控制循环；信条是**多简单控制器各管一块**，容忍单环失败。[11]
 
 > **要点**：通用控制平面首先取决于 **API + 一致性存储**，其次才是「会跑容器」。
 
 ### 7.2 声明式与调谐
+
+循环的语义见 §6.2；此处只补工程约束。
 
 | 维度 | 声明式 | 命令式 |
 |------|--------|--------|
 | 关注点 | 要什么 | 怎么做 |
 | 分布式含义 | 故障交给平台循环 | 调用方自行编排重试 |
 
-```text
-for {
-    actual  := 获取实际状态
-    desired := 获取期望状态
-    if actual != desired { 把 actual 推向 desired }
-}
-```
-
-Informer 先 `LIST` 再 `WATCH`——**缓存是运行模型**；调谐必须**幂等**。[23] 容错靠持续收敛，而非一次性排障剧本。[11]
+Informer 先 `LIST` 再 `WATCH`——**缓存是运行模型**，调谐读的是本地观测，而不是对 apiserver 的轮询。[23] 容错靠持续收敛，而非一次性排障剧本。[11]
 
 ### 7.3 设计原则精要
 
@@ -365,6 +416,53 @@ Informer 先 `LIST` 再 `WATCH`——**缓存是运行模型**；调谐必须**�
 | 架构 | 仅 API Server↔etcd | 其余经 API |
 | 架构 | 分区时执行上次指令 | **静态稳定** |
 | 架构 | 优先 Watch；单节点不毁集群 | 事件驱动与故障域隔离 |
+
+### 7.4 同一循环：从 apply 到自愈
+
+把 §6.2 的循环放到组件上走一遍。你写一份 Deployment 清单——「这个镜像在负载均衡后面跑 3 个副本」——然后 `kubectl apply`。[40][42]
+
+#### 一次 apply 的链路
+
+1. kubectl 把清单交给 apiserver；认证、RBAC、校验通过后，Deployment 写入 etcd。对你来说命令已返回；对集群来说循环才刚开始。[18][40]
+2. Deployment 控制器的 Watch 看到新对象，发现还没有匹配的 ReplicaSet，于是创建一个。[42]
+3. ReplicaSet 控制器看到期望 3 个 Pod、实际 0 个，于是创建 3 个尚未绑定节点的 Pod 对象。
+4. scheduler 看到无 `nodeName` 的 Pod，过滤不可行节点、对可行节点打分，把胜者写成绑定。[41]
+5. 被选中节点上的 kubelet 看到「属于我」的 Pod，拉镜像、启动容器，持续把 `status` 写回 apiserver。[18]
+
+每一步都是同一个循环：看见偏差，写回一步，让别人看见。没有中心剧本在编排「先 A 再 B」。
+
+```mermaid
+%% 一次 apply：每个箭头都是一次调谐，而不是中心剧本
+flowchart TB
+  Apply["kubectl apply"] --> Etcd["etcd 中的 Deployment"]
+  Etcd --> Dep["Deployment 控制器<br/>创建 ReplicaSet"]
+  Dep --> RS["ReplicaSet 控制器<br/>创建 3 个 Pod"]
+  RS --> Sch["scheduler 绑定 nodeName"]
+  Sch --> Kube["kubelet 拉镜像、启动"]
+  Kube --> St["status 写回 apiserver"]
+```
+
+#### 节点挂了：计数不对，然后又对了
+
+某节点失联，kubelet 不再上报。默认约 50 秒无心跳后，Node 的 `Ready` 变为 `Unknown`，并打上 `node.kubernetes.io/unreachable` 污点；默认再过约 5 分钟，不容忍该污点的 Pod 被驱逐。[44][45]
+
+ReplicaSet 控制器并不「处理节点火灾」。它只是一直盯着自己的对象：期望 3 个，现在只剩 2 个——于是再创建一个。scheduler 给新 Pod 找活着的节点，kubelet 拉起它。
+
+没人被呼叫。计数错了，然后计数对了。这仍是同一个循环。[11][13]
+
+#### Pod 如何互相找到：Service 也是循环
+
+Pod 故意短命：每次重建换 IP，不能拿单个 Pod 当身份。Service 是一层很薄的对象：标签选择器 + 虚拟 IP（ClusterIP）。控制器持续扫描匹配且已就绪的 Pod，维护 EndpointSlice；kube-proxy 在每个节点把发往虚 IP 的包转到活着的 Pod IP。[43]
+
+虚 IP 并不长在某块网卡上；内核只是「看见这个地址时知道该怎么办」。新 Pod 的就绪探针通过之前，不会进入端点列表——坏版本因此接不到流量。[14][43]
+
+#### 零停机发布：还是同一个循环
+
+把镜像标签改掉再 apply。Deployment 控制器发现当前 ReplicaSet 的模板不再匹配，就在旧 ReplicaSet 旁边创建一个新的，然后按 `maxSurge`（允许超出期望的个数）与 `maxUnavailable`（允许低于期望的个数）慢慢把新的扩上去、旧的缩下来；二者默认都是 25%。[42]
+
+新 Pod 未就绪就不进 Service。若新版本一直不就绪，滚动会按 `maxUnavailable` 卡住，流量仍打在旧副本上——控制器**停住扩新，并不会自动 undo**；`kubectl rollout undo` 把期望态改回上一版，循环再走一遍。[42]
+
+> **判断**：Operator、服务网格、GitOps 同步器，都是这套循环的变体：把期望写给 apiserver，让控制器去调谐，让 kubelet 在节点上兑现。[15][36]
 
 ---
 
@@ -413,12 +511,14 @@ flowchart TB
 
 ### 8.3 节点与工作负载自愈
 
+节点失联后的补齐，正是 §7.4 里 ReplicaSet 循环的再一次运行：控制器并不处理火灾，只是发现副本数不对。[11][13][44]
+
 | 层级 | 机制 | 作用 |
 |------|------|------|
 | 容器 | `restartPolicy` | 进程级回收 |
 | 工作负载 | 副本控制器 + 重调度 | 补齐期望 |
 | 存储 | 卷再挂载 | 有状态迁移 |
-| 流量 | Endpoints 摘除 | 避开坏实例 |
+| 流量 | EndpointSlice 摘除 | 避开坏实例 |
 | 节点 | kubelet 闭环 | 本地保证[13] |
 
 | 探针 | 行为 |
@@ -430,7 +530,7 @@ flowchart TB
 ### 8.4 为何抗造
 
 - 声明期望，失败后再调谐；[11][13]
-- 控制循环永不停止；[11]
+- 控制循环永不停止——apply、节点故障、服务发现、滚动发布走的是同一个循环；[11]
 - 多控制器可失败；[11]
 - 探针切开故障域；[14]
 - 控制面 / 数据面分离 + 静态稳定。[10][12]
@@ -500,7 +600,7 @@ backend apiservers
 | **CRD** | 领域对象获得声明式外表。由 TPR 重设计而来，1.7 入 beta，1.16 以 `apiextensions.k8s.io/v1` 达 GA。[30][35] |
 | **Operator** | 运维知识编码为持续调谐（Controller + CRD）。CoreOS 于 2016-11 提出；早期依赖 TPR，CRD 成熟后成为主路。[15][36] |
 
-集群里许多「高级能力」并不是突然写进内核的：有人用 CRD 教集群认识一个新对象，再写一个 controller 去实现它。
+集群里许多「高级能力」并不是突然写进内核的：有人用 CRD 教集群认识一个新对象，再写一个 controller 去实现它。Deployment 让「三个相同的 Web 副本」保持存活；Operator 让「这个有状态系统以专家期望的方式保持存活」——二者跑的是**同一个调谐循环**，只是「收敛什么」换成了领域知识。[15][36]
 
 > **工程含义**：先统一「如何描述、如何共识、如何在故障下收敛」，再让各领域填写「收敛什么」——「通用软件控制平面」不过是同一控制模型的外推。
 
@@ -535,7 +635,7 @@ backend apiservers
 | 层次 | 命题 | 要点 |
 |------|------|------|
 | **上篇** | 时代与谱系 | 云可编程 × 容器不可变 × 复杂度下沉；Borg/Omega 经验外溢，非 Borg 开源版；CNCF 治理 + 可插拔接口使其成为默认底座[2][6] |
-| **中篇** | 可久约束 | 一份真相 · API 松耦合 · level-based 收敛 · 静态稳定 · Platform for Platform[12][19] |
+| **中篇** | 可久约束 | 一份真相 · API 松耦合 · **同一个调谐循环** · 静态稳定 · Platform for Platform[11][12][19] |
 | **下篇** | 工程工艺 | L1–L5 分层 HA；L4 入口；CRD/Operator 外推；边界清晰[13][25] |
 
 | 偏废 | 后果 |
@@ -546,7 +646,7 @@ backend apiservers
 
 > **收束**  
 > Docker 把软件变成标准集装箱；Kubernetes 把「如何调度这些箱子」写成云原生的共同语言。  
-> 接受「故障是常态」的生产假设；守住「一份真相、持续收敛、静态稳定」；把原则落成「分层高可用与可扩展控制平面」。  
+> 接受「故障是常态」的生产假设；守住「一份真相、同一循环、静态稳定」；把原则落成「分层高可用与可扩展控制平面」。  
 > 舵手之意，不在无风浪，而在有原则可依、有工艺可操，于故障中仍能指向可用。
 
 ---
@@ -565,7 +665,7 @@ backend apiservers
 | [8] | Design Proposals Archive, *Architecture*. https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/architecture.md | 可扩展、声明式 |
 | [9] | Kubernetes Documentation, *Persistent Volumes*. https://kubernetes.io/docs/concepts/storage/persistent-volumes/ | PV / PVC |
 | [10] | Marc Brooker, *Control Planes vs Data Planes* (2019). https://brooker.co.za/blog/2019/03/17/control | 控制面 / 数据面 |
-| [11] | Kubernetes Documentation, *Controllers*. https://kubernetes.io/docs/concepts/architecture/controller/ | 控制循环 |
+| [11] | Kubernetes Documentation, *Controllers*. https://kubernetes.io/docs/concepts/architecture/controller/ | 控制循环、恒温器类比、多简单控制器 |
 | [12] | Design Proposals Archive, *Design Principles*. https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/principles.md | level-based、静态稳定 |
 | [13] | Kubernetes Documentation, *Self-Healing*. https://kubernetes.io/docs/concepts/architecture/self-healing/ | 分层自愈 |
 | [14] | Kubernetes Documentation, *Configure Probes*. https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ | 探针 |
@@ -577,7 +677,7 @@ backend apiservers
 | [20] | etcd Documentation, *FAQ*. https://etcd.io/docs/v3.5/faq/ | quorum |
 | [21] | Ongaro & Ousterhout, *Raft*, USENIX ATC 2014. https://raft.github.io/raft.pdf | Raft |
 | [22] | Kubernetes Documentation, *Leases*. https://kubernetes.io/docs/concepts/architecture/leases/ | 选主 |
-| [23] | Kubernetes Blog, *controller-runtime Cache* (2026). https://kubernetes.io/blog/2026/07/29/controller-runtime-cache-explained/ | Informer |
+| [23] | Kubernetes Blog, *controller-runtime Cache* (2026). https://kubernetes.io/blog/2026/07/29/controller-runtime-cache-explained/ | Informer、电平触发、调谐须幂等 |
 | [24] | Kubernetes Documentation, *HA Topology*. https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/ha-topology/ | Stacked / External |
 | [25] | Kubernetes Documentation, *HA with kubeadm*. https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/high-availability/ | TCP LB、endpoint |
 | [26] | kubeadm, *HA considerations*. https://github.com/kubernetes/kubeadm/blob/main/docs/ha-considerations.md | Keepalived、kube-vip |
@@ -594,3 +694,9 @@ backend apiservers
 | [37] | Kubernetes Blog, *Removals in 1.24*（dockershim）. https://kubernetes.io/blog/2022/04/07/upcoming-changes-in-kubernetes-1-24/ ；*Pod Security Admission Stable*（1.25，PSP 移除）. https://kubernetes.io/blog/2022/08/25/pod-security-admission-stable/ | 运行时与安全模型收束 |
 | [38] | Kubernetes Blog, *Gateway API v1.0: GA Release* (2023-10-31). https://kubernetes.io/blog/2023/10/31/gateway-api-ga/ | Gateway / HTTPRoute stable |
 | [39] | Google Cloud Blog, *The world's largest distributed LLM training job on TPU v5e* (2023-11). https://cloud.google.com/blog/products/compute/the-worlds-largest-distributed-llm-training-job-on-tpu-v5e | GKE 调度 50,944 颗 TPU v5e |
+| [40] | Kubernetes Documentation, *Objects In Kubernetes*. https://kubernetes.io/docs/concepts/overview/working-with-objects/ | `spec` / `status`；对象是意图记录 |
+| [41] | Kubernetes Documentation, *Kubernetes Scheduler*. https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/ | 过滤 + 打分 + 绑定；kubelet 才运行 |
+| [42] | Kubernetes Documentation, *Deployments*. https://kubernetes.io/docs/concepts/workloads/controllers/deployment/ | ReplicaSet 链路；`maxSurge` / `maxUnavailable`；滚动卡住 ≠ 自动回滚 |
+| [43] | Kubernetes Documentation, *Service*. https://kubernetes.io/docs/concepts/services-networking/service/ | ClusterIP、EndpointSlice、kube-proxy |
+| [44] | Kubernetes Documentation, *Nodes*. https://kubernetes.io/docs/concepts/architecture/nodes/ | Ready=`Unknown`；默认约 5 分钟后驱逐 |
+| [45] | Kubernetes Documentation, *Taints and Tolerations*. https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ | `unreachable` 污点；默认 `tolerationSeconds=300` |
