@@ -7,7 +7,7 @@
 **分类**：`50-strategy` · 优术 · 略  
 **体裁**：treatise（系统专论）  
 **对象**：Token 经济学  
-**相邻文稿**：[50 AI 产业穿透战略](./50-ai-industry-disruption-strategy.md) 问产业如何被穿透；本文问当 Token 边际成本趋近于零时，价值落在何处。[53 李嘉诚资本配置](./53-li-ka-shing-capital-allocation-treatise.md) 按公告与年报整理长和系交易、持股与交割状态。
+**相邻文稿**：[50 AI 产业穿透战略](./50-ai-industry-disruption-strategy.md) 问产业如何被穿透；本文问当 Token 边际成本趋近于零时，价值落在何处。[53 李嘉诚资本配置](./53-li-ka-shing-capital-allocation-treatise.md) 按公告、年报与有出处的分析整理长和系交易，以及重大转换当时可见的卖方与相对价格。
 
 ## 摘要
 

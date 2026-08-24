@@ -116,7 +116,7 @@ knowledge_base/
 | 50 | [AI Industry Disruption Strategy](./50-strategy/50-ai-industry-disruption-strategy.md) | 预测成本下降不自动等于好决策；护城河转向数据与流程 |
 | 51 | [Brand Cultural Translation](./50-strategy/51-brand-cultural-translation.md) | 跨文化少打折扣、多造溢价 |
 | 52 | [Token Economics Treatise](./50-strategy/52-token-economics-treatise.md) | Token 先因稀疏计算而廉价，再因商业与金融化成为底层货币；无法被 Token 化的判断才有剩余溢价 |
-| 53 | [Li Ka-shing Capital Allocation](./50-strategy/53-li-ka-shing-capital-allocation-treatise.md) | 形态转换、特许权与购买力；可带走的是三问，不是某一窗口里的资产 |
+| 53 | [Li Ka-shing Capital Allocation](./50-strategy/53-li-ka-shing-capital-allocation-treatise.md) | 形态转换、特许权与购买力；看起来准的转换当时多有卖方与相对价格；可带走的是三问，不是某一窗口里的资产 |
 
 ---
 
