@@ -1,19 +1,19 @@
 # Kubernetes 控制面原则：声明式 API、控制循环与分层自愈
 
-> Kubernetes 之名源于希腊语，意为「舵手 / 飞行员」。Google 于 2014 年开源该项目，将十余年大规模生产负载经验与社区最佳实践，凝练为一套可对外使用的容器编排平台。[1]
+> Kubernetes 之名源于希腊语，意为「舵手 / 飞行员」。Google 于 2014 年开源该项目，将十余年 Borg / Omega 生产经验凝练为可对外使用的容器编排平台。社区简称 **K8s**；七边形 logo 致敬内部代号 Project Seven of Nine。[1][6][27]
 
 先记住总纲：
 
 > **Kubernetes 不是一次性编排脚本，而是一台「分布式控制计算机」：**  
 > 以 etcd 为真相源，以声明式 API 为协调语言，以可失败的控制循环持续逼近期望态；控制面短暂失联时，数据面尽量按上次指令继续服务。[1][12][18]
 
-全文可与本库 [《服务架构演进》](./21-service-architecture-evolution.md)（复杂度如何转移）、[《分布式一致性专论》](./22-distributed-consistency-treatise.md)（CAP / Raft）、[《Calico 三层网络专论》](./24-calico-l3-dataplane-treatise.md)（网络控制面如何写表；kubelet 经 CNI 调用插件）对照阅读。关键史实与论断尽量对齐一手文献，文末附参考文献。
+全文可与本库 [《服务架构演进》](./21-service-architecture-evolution.md)（复杂度如何转移）、[《分布式一致性专论》](./22-distributed-consistency-treatise.md)（CAP / Raft）、[《Calico 三层网络专论》](./24-calico-l3-dataplane-treatise.md)（网络控制面如何写表；kubelet 经 CNI 调用插件）对照阅读。更长的容器与云原生时间线见 [《云计算发展编年史》](../10-chronicle/10-computing-cloud-chronicle.md) §8。关键史实与论断尽量对齐一手文献，文末附参考文献。
 
 ## 摘要
 
-Kubernetes 应被理解为持续收敛的分布式控制计算机，而不是一次性编排脚本。etcd 为真相源，声明式 API 为协调语言，控制器按当前态与期望态的偏差调谐；控制面可以短暂失败，数据面按上次指令尽量保持静态稳定。全文从 Borg → Omega 谱系与「平台的平台」定位，写到分层高可用、API Server 负载均衡、CRD / Operator 与能力边界。可与本库 21、22、24 对照：编排原则、一致性取舍与网络写表是同一台控制计算机的不同平面。
+Kubernetes 应被理解为持续收敛的分布式控制计算机，而不是一次性编排脚本。etcd 为真相源，声明式 API 为协调语言，控制器按当前态与期望态的偏差调谐；控制面可以短暂失败，数据面按上次指令尽量保持静态稳定。全文从 Borg → Omega 谱系、开源与编排战争、可插拔接口与「平台的平台」，写到分层高可用、API Server 负载均衡、CRD / Operator 与能力边界。可与本库 21、22、24 对照：编排原则、一致性取舍与网络写表是同一台控制计算机的不同平面。
 
-**关键词：** Kubernetes；声明式 API；控制循环；etcd；静态稳定
+**关键词：** Kubernetes；声明式 API；控制循环；etcd；静态稳定；CNCF
 
 ---
 
@@ -26,6 +26,7 @@ Kubernetes 应被理解为持续收敛的分布式控制计算机，而不是一
 1. [阅读主线](#1-阅读主线)
 2. [行业背景：为何需要编排平面](#2-行业背景为何需要编排平面)
 3. [谱系：Borg → Omega → Kubernetes](#3-谱系borg--omega--kubernetes)
+    - [3.1 三代系统](#31-三代系统) · [3.2 从开源到默认底座](#32-从开源到默认底座) · [3.3 关键节点](#33-关键节点可核验) · [3.4 何以胜出](#34-何以胜出)
 4. [定位：是什么、不是什么](#4-定位是什么不是什么)
 
 **设计原则**
@@ -70,7 +71,7 @@ flowchart TB
 | 步骤 | 问题 | 对应章节 |
 |:----:|------|----------|
 | **①** | 上一代运维 / 编排方式在规模下为何不够用？ | §2 |
-| **②** | Google 内部经验如何外溢为开源平台？ | §3 |
+| **②** | Google 内部经验如何外溢，又如何成为默认编排底座？ | §3 |
 | **③** | Kubernetes 在生态中站在哪一格？ | §4 |
 | **④** | 它依赖哪些基础设施前提？核心理念是什么？ | §5–§6 |
 | **⑤** | **分布式控制精髓与可久原则是什么？** | **§7–§10** |
@@ -83,7 +84,9 @@ flowchart TB
 
 ## 2. 行业背景：为何需要编排平面
 
-Kubernetes 出现在三股行业潮流交汇处：
+若数据中心是港口、容器是标准化集装箱，则 Kubernetes 是港口的调度系统：船停哪个泊位、货物怎么装卸、出故障怎么办、流量暴增时怎么扩容。它不制造箱子，它决定这些箱子能不能规模化运行。
+
+它出现在三股潮流交汇处：
 
 | 潮流 | 内容 | 对编排的含义 |
 |------|------|--------------|
@@ -91,13 +94,27 @@ Kubernetes 出现在三股行业潮流交汇处：
 | **容器不可变** | 镜像成为版本化制品；发布等于替换，而非就地打补丁 | 运行单元可被声明、调度、批量替换 |
 | **复杂度下沉** | 微服务把应用复杂度切开后，运维复杂度上涌（见本库服务架构演进） | 需要把发现、扩缩、自愈从应用层**下沉到基础设施** |
 
+2013 年 Docker 把容器从运维黑科技变成开发者日常工具：笔记本上打包，几乎原封不动搬到服务器。一台机器上几个容器很容易管；横跨成百上千台机器的成千上万个容器，才把「编排」变成所有人的问题——自动化部署、扩缩容、服务发现、故障恢复。谁把它做成通用平台，谁就有机会成为云基础设施的标准。
+
 上一代「命令式编排 / 手工剧本」在规模下成本急剧上升：故障组合爆炸，逐步脚本既不经济，也不诚实。行业需要的不是更长的 Runbook，而是**把故障当成稳态输入、用持续收敛代替一次性剧本**的控制平面。
 
-> **判断**：Kubernetes 应时而生——不是发明了容器，而是为「可编程云 + 不可变制品 + 微服务后的运维洪峰」提供了编排与自愈平面。
+> **判断**：Kubernetes 应时而生——不是发明了容器，而是为「可编程云 + 不可变制品 + 微服务后的运维洪峰」提供了编排与自愈平面。Docker 解决打包；它补上规模化运维。
 
 ---
 
 ## 3. 谱系：Borg → Omega → Kubernetes
+
+下图为谱系主线：内部生产经验外溢为开源平台，再经治理、接口与云厂商对齐，收束成默认编排底座。
+
+```mermaid
+%% K8s 谱系：内部经验 → 开源治理 → 编排战争 → 接口锁定 → 托管对齐
+flowchart LR
+  Borg["Borg / Omega<br/>~2003–2013"] --> OSS["开源 2014<br/>1.0 + CNCF 2015"]
+  OSS --> War["编排战争<br/>2015–2017"]
+  War --> Ext["接口与 Operator<br/>2016–2019"]
+  Ext --> Cloud["托管对齐<br/>2018"]
+  Cloud --> Adult["成年礼<br/>2020–"]
+```
 
 ### 3.1 三代系统
 
@@ -111,21 +128,81 @@ Burns / Grant / Oppenheimer 区分了 Google 内部三代容器管理系统：[2
 
 Brian Grant 指出：Kubernetes「更像开源的 Omega，而非开源的 Borg」；Scheduling Unit 等概念随后演进为 Pod。[5]
 
+它继承了 Borg 的若干本能，最明显的是把一组紧密协作的容器当作一个调度单元（Borg 称 alloc，Kubernetes 称 **Pod**）。同时刻意改进 Borg 的局限：Borg 主要用相对僵硬的 Job 分组工作，Kubernetes 用 Label / Selector 组织对象，并更强调声明式期望态——你描述想要什么，系统努力去实现它。[2]
+
 从分布式视角，三代留下三条遗产：
 
 1. **共享集群状态**作为协调枢纽；
 2. **异步控制器**监视变化并写回观测；
-3. Kubernetes 的关键升级：状态**不直接暴露存储**，而必须经 **REST API** 完成版本、校验与策略。[2]
+3. Kubernetes 的关键升级：状态**不直接暴露存储**（有别于 Omega 让受信组件直连共享状态），而必须经 **REST API** 完成版本、校验与策略。[2]
 
-### 3.2 关键节点（可核验）
+### 3.2 从开源到默认底座
+
+**点燃（2013–2015）。** 2013 年夏，Joe Beda、Brendan Burns、Craig McLuckie 向领导层提议：把 Borg / Omega 经验做成开源容器管理系统。内部代号 Project Seven of Nine，致敬《星际迷航》九之七，这也是 logo 七条边的来历。[27] 2014-06-06 首个 commit 落地；6 月 10 日 Eric Brewer 在 DockerCon 宣布。行业通常把 6 月 6 日当作生日。[6]
+
+2015-07-21 发布 1.0，并捐赠给新成立的 CNCF（Linux 基金会托管）。[6][7] 象征意义大于版本号：若仍是「Google 的开源项目」，竞争对手会犹豫；落到中立基金会之下，Red Hat、IBM、Intel、VMware，以及后来的 AWS 与微软，都更愿意押注。CNCF 的目标从来不只是发展 Kubernetes，而是推进整个云原生栈。约一个月后，2015-08-26，Google Container Engine（后来的 GKE）达到 GA——云厂商开始把「我们帮你运行控制平面」当作产品来卖。[28]
+
+到 1.0，最小闭环已经在：
+
+| 概念 | 含义 |
+|------|------|
+| **Pod** | 最小调度单元：可容纳一个或多个紧密协作容器的小房间 |
+| **Node** | 一台工作机器（物理或虚拟） |
+| **Service** | 变化的一组 Pod 前面的稳定访问点 |
+| **Label / Selector** | 给对象打标签再按标签过滤 |
+| **声明式 API** | 说「保持 3 个副本存活」，系统去实现，而不是手工 SSH |
+
+人们后来习以为常的 Deployment、DaemonSet、StatefulSet、Ingress、成熟 RBAC，都是 1.0 之后长出来的。1.0 更像「可用的最小闭环」：证明编排可以成为平台。
+
+**编排战争（2015–2017）。** 市场上至少有三大竞争者：Docker Swarm（与 Docker 集成最紧、最好上手）、Apache Mesos + Marathon（更老牌，擅长超大规模与异构负载）、Kubernetes（学习曲线陡，但模型完整且可扩展）。Nomad 等也在混战。Kubernetes 获胜不是某个单一开关，而是多股力量叠加：Google 的生产可信度 + CNCF 的中立治理；设计良好的 API 与扩展点；监控、网络、存储、CI/CD、安全工具优先支持它；云厂商排队站队。高潮出现在 2017-10 DockerCon Europe：Docker 宣布在 Swarm 之外原生支持 Kubernetes。[31] Swarm 没有一夜消失，Mesos 仍活在某些细分领域，但行业已经知道默认答案是什么。2017-11-13，CNCF 启动 Certified Kubernetes Conformance：自称 Kubernetes 的发行版须通过测试套件，保证核心 API 行为一致，避免严重的 Unix / Android 式碎片化。[32]
+
+**长肌肉（2016–2019）。** 工作负载方面，`apps/v1`（Deployment、DaemonSet、ReplicaSet、StatefulSet）于 1.9（2017-12-15）达 GA——常见应用形态有了稳定的一等公民 API。[30] 权限方面，RBAC 于 1.8（2017-09）GA，把集群从「共享 root 的服务器农场」变成有门禁的系统。网络方面，NetworkPolicy 于 1.7（2017-06）达 `networking.k8s.io/v1` stable；1.8 增加更有用的 egress 策略。更关键的是可插拔合同：CRI 随 1.5（2016-12）以 Alpha 引入；CNI 把容器网络交给插件（Kubernetes 采用该合同，而非自造网络栈）；CSI 随 1.13（2018-12）达 GA。[29][34] 三者的战略价值超过几乎任何单个功能——网络、存储、运行时厂商可以在不修改内核的情况下加入竞争。
+
+CRD 由 ThirdPartyResource 重设计而来，1.7 入 beta，1.16（2019）以 `apiextensions.k8s.io/v1` 达 GA。[30][35] 2016-11-03，CoreOS 提出 Operator 模式：把部署、备份、故障转移、升级的专家经验，编码进监视自定义资源的控制器；当时 CRD 未稳，早期实现更多依赖 TPR。[36] CRD 成熟后，Operator 几乎都迁到这条路上。Deployment 让「三个相同的 Web 副本」保持存活；Operator 让「这个有状态系统以专家期望的方式保持存活」。
+
+**共同语言（2018）。** Amazon EKS 于 2018-06-05 GA，Azure AKS 于 2018-06-13 GA；加上 2015 年已 GA 的 GKE，三大云都提供托管 Kubernetes。[33] 对企业意味着：学一套模型，就能在多个云上说话。差异更多落在周边服务、网络和身份上，而不是「必须再学第三个编排器」。Kubernetes 不能完全消除锁定，但大幅降低了「应用怎么运行」这一层的锁定。一致性认证让托管服务更像同一种语言的不同口音。
+
+**成年礼（2020–）。** 许多人曾以为「Kubernetes = 用 Docker 跑容器」。实际上它依赖的是容器运行时接口；为兼容 Docker，kubelet 曾内置 dockershim。该垫片于 1.20 弃用，1.24（2022-04）移除，标准收束到 OCI / CRI。[37] 终端用户仍可用 Docker 构建镜像；变化主要影响节点上由哪个运行时来跑容器。PodSecurityPolicy 于 1.21 弃用、1.25 移除，代以更简单的 Pod Security Admission（给 Namespace 打标签，套 Privileged / Baseline / Restricted）；更细的需求交给 OPA / Gatekeeper 或 Kyverno 等外部引擎。[37] 方向明确：默认更安全，机制里更少魔法。
+
+入口侧，Ingress 简单但扩展碎片化（annotation 行为随实现而异）。Gateway API 于 2023-10-31 发布 v1.0，`Gateway`、`GatewayClass`、`HTTPRoute` 达 stable，把「基础设施如何提供入口」与「应用如何声明路由」分开。[38] Ingress 不会一夜消失，新项目越来越默认走 Gateway API。与此同时，大模型把 GPU / TPU 与大规模作业调度推回舞台中央。约 2023-11，Google 公开用 GKE 及相关能力调度一次约 50,944 颗 TPU v5e 芯片的分布式训练作业。[39] Kubernetes 不是为 LLM 发明的，但眼下是多数组织够得着的、足够通用的集群底座。安全、可观测与平台工程则不断把它藏到自助服务后面：开发者可能永远不直接碰集群，平台团队几乎总是在它之上构建。
+
+### 3.3 关键节点（可核验）
 
 | 时间 | 事件 |
 |------|------|
-| **2014-06** | 首批提交；Eric Brewer 在 DockerCon 宣布。[6] |
+| 约 **2003** 起 | Borg 大规模管理容器化工作负载。[3] |
+| **2013** | Docker 成为开发者日常工具；Kubernetes 以 Project Seven of Nine 起步。[27] |
+| **2014-06-06** | 首个 commit；**2014-06-10** Eric Brewer 在 DockerCon 宣布。[6] |
 | **2015-07-21** | Kubernetes **1.0**；捐赠新成立的 **CNCF**。[6][7] |
-| **2016–2018** | Prometheus、Istio、托管服务与 KubeCon 推动生态主流化。 |
+| **2015-08-26** | Google Container Engine（后来的 GKE）GA。[28] |
+| **2016-11-03** | CoreOS 提出 Operator。[36] |
+| **2016-12** | CRI Alpha（1.5）。[29] |
+| **2017-06 / 09** | NetworkPolicy GA（1.7）；RBAC GA（1.8）。[30] |
+| **2017-10** | Docker 宣布原生支持 Kubernetes。[31] |
+| **2017-11-13** | CNCF 启动 Certified Kubernetes Conformance。[32] |
+| **2017-12-15** | 1.9，`apps/v1` 核心工作负载 API GA。[30] |
+| **2018-06** | EKS（06-05）、AKS（06-13）GA。[33] |
+| **2018-12** | 1.13，CSI GA（官方 GA 说明文 2019-01）。[34] |
+| **2019** | 1.16，CRD 以 `apiextensions.k8s.io/v1` GA。[35] |
+| **2020–2022** | dockershim 1.20 弃用、1.24 移除；PSP 移除；Pod Security Admission 于 1.25 稳定。[37] |
+| **2023-10-31** | Gateway API v1.0，核心资源稳定。[38] |
+| **2023-11** | 公开报道：GKE 调度约 5.1 万颗 TPU v5e 的分布式训练作业。[39] |
+| **2024–** | 开源十周年；继续向 AI、多集群、平台工程推进。[6] |
 
-> **判断**：开源的不是 Borg 的源码外壳，而是「规模下故障是常态」这一工程假设——把内部生产经验，变成外部可复用的控制模型。
+### 3.4 何以胜出
+
+回看这十几年，胜利可以压成四个词：
+
+| 词 | 含义 |
+|--|------|
+| **时机** | Docker 解决打包，它补上规模化运维 |
+| **经验** | 十几年 Borg 伤痕换来更清晰的抽象（Pod、声明式、Label） |
+| **治理** | 交给 CNCF，让竞争对手也愿意共建 |
+| **接口** | CRI / CNI / CSI 加上 CRD / Operator，让其他人能在它之上继续建设 |
+
+它从来不是「简单」的。学习曲线陡，YAML 又长又丑，生产事故可以很戏剧化——这些都是合理的抱怨。基础设施很少因为无懈可击而赢；它赢在足够通用、足够可扩展、有足够强的生态。监控、service mesh、GitOps 与平台工程，大多是在这座港口上加建的码头、吊机和海关。展望未来，港口不会消失，但会越来越不像开发者每天面对的栈桥。
+
+> **判断**：开源的不是 Borg 的源码外壳，而是「规模下故障是常态」这一工程假设——把内部生产经验，变成外部可复用的控制模型。未来十年更可能发生的，不是从零再建一个新港口，而是把这座港口建得更高更深。
 
 ---
 
@@ -157,7 +234,7 @@ Kubernetes 是可移植、可扩展的**开源平台**，用于管理容器化�
 | 类别 | 典型组件 | 边界 |
 |------|----------|------|
 | 网络 / DNS | Calico、Cilium、CoreDNS | 插件实现；kubelet 经 CNI 调用。Calico 合同见 [《Calico 三层网络专论》](./24-calico-l3-dataplane-treatise.md) §2.5 |
-| 工作负载入口 | Ingress、云 LB、MetalLB | 业务流量，**非**控制面入口 |
+| 工作负载入口 | Ingress、**Gateway API**、云 LB、MetalLB | 业务流量，**非**控制面入口。Gateway API 为下一代入口，见 §3.2 |
 | 可观测 / 网格 | Prometheus、Istio | 周边生态 |
 
 > **要点**：Kubernetes 管「如何声明与收敛」；生态管「具体实现插件」。核心价值是**持续收敛**，而非中心化剧本。
@@ -183,6 +260,8 @@ Kubernetes 能成立，建立在云把基础设施「产品化」之后的三个
 Kubernetes 的定位是 **Platform for Platform**——用来构建分布式系统的分布式系统。首要用户是分布式应用开发者。
 
 「平台之平台」意味着：不把所有领域知识写死在核心里，而把**声明与收敛的能力**开放出去。上层经 CRD / Operator 扩展，而不必每次重造控制平面。官方要求与此一致：可扩展、可自动化；声明式是自愈的关键。[8]
+
+机制上对应两层接口：CRI / CNI / CSI 让运行时、网络、存储可插拔（核心当裁判，不当全部运动员）；CRD / Operator 让领域对象与运维知识可外挂。这是编排战争第二回合的胜负手，工程细节见 §13。[29][34][36]
 
 > **判断**：复杂度不会消失，只会转移——Kubernetes 把「如何协调分布式」收成平台能力，把「协调什么」留给领域。
 
@@ -441,8 +520,10 @@ backend apiservers
 
 | 机制 | 作用 |
 |------|------|
-| **CRD** | 领域对象获得声明式外表 |
-| **Operator** | 运维知识编码为持续调谐（Controller + CRD）[15] |
+| **CRD** | 领域对象获得声明式外表。由 TPR 重设计而来，1.7 入 beta，1.16 以 `apiextensions.k8s.io/v1` 达 GA。[30][35] |
+| **Operator** | 运维知识编码为持续调谐（Controller + CRD）。CoreOS 于 2016-11 提出；早期依赖 TPR，CRD 成熟后成为主路。[15][36] |
+
+集群里许多「高级能力」并不是突然写进内核的：有人用 CRD 教集群认识一个新对象，再写一个 controller 去实现它。
 
 > **工程含义**：先统一「如何描述、如何共识、如何在故障下收敛」，再让各领域填写「收敛什么」——「通用软件控制平面」不过是同一控制模型的外推。
 
@@ -476,7 +557,7 @@ backend apiservers
 
 | 层次 | 命题 | 要点 |
 |------|------|------|
-| **背景** | 时代与谱系 | 云可编程 × 容器不可变 × 复杂度下沉；Borg/Omega 经验外溢，非 Borg 开源版[2] |
+| **背景** | 时代与谱系 | 云可编程 × 容器不可变 × 复杂度下沉；Borg/Omega 经验外溢，非 Borg 开源版；CNCF 治理 + 可插拔接口使其成为默认底座[2][6] |
 | **原则** | 可久约束 | 一份真相 · API 松耦合 · level-based 收敛 · 静态稳定 · Platform for Platform[12][19] |
 | **落地** | 工程工艺 | 共识 → L4 入口 → 选主 → 节点闭环 → 负载自愈；CRD/Operator 外推；边界清晰[13][25] |
 
@@ -487,6 +568,7 @@ backend apiservers
 | 看清趋势、无落地工艺 | 知道需要编排平面，却无分层 HA 与入口设计——机遇空过 |
 
 > **收束**  
+> Docker 把软件变成标准集装箱；Kubernetes 把「如何调度这些箱子」写成云原生的共同语言。  
 > 接受「故障是常态」的生产假设；守住「一份真相、持续收敛、静态稳定」；把原则落成「分层高可用与可扩展控制平面」。  
 > 舵手之意，不在无风浪，而在有原则可依、有工艺可操，于故障中仍能指向可用。
 
@@ -499,10 +581,10 @@ backend apiservers
 | [1] | Kubernetes Documentation, *Overview*. https://kubernetes.io/docs/concepts/overview/ | 定义、能力、「不是编排器」 |
 | [2] | Burns, Grant, Oppenheimer, *Borg, Omega, and Kubernetes*, ACM Queue 2016. https://queue.acm.org/detail.cfm?id=2898444 | 三代系统；共享状态与 API |
 | [3] | Verma et al., *Borg*, EuroSys 2015. https://research.google/pubs/pub43438/ | Borg 规模与实践 |
-| [4] | Schwarzkopf et al., *Omega*, EuroSys 2013. | 共享状态与多调度器 |
+| [4] | Schwarzkopf et al., *Omega: flexible, scalable schedulers for large compute clusters*, EuroSys 2013. https://research.google/pubs/pub41684/ | 共享状态与多调度器 |
 | [5] | Kubernetes Podcast, *Ep. 43 — Brian Grant*. https://kubernetespodcast.com/episode/043-borg-omega-kubernetes-beyond/ | 「更像开源 Omega」 |
-| [6] | Kubernetes Blog, *10 Years of Kubernetes* (2024). https://kubernetes.io/blog/2024/06/06/10-years-of-kubernetes/ | 2014 / 2015-07-21 |
-| [7] | CNCF 成立公告 (2015-07-21). https://www.cncf.io/announcements/2015/06/21/new-cloud-native-computing-foundation-to-drive-alignment-among-container-technologies/ | CNCF 种子技术 |
+| [6] | Kubernetes Blog, *10 Years of Kubernetes* (2024-06-06). https://kubernetes.io/blog/2024/06/06/10-years-of-kubernetes/ | 2014-06-06 首 commit；2014-06-10 DockerCon；2015-07-21 1.0 |
+| [7] | CNCF 成立公告 (2015-07-21). https://www.cncf.io/announcements/2015/06/21/new-cloud-native-computing-foundation-to-drive-alignment-among-container-technologies/ | 种子技术；URL 日期戳为 06-21，宣布日为 07-21 |
 | [8] | Design Proposals Archive, *Architecture*. https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/architecture.md | 可扩展、声明式 |
 | [9] | Kubernetes Documentation, *Persistent Volumes*. https://kubernetes.io/docs/concepts/storage/persistent-volumes/ | PV / PVC |
 | [10] | Marc Brooker, *Control Planes vs Data Planes* (2019). https://brooker.co.za/blog/2019/03/17/control | 控制面 / 数据面 |
@@ -522,3 +604,16 @@ backend apiservers
 | [24] | Kubernetes Documentation, *HA Topology*. https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/ha-topology/ | Stacked / External |
 | [25] | Kubernetes Documentation, *HA with kubeadm*. https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/high-availability/ | TCP LB、endpoint |
 | [26] | kubeadm, *HA considerations*. https://github.com/kubernetes/kubeadm/blob/main/docs/ha-considerations.md | Keepalived、kube-vip |
+| [27] | McLuckie, *How Kubernetes came to be*, Google Cloud Blog. https://cloud.google.com/blog/products/containers-kubernetes/from-google-to-the-world-the-kubernetes-origin-story | Project Seven of Nine；七边形 logo |
+| [28] | Google Cloud Platform Blog, *Google Container Engine is Generally Available* (2015-08-26). https://cloudplatform.googleblog.com/2015/08/Google-Container-Engine-is-Generally-Available.html | GKE 前身 GA |
+| [29] | Kubernetes Blog, *Introducing CRI* (2016-12). https://kubernetes.io/blog/2016/12/container-runtime-interface-cri-in-kubernetes/ | CRI Alpha（1.5） |
+| [30] | Kubernetes Blog：*1.7*（NetworkPolicy GA、CRD 取代 TPR）https://kubernetes.io/blog/2017/06/kubernetes-1-7-security-hardening-stateful-application-extensibility-updates/ ；*Using RBAC, GA in 1.8* https://kubernetes.io/blog/2017/10/using-rbac-generally-available-18/ ；*1.9*（apps/v1 GA）https://kubernetes.io/blog/2017/12/kubernetes-19-workloads-expanded-ecosystem/ | 工作负载与安全 API 达 GA |
+| [31] | InfoQ, *DockerCon Europe 2017: Docker EE and CE to Include Kubernetes Integration*. https://www.infoq.com/news/2017/10/docker-kubernetes-integration/ | 编排战争高潮 |
+| [32] | CNCF, *Certified Kubernetes Conformance Program* (2017-11-13). https://www.cncf.io/announcements/2017/11/13/cloud-native-computing-foundation-launches-certified-kubernetes-program-32-conformant-distributions-platforms/ | 一致性认证 |
+| [33] | AWS, *Amazon EKS – Now Generally Available* (2018-06-05). https://aws.amazon.com/blogs/aws/amazon-eks-now-generally-available/ ；Azure, *AKS GA* (2018-06-13). https://azure.microsoft.com/en-us/blog/azure-kubernetes-service-aks-ga-new-regions-new-features-new-productivity/ | 三大云托管对齐 |
+| [34] | Kubernetes Blog, *CSI for Kubernetes GA* (2019-01-15). https://kubernetes.io/blog/2019/01/15/container-storage-interface-ga/ ；*1.13 release* (2018-12-03). https://kubernetes.io/blog/2018/12/03/kubernetes-1-13-release-announcement/ | CSI 随 1.13 GA |
+| [35] | Kubernetes Blog, *Kubernetes 1.16 Release Announcement* (2019-09-18). https://kubernetes.io/blog/2019/09/18/kubernetes-1-16-release-announcement/ | CRD `apiextensions.k8s.io/v1` GA |
+| [36] | CoreOS, *Introducing Operators* (2016-11-03). https://web.archive.org/web/20191125171801/https://coreos.com/blog/introducing-operators.html | Operator 模式提出 |
+| [37] | Kubernetes Blog, *Removals in 1.24*（dockershim）. https://kubernetes.io/blog/2022/04/07/upcoming-changes-in-kubernetes-1-24/ ；*Pod Security Admission Stable*（1.25，PSP 移除）. https://kubernetes.io/blog/2022/08/25/pod-security-admission-stable/ | 运行时与安全模型成年 |
+| [38] | Kubernetes Blog, *Gateway API v1.0: GA Release* (2023-10-31). https://kubernetes.io/blog/2023/10/31/gateway-api-ga/ | Gateway / HTTPRoute stable |
+| [39] | Google Cloud Blog, *The world's largest distributed LLM training job on TPU v5e* (2023-11). https://cloud.google.com/blog/products/compute/the-worlds-largest-distributed-llm-training-job-on-tpu-v5e | GKE 调度 50,944 颗 TPU v5e |
