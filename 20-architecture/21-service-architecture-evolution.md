@@ -10,6 +10,8 @@
 
 > **好的架构演进，不是消灭复杂度，而是把当前最痛的那种复杂度，从开发者的日常视野中移走——有时下沉到基础设施，有时交给云厂商。**
 
+同一原理的一般说法见 [43 熵与复杂系统](../40-paradigm/43-entropy-complex-systems-philosophy.md)：控制是搬运，有序是局部现象。本文是它在服务架构代际上的专名。
+
 ## 摘要
 
 服务架构从原始分布式、单体、SOA、微服务、后微服务到无服务，每一代都因上一代解决不了的具体问题而生。贯穿全文的暗线是：复杂度不会消失，只会转移——有时下沉到基础设施，有时交给云厂商。本文在周志明《凤凰架构》第一章基础上补充可核验材料与时间线，把零散的后端经验收成代际图谱。理解这条暗线，比记住任何一张架构图更有用。
@@ -298,6 +300,7 @@ Kubernetes 也不完美。基础设施多以**容器 / Pod** 为粒度，对「�
 
 - 原始分布式：<https://icyfenix.cn/architecture/architect-history/primitive-distribution.html>  
 - 微服务：<https://icyfenix.cn/architecture/architect-history/microservices.html>  
-- 李智慧，《大型网站技术架构：核心原理与案例分析》（附录 A 路径的常见出处之一）
+- 李智慧，《大型网站技术架构：核心原理与案例分析》（附录 A 路径的常见出处之一）  
+- 本库 [43 熵与复杂系统](../40-paradigm/43-entropy-complex-systems-philosophy.md)：复杂度转移的一般语法（熵、搬运、散热、进化）
 
 ---

@@ -10,7 +10,7 @@
 
 > **Agentic search（glob / grep）与向量索引并非简单的「先进 / 倒退」，而是场景、确定性、隐私、延迟与 token 成本之间的不同取舍。**
 
-**40-paradigm 系列导读：** 本区三篇按「哲学 → 组织范式 → 运维落地」递进。先读本文，弄清工具为何要职责明确、可组合、可观察；再读 [41](./41-ai-engineering-paradigm.md)，看个人提效之后组织如何用 5+2 承接；最后读 [42](./42-agentic-sre-operations-playbook.md)，把同一套人机分工落到 SRE 事故链与平均恢复时间（MTTR）。三篇合看：智的优术，从设计原则走到可试点的工艺。
+**40-paradigm 系列导读：** 本区前三篇按「哲学 → 组织范式 → 运维落地」递进。先读本文，弄清工具为何要职责明确、可组合、可观察；再读 [41](./41-ai-engineering-paradigm.md)，看个人提效之后组织如何用 5+2 承接；再读 [42](./42-agentic-sre-operations-playbook.md)，把同一套人机分工落到 SRE 事故链与平均恢复时间（MTTR）。三篇是智的优术。[43](./43-entropy-complex-systems-philosophy.md) 是横切镜片：用熵、搬运与进化读任意复杂系统——团队、市场、制度，不限于智能协作。
 
 ## 摘要
 

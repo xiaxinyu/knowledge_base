@@ -69,7 +69,7 @@ AI 降低了「写出代码」的边际成本，却未必提高组织交付—�
 | **10** | `10-chronicle/` | 取势 | 史 | 计算从何而来？ |
 | **20** | `20-architecture/` | 明道 | 构 | 系统如何立身？ |
 | **30** | `30-governance/` | 明道 | 治 | 技术如何可信？ |
-| **40** | `40-paradigm/` | 优术 | 智 | 智能如何协作？ |
+| **40** | `40-paradigm/` | 优术 | 智 | 智能如何协作？复杂系统如何被分析？ |
 | **50** | `50-strategy/` | 优术 | 略 | 价值如何取胜？ |
 
 此序即本末：
@@ -97,7 +97,7 @@ knowledge_base/
 └── 50-strategy/        优术 · 略
 ```
 
-同域内按认知依赖递增：先概念，后演进，再原则，再落地。`50` 四篇不是上下卷，而是同一问的四个切面——**局、译、币、配**：产业如何被穿透，意义如何跨文化传递，Token 如何成为智能经济的计量单位，资本如何在周期中配置。
+同域内按认知依赖递增：先概念，后演进，再原则，再落地。`40` 前三篇是智能协作的优术（工具哲学 → 组织范式 → 运维落地），`43` 是横切镜片：用熵读任意复杂系统。`50` 四篇不是上下卷，而是同一问的四个切面——**局、译、币、配**：产业如何被穿透，意义如何跨文化传递，Token 如何成为智能经济的计量单位，资本如何在周期中配置。
 
 | 编号 | 文稿 | 核心命题 |
 |------|------|----------|
@@ -113,6 +113,7 @@ knowledge_base/
 | 40 | [Unix–Agent Stateless Philosophy](./40-paradigm/40-unix-agent-stateless-philosophy.md) | 工具应职责明确、可组合、可观察；遗忘有时强于记忆 |
 | 41 | [AI Engineering Paradigm](./40-paradigm/41-ai-engineering-paradigm.md) | 个人变快之后，组织有无新的协作与治理来承接 |
 | 42 | [Agentic SRE Operations Playbook](./40-paradigm/42-agentic-sre-operations-playbook.md) | 压缩 MTTR 中可并行、可检索、可证据化的时间段 |
+| 43 | [Entropy Complex Systems Philosophy](./40-paradigm/43-entropy-complex-systems-philosophy.md) | 控制是搬运熵；有序是局部现象；好系统是进化引擎还在转 |
 | 50 | [AI Industry Disruption Strategy](./50-strategy/50-ai-industry-disruption-strategy.md) | 预测成本下降不自动等于好决策；护城河转向数据与流程 |
 | 51 | [Brand Cultural Translation](./50-strategy/51-brand-cultural-translation.md) | 跨文化少打折扣、多造溢价 |
 | 52 | [Token Economics Treatise](./50-strategy/52-token-economics-treatise.md) | Token 先因稀疏计算而廉价，再因商业与金融化成为底层货币；无法被 Token 化的判断才有剩余溢价 |
@@ -130,10 +131,11 @@ knowledge_base/
 
 1. **10** 计算演进脉络  
 2. **21** 架构代际迁移  
-3. **22** 跨节点一致性取舍  
-4. **23** 编排控制面原则  
-5. **24** 数据面如何写表转发  
-6. **40** 回扣无状态与可组合  
+3. **43** 熵与复杂度如何转移（一般原理）  
+4. **22** 跨节点一致性取舍  
+5. **23** 编排控制面原则  
+6. **24** 数据面如何写表转发  
+7. **40** 回扣无状态与可组合  
 
 ### IT 治理 / CIO / 审计
 
@@ -151,7 +153,8 @@ AI 如何改变工程组织、如何承接被放大的速度。
 1. **40** 工具为何要职责明确、可观察  
 2. **41** 5+2 如何承接个人提效  
 3. **42** 运维侧如何智能体化  
-4. **50** 战略层如何重构护城河  
+4. **43** 用熵读组织与制度（横切镜片）  
+5. **50** 战略层如何重构护城河  
 
 ### 品牌 / 战略负责人
 
