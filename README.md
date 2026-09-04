@@ -66,7 +66,7 @@ AI 降低了「写出代码」的边际成本，却未必提高组织交付—�
 
 | 区号 | 目录 | 境界 | 线索 | 所问 |
 |------|------|------|------|------|
-| **10** | `10-chronicle/` | 取势 | 史 | 计算从何而来？ |
+| **10** | `10-chronicle/` | 取势 | 史 | 计算、信息与智能从何而来？ |
 | **20** | `20-architecture/` | 明道 | 构 | 系统如何立身？ |
 | **30** | `30-governance/` | 明道 | 治 | 技术如何可信？ |
 | **40** | `40-paradigm/` | 优术 | 智 | 智能如何协作？复杂系统如何被分析？ |
@@ -103,6 +103,7 @@ knowledge_base/
 |------|------|----------|
 | 10 | [Computing Cloud Chronicle](./10-chronicle/10-computing-cloud-chronicle.md) | 计算能力如何从专用机械变为按需共享资源池 |
 | 11 | [Information Theory Chronicle](./10-chronicle/11-information-theory-chronicle.md) | 信息如何被度量，并成为数字通信与统计学习的共同语言 |
+| 12 | [Artificial Intelligence Chronicle](./10-chronicle/12-artificial-intelligence-chronicle.md) | 达特茅斯提案可核对；五阶段 + 产业三分；节点年表与来源 |
 | 20 | [Enterprise Architecture Treatise](./20-architecture/20-enterprise-architecture-treatise.md) | 战略如何翻译为可执行的经营与 IT 安排 |
 | 21 | [Service Architecture Evolution](./20-architecture/21-service-architecture-evolution.md) | 复杂度不会消失，只会代际转移 |
 | 22 | [Distributed Consistency Treatise](./20-architecture/22-distributed-consistency-treatise.md) | 跨节点之后，强一致与持续可用如何取舍 |
@@ -131,12 +132,14 @@ knowledge_base/
 系统如何立身、如何设计可久。
 
 1. **10** 计算演进脉络  
-2. **21** 架构代际迁移  
-3. **43** 熵与复杂度如何转移（一般原理）  
-4. **22** 跨节点一致性取舍  
-5. **23** 编排控制面原则  
-6. **24** 数据面如何写表转发  
-7. **40** 回扣无状态与可组合  
+2. **11** 信息如何被度量  
+3. **12** 人工智能如何走到大模型  
+4. **21** 架构代际迁移  
+5. **43** 熵与复杂度如何转移（一般原理）  
+6. **22** 跨节点一致性取舍  
+7. **23** 编排控制面原则  
+8. **24** 数据面如何写表转发  
+9. **40** 回扣无状态与可组合  
 
 ### IT 治理 / CIO / 审计
 
@@ -151,11 +154,12 @@ knowledge_base/
 
 AI 如何改变工程组织、如何承接被放大的速度。
 
-1. **40** 工具为何要职责明确、可观察  
-2. **41** 5+2 如何承接个人提效  
-3. **42** 运维侧如何智能体化  
-4. **43** 用熵读组织与制度（横切镜片）  
-5. **50** 战略层如何重构护城河  
+1. **12** 人工智能如何走到大模型  
+2. **40** 工具为何要职责明确、可观察  
+3. **41** 5+2 如何承接个人提效  
+4. **42** 运维侧如何智能体化  
+5. **43** 用熵读组织与制度（横切镜片）  
+6. **50** 战略层如何重构护城河  
 
 ### 品牌 / 战略负责人
 
