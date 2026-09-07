@@ -129,7 +129,7 @@ knowledge_base/
 | 编号 | 文稿 | 核心命题 | 触发器（何时读） |
 |------|------|----------|------------------|
 | 10 | [Computing Cloud Chronicle](./10-chronicle/10-computing-cloud-chronicle.md) | 计算能力如何从专用机械变为按需共享资源池 | 云从何而来、资源池化 |
-| 11 | [Information Theory Chronicle](./10-chronicle/11-information-theory-chronicle.md) | 信息如何被度量，并成为数字通信与统计学习的共同语言 | 熵、信道、信息度量 |
+| 11 | [Information Theory Chronicle](./10-chronicle/11-information-theory-chronicle.md) | 信息如何被度量，并成为数字通信与统计学习的共同语言 | 信息熵、信道、香农 |
 | 12 | [Artificial Intelligence Chronicle](./10-chronicle/12-artificial-intelligence-chronicle.md) | 六种机制的本质与可观察量；承诺—能力鸿沟上的五阶段编年（智能体为第五阶段之延伸） | AI 编年、智能体从哪来 |
 
 #### 20 · 明道 · 构
@@ -156,7 +156,7 @@ knowledge_base/
 | 40 | [Unix–Agent Stateless Philosophy](./40-paradigm/40-unix-agent-stateless-philosophy.md) | 工具应职责明确、可组合、可观察；遗忘有时强于记忆 | 无状态、可组合工具 |
 | 41 | [AI Engineering Paradigm](./40-paradigm/41-ai-engineering-paradigm.md) | 个人变快之后，组织有无新的协作与治理来承接 | 个人提效后组织怎么接 |
 | 42 | [Agentic SRE Operations Playbook](./40-paradigm/42-agentic-sre-operations-playbook.md) | 压缩 MTTR 中可并行、可检索、可证据化的时间段 | Agent 运维落地、MTTR |
-| 43 | [Entropy Complex Systems Philosophy](./40-paradigm/43-entropy-complex-systems-philosophy.md) | 控制是搬运熵；有序是局部现象；好系统是进化引擎还在转 | 熵、控制、散热 |
+| 43 | [Entropy Complex Systems Philosophy](./40-paradigm/43-entropy-complex-systems-philosophy.md) | 控制是搬运熵；有序是局部现象；好系统是进化引擎还在转 | 热力学熵隐喻、控制、散热 |
 | 44 | [Agentic Ops Frontier Treatise](./40-paradigm/44-agentic-ops-frontier-treatise.md) | 2025–2026 Agentic Ops 十大动向：自治 RCA、比例治理、MCP/OTel 与评测底座 | Agentic Ops 产业动向 |
 | 45 | [Agent Teams Collaboration Treatise](./40-paradigm/45-agent-teams-collaboration-treatise.md) | ReAct 之上的协作语义：协议通道 ≠ Team；堆人不是加法 | 多 Agent、Team、协议 |
 | 46 | [Systems Thinking Philosophy](./40-paradigm/46-systems-thinking-philosophy.md) | 系统=要素+连接+目标；谱系与杠杆点；看影子背后的结构，从线性到循环 | 系统思维、反馈、杠杆点 |
@@ -178,7 +178,7 @@ knowledge_base/
 | 概念 / 关键词 | 编号 |
 |---------------|------|
 | 云计算史、资源池 | 10 |
-| 信息论、香农、信道容量 | 11 |
+| 信息论、香农、信道容量、**信息熵** | 11 |
 | AI 史、机制分类、智能体编年 | 12 |
 | 企业架构、TOGAF/业务—IT 对齐 | 20 |
 | 服务架构代际、复杂度转移 | 21 |
@@ -190,7 +190,7 @@ knowledge_base/
 | Unix 哲学、无状态 Agent、可组合 | 40 |
 | AI 工程组织、5+2、提效承接 | 41 |
 | Agentic SRE、MTTR、运维手册 | 42 |
-| 熵、控制、有序局部性 | 43 |
+| **控制与散热**、热力学熵隐喻、有序局部性（≠ 信息熵） | 43 |
 | Agentic Ops 前沿、MCP、OTel、RCA | 44 |
 | ReAct、Agent Teams、A2A/多 Agent | 45 |
 | 系统思维、反馈回路、杠杆点、涌现 | 46 |

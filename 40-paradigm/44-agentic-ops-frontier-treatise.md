@@ -1,10 +1,10 @@
 # AI Agent × DevOps/SRE：2026 年十大前沿动向
 
-> 去年写 SRE 相关文章时，聊的还是「AIOps 能不能落地」。今年再聊，话题已经变成了「Agent 能不能自己修故障」。
+> 「AIOps 压发现、LLM + Agent 压理解取证、MTTR 怎么拆」——本库 [42](./42-agentic-sre-operations-playbook.md) 已立论，本文不重讲。
 >
-> 变化快得有点离谱。本文把 2025–2026 年可核验的海外一线资料过了一遍——云厂商产品公告、Gartner 调研与治理研究、学术基准与混沌工程论文、可观测厂商的 Agent 发布——整理了十条正在发生的趋势。每条都附原始出处，**你可以自己去验证**；文中厂商数字与生产案例均为公开观察，**须用本组织基线复核**，不可直接当 KPI 保证值。
+> 本文只做一件事：把 2025–2026 年可核验的海外一线资料过一遍——云厂商产品公告、Gartner 调研与治理研究、学术基准与混沌工程论文、可观测厂商的 Agent 发布——整理**十条正在发生的产业动向**。每条附原始出处，**你可以自己去验证**；文中厂商数字与生产案例均为公开观察，**须用本组织基线复核**，不可直接当 KPI 保证值。
 >
-> 把这十条放在一起看，能发现一条清晰的脉络：**AI Agent 正在从「工具」变成「运维体系的一部分」**。它不是替代 SRE，而是让 SRE 从写脚本、盯告警，变成设计 Agent、配治理。谁先看懂这个变化，谁就先占了位置。
+> 十条合在一起，脉络是：**AI Agent 正在从「工具」变成「运维体系的一部分」**。它不是替代 SRE，而是让 SRE 从写脚本、盯告警，变成设计 Agent、配治理。谁先看懂这个变化，谁就先占了位置。
 
 先给一个直接答案：
 
@@ -41,9 +41,7 @@
 
 ## 1. 开篇：从「AIOps 落地」到「Agent 修故障」
 
-经典 AIOps / 事件智能（Event Intelligence）把告警风暴收敛成可行动事件，主要缩短「发现」。下一跳的瓶颈是：**为什么、证据在哪、下一步查什么、谁有权改什么**——这些认知与协同成本，正是 LLM + RAG + Agent 切入的位置。本库 [42](./42-agentic-sre-operations-playbook.md) 已论证：可核对的价值在压缩 MTTR 中可并行、可检索、可证据化的时间段，而不是承诺无人值守自愈。
-
-2025–2026 年，产业侧的变化是：上述能力不再只停留在 PoC 叙事，而开始以**产品形态、协议标准、评测基准与治理框架**同时推进。下文十条动向按逻辑主线编排：
+如何用人机分工压缩 MTTR、为何默认只读取证 + 人在环上——见 [42](./42-agentic-sre-operations-playbook.md)。本文从产业侧接着问：这些能力如何以**产品形态、协议标准、评测基准与治理框架**同时推进。下文十条动向按逻辑主线编排：
 
 | 逻辑层 | 对应动向 | 核心问题 |
 | ------ | -------- | -------- |
@@ -108,6 +106,8 @@
 - **Microsoft Triangle（ASE 2025）**：多角色 Agent（Analyzer / Decider / Team Manager）做事故分诊与协商；在所述特定生产环境中，分诊准确率最高约 **97%**，Time-to-Engage 最高约降 **91%**——**这是单一组织生产观察，不是跨行业基准**。[^triangle]
 
 > 落地时优先学「角色切分与协商机制」，不要把单一环境的准确率写进对外 SLA。
+
+协作语义（讨论→共识→横向通信→集体复盘；MCP ≠ Team）见专论 [45](./45-agent-teams-collaboration-treatise.md)；本节只记运维场景下的角色切分与产业参照。
 
 **出处锚点：** AWS Samples – Incident Management Multi-Agent System using Bedrock AgentCore；AWS ML Blog – Build multi-agent SRE assistants with AgentCore；Microsoft Triangle（ASE 2025）。[^aws-multi-agent][^aws-sre-assistants][^triangle]
 
