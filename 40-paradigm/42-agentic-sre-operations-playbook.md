@@ -8,7 +8,7 @@
 
 > **经典 AIOps 主要缩短「发现」；LLM + RAG + Agent 主要缩短「理解、取证与协同」。生产上不要用一个大模型包办全链路——窄任务交给 SLM，跨源解释交给 LLM，工具编排与权限门闸交给 Agent；写操作默认人在环上。**
 
-**40-paradigm 系列导读：** 上游见 [40](./40-unix-agent-stateless-philosophy.md)、[41](./41-ai-engineering-paradigm.md)。横切镜片见 [43](./43-entropy-complex-systems-philosophy.md)：压缩 MTTR 是在时间维上搬运熵；散热带宽跟不上，加速只会让事故链更脆。
+**40-paradigm 系列导读：** 上游见 [40](./40-unix-agent-stateless-philosophy.md)、[41](./41-ai-engineering-paradigm.md)。横切镜片见 [43](./43-entropy-complex-systems-philosophy.md)：压缩 MTTR 是在时间维上搬运熵；散热带宽跟不上，加速只会让事故链更脆。产业前沿对照见 [44](./44-agentic-ops-frontier-treatise.md)：本文讲「怎么在组织内试点」，44 讲「2025–2026 行业正在往哪走」。
 
 ## 摘要
 
@@ -419,6 +419,8 @@ SRE 与 DevOps 拥抱 Agent，本质上是一次**工作流重构**：
 行业史已经写明：Event Intelligence 解决「看见与关联」；生成式与智能体浪潮解决「解释与行动准备」。若只能做一件事——
 
 > **先让每次严重告警自动附带一份「变更 + 遥测 + 历史事故」证据包，再谈要不要换更大的模型。**
+
+若要对照产业侧正在发生的自治处置、分级治理、MCP / OpenTelemetry 与混沌工程等动向，见 [44 Agentic Ops Frontier Treatise](./44-agentic-ops-frontier-treatise.md)。
 
 ---
 
