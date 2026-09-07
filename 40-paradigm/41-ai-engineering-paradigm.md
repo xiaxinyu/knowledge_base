@@ -10,7 +10,7 @@ AI 降低「写出代码」的边际成本，但若协作方式、验证机制�
 
 > **真正的问题不是「个人能不能变快」——答案已经足够清楚；而是：个人变快之后，组织有没有新的协作方式、验证机制与治理边界来承接这种变化？**
 
-**40-paradigm 系列导读：** 上游见 [40](./40-unix-agent-stateless-philosophy.md) 工具为何要职责明确、可组合；下游见 [42](./42-agentic-sre-operations-playbook.md) 运维如何压缩可验证的恢复时间，以及 [44](./44-agentic-ops-frontier-treatise.md) Agentic Ops 产业前沿。横切镜片见 [43](./43-entropy-complex-systems-philosophy.md)：提效若只压效率维，熵会泄到评审、联调与治理——本文的 5+2 就是在给那些接熵的维度补结构。
+**40-paradigm 系列导读：** 上游见 [40](./40-unix-agent-stateless-philosophy.md) 工具为何要职责明确、可组合；下游见 [42](./42-agentic-sre-operations-playbook.md) 运维如何压缩可验证的恢复时间，以及 [44](./44-agentic-ops-frontier-treatise.md) Agentic Ops 产业前沿；协作机制见 [45](./45-agent-teams-collaboration-treatise.md)。横切镜片见 [43](./43-entropy-complex-systems-philosophy.md)：提效若只压效率维，熵会泄到评审、联调与治理——本文的 5+2 就是在给那些接熵的维度补结构。
 
 ## 摘要
 

@@ -97,7 +97,7 @@ knowledge_base/
 └── 50-strategy/        优术 · 略
 ```
 
-同域内按认知依赖递增：先概念，后演进，再原则，再落地。`40` 前三篇是智能协作的优术（工具哲学 → 组织范式 → 运维落地），`43` 是横切镜片：用熵读任意复杂系统，`44` 是运维落地的产业前沿对照（Agentic Ops 十大动向）。`50` 五篇不是上下卷，而是同一问的五个切面——**局、译、币、配、人**：产业如何被穿透，意义如何跨文化传递，Token 如何成为智能经济的计量单位，资本如何在周期中配置，经理人如何在压力中被选出。
+同域内按认知依赖递增：先概念，后演进，再原则，再落地。`40` 前三篇是智能协作的优术（工具哲学 → 组织范式 → 运维落地），`43` 与 `46` 是复杂系统横切镜片（熵 / 系统思维入门），`44` 是运维落地的产业前沿对照，`45` 是从 ReAct 到 Agent Teams 的协作机制专论。`50` 五篇不是上下卷，而是同一问的五个切面——**局、译、币、配、人**：产业如何被穿透，意义如何跨文化传递，Token 如何成为智能经济的计量单位，资本如何在周期中配置，经理人如何在压力中被选出。
 
 | 编号 | 文稿 | 核心命题 |
 |------|------|----------|
@@ -116,6 +116,8 @@ knowledge_base/
 | 42 | [Agentic SRE Operations Playbook](./40-paradigm/42-agentic-sre-operations-playbook.md) | 压缩 MTTR 中可并行、可检索、可证据化的时间段 |
 | 43 | [Entropy Complex Systems Philosophy](./40-paradigm/43-entropy-complex-systems-philosophy.md) | 控制是搬运熵；有序是局部现象；好系统是进化引擎还在转 |
 | 44 | [Agentic Ops Frontier Treatise](./40-paradigm/44-agentic-ops-frontier-treatise.md) | 2025–2026 Agentic Ops 十大动向：自治 RCA、比例治理、MCP/OTel 与评测底座 |
+| 45 | [Agent Teams Collaboration Treatise](./40-paradigm/45-agent-teams-collaboration-treatise.md) | ReAct 之上的协作语义：协议通道 ≠ Team；堆人不是加法 |
+| 46 | [Systems Thinking Philosophy](./40-paradigm/46-systems-thinking-philosophy.md) | 系统=要素+连接+目标；看影子背后的结构，从线性因果到循环因果 |
 | 50 | [AI Industry Disruption Strategy](./50-strategy/50-ai-industry-disruption-strategy.md) | 预测成本下降不自动等于好决策；护城河转向数据与流程 |
 | 51 | [Brand Cultural Translation](./50-strategy/51-brand-cultural-translation.md) | 跨文化少打折扣、多造溢价 |
 | 52 | [Token Economics Treatise](./50-strategy/52-token-economics-treatise.md) | Token 先因稀疏计算而廉价，再因商业与金融化成为底层货币；无法被 Token 化的判断才有剩余溢价 |
@@ -137,10 +139,11 @@ knowledge_base/
 3. **12** 人工智能如何走到大模型  
 4. **21** 架构代际迁移  
 5. **43** 熵与复杂度如何转移（一般原理）  
-6. **22** 跨节点一致性取舍  
-7. **23** 编排控制面原则  
-8. **24** 数据面如何写表转发  
-9. **40** 回扣无状态与可组合  
+6. **46** 系统思维：要素、连接、目标与反馈  
+7. **22** 跨节点一致性取舍  
+8. **23** 编排控制面原则  
+9. **24** 数据面如何写表转发  
+10. **40** 回扣无状态与可组合  
 
 ### IT 治理 / CIO / 审计
 
@@ -158,10 +161,11 @@ AI 如何改变工程组织、如何承接被放大的速度。
 1. **12** 人工智能如何走到大模型  
 2. **40** 工具为何要职责明确、可观察  
 3. **41** 5+2 如何承接个人提效  
-4. **42** 运维侧如何智能体化  
-5. **44** Agentic Ops 产业前沿对照  
-6. **43** 用熵读组织与制度（横切镜片）  
-7. **50** 战略层如何重构护城河  
+4. **45** 从 ReAct 到 Agent Teams 的协作机制  
+5. **42** 运维侧如何智能体化  
+6. **44** Agentic Ops 产业前沿对照  
+7. **43** 用熵读组织与制度（横切镜片）  
+8. **50** 战略层如何重构护城河  
 
 ### 品牌 / 战略负责人
 

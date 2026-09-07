@@ -8,7 +8,7 @@
 
 > **控制不是消灭混乱，是搬运熵：压平一个维度，别的维度就会鼓起来。好系统不是控制最多的那个，而是刚柔落在对的维度上、进化引擎还在转的那个。诊断只问三句：控制落在哪、谁在接熵、熵接着会流向哪。**
 
-**40-paradigm 系列导读：** [40](./40-unix-agent-stateless-philosophy.md) 工具如何自处，[41](./41-ai-engineering-paradigm.md) 组织如何承接提效，[42](./42-agentic-sre-operations-playbook.md) 运维如何压缩可验证的恢复时间。三篇是智的优术。本文是横切的分析镜片：任何复杂系统——房间、空调、团队、市场、国家——都可以用熵、搬运、散热与进化来读。
+**40-paradigm 系列导读：** [40](./40-unix-agent-stateless-philosophy.md) 工具如何自处，[41](./41-ai-engineering-paradigm.md) 组织如何承接提效，[42](./42-agentic-sre-operations-playbook.md) 运维如何压缩可验证的恢复时间。三篇是智的优术。本文是横切的分析镜片：任何复杂系统——房间、空调、团队、市场、国家——都可以用熵、搬运、散热与进化来读。入门对照见 [46](./46-systems-thinking-philosophy.md)：先学会看见要素、连接与真正目标，再谈熵的搬运。
 
 ## 摘要
 

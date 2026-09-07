@@ -10,7 +10,7 @@
 
 > **Agentic search（glob / grep）与向量索引并非简单的「先进 / 倒退」，而是场景、确定性、隐私、延迟与 token 成本之间的不同取舍。**
 
-**40-paradigm 系列导读：** 本区前三篇按「哲学 → 组织范式 → 运维落地」递进。先读本文，弄清工具为何要职责明确、可组合、可观察；再读 [41](./41-ai-engineering-paradigm.md)，看个人提效之后组织如何用 5+2 承接；再读 [42](./42-agentic-sre-operations-playbook.md)，把同一套人机分工落到 SRE 事故链与平均恢复时间（MTTR）。三篇是智的优术。[43](./43-entropy-complex-systems-philosophy.md) 是横切镜片：用熵、搬运与进化读任意复杂系统——团队、市场、制度，不限于智能协作。[44](./44-agentic-ops-frontier-treatise.md) 是 42 的产业前沿对照：自治处置、分级治理、MCP 与可观测标准。
+**40-paradigm 系列导读：** 本区前三篇按「哲学 → 组织范式 → 运维落地」递进。先读本文，弄清工具为何要职责明确、可组合、可观察；再读 [41](./41-ai-engineering-paradigm.md)，看个人提效之后组织如何用 5+2 承接；再读 [42](./42-agentic-sre-operations-playbook.md)，把同一套人机分工落到 SRE 事故链与平均恢复时间（MTTR）。三篇是智的优术。[43](./43-entropy-complex-systems-philosophy.md) 是横切镜片：用熵、搬运与进化读任意复杂系统——团队、市场、制度，不限于智能协作。[44](./44-agentic-ops-frontier-treatise.md) 是 42 的产业前沿对照：自治处置、分级治理、MCP 与可观测标准。[45](./45-agent-teams-collaboration-treatise.md) 从 ReAct 到 Agent Teams，专论多 Agent 协作机制。
 
 ## 摘要
 

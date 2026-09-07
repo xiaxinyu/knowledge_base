@@ -10,7 +10,7 @@
 
 > **Agentic Ops 的主线不是「再写更多脚本」，而是：让 Agent 在只读取证与受控缓解上缩短 MTTR；用多智能体与比例制自治管住风险；用 MCP / OpenTelemetry GenAI 把工具调用与推理链路纳入治理与可观测；再用基准、混沌工程与云厂商底座，把能力验进生产——而不是承诺无人值守自愈。**
 
-**40-paradigm 系列导读：** 上游见 [40](./40-unix-agent-stateless-philosophy.md) 工具为何要职责明确、可组合；[41](./41-ai-engineering-paradigm.md) 组织如何用 5+2 承接提效；[42](./42-agentic-sre-operations-playbook.md) 如何把人机分工落到 MTTR 可验证压缩。横切镜片见 [43](./43-entropy-complex-systems-philosophy.md)。本文是 **42 的产业前沿对照**：42 讲「怎么做」，本文讲「行业正在往哪走」。
+**40-paradigm 系列导读：** 上游见 [40](./40-unix-agent-stateless-philosophy.md) 工具为何要职责明确、可组合；[41](./41-ai-engineering-paradigm.md) 组织如何用 5+2 承接提效；[42](./42-agentic-sre-operations-playbook.md) 如何把人机分工落到 MTTR 可验证压缩。横切镜片见 [43](./43-entropy-complex-systems-philosophy.md)。协作机制专论见 [45](./45-agent-teams-collaboration-treatise.md)。本文是 **42 的产业前沿对照**：42 讲「怎么做」，本文讲「行业正在往哪走」。
 
 ## 摘要
 
