@@ -117,7 +117,7 @@ knowledge_base/
 | 43 | [Entropy Complex Systems Philosophy](./40-paradigm/43-entropy-complex-systems-philosophy.md) | 控制是搬运熵；有序是局部现象；好系统是进化引擎还在转 |
 | 44 | [Agentic Ops Frontier Treatise](./40-paradigm/44-agentic-ops-frontier-treatise.md) | 2025–2026 Agentic Ops 十大动向：自治 RCA、比例治理、MCP/OTel 与评测底座 |
 | 45 | [Agent Teams Collaboration Treatise](./40-paradigm/45-agent-teams-collaboration-treatise.md) | ReAct 之上的协作语义：协议通道 ≠ Team；堆人不是加法 |
-| 46 | [Systems Thinking Philosophy](./40-paradigm/46-systems-thinking-philosophy.md) | 系统=要素+连接+目标；看影子背后的结构，从线性因果到循环因果 |
+| 46 | [Systems Thinking Philosophy](./40-paradigm/46-systems-thinking-philosophy.md) | 系统=要素+连接+目标；谱系与杠杆点；看影子背后的结构，从线性到循环 |
 | 50 | [AI Industry Disruption Strategy](./50-strategy/50-ai-industry-disruption-strategy.md) | 预测成本下降不自动等于好决策；护城河转向数据与流程 |
 | 51 | [Brand Cultural Translation](./50-strategy/51-brand-cultural-translation.md) | 跨文化少打折扣、多造溢价 |
 | 52 | [Token Economics Treatise](./50-strategy/52-token-economics-treatise.md) | Token 先因稀疏计算而廉价，再因商业与金融化成为底层货币；无法被 Token 化的判断才有剩余溢价 |
