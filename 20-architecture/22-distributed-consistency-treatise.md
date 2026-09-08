@@ -36,7 +36,7 @@
 9. [Paxos](#9-paxos)
 10. [Raft](#10-raft)
 11. [ZAB](#11-zab)
-12. [Paxos / Raft / ZAB 对照](#12-paxos--raft--zab-对照)
+12. [Paxos / Raft / ZAB 对照](#12-paxos-raft-zab-对照)
 
 **下篇 · 并存与落地**
 
@@ -127,8 +127,8 @@ flowchart TB
 
 | 时间 | 事件 | 说明 |
 |------|------|------|
-| 约 1998–1999 | Eric Brewer 提出 CAP 思想 | 源于宽域集群等实践中「可用性优先、事后调和」[^brewer-cap-twelve-years] |
-| 2000 | Brewer 在 PODC 提出猜想 | Brewer's Conjecture [^brewer-podc-2000] |
+| 约 1998–1999 | Eric Brewer 提出 CAP 思想 | 源于宽域集群等实践中「可用性优先、事后调和」[^brewer-cap12] |
+| 2000 | Brewer 在 PODC 提出猜想 | Brewer's Conjecture [^brewer-podc2000] |
 | 2002 | Gilbert & Lynch 形式化证明 | 猜想成为定理 [^gilbert-lynch-cap] |
 
 ### 3.2 三条性质
@@ -143,7 +143,7 @@ flowchart TB
 
 ### 3.3 为何工程上强调 CP / AP
 
-真实多机网络无法从概率上消除分区。宣称同时保证 C 与 A 却否认 P，等于假设网络永不分裂。[^hale-sacrifice-pt]
+真实多机网络无法从概率上消除分区。宣称同时保证 C 与 A 却否认 P，等于假设网络永不分裂。[^hale-cpt]
 
 | 组合 | 分区时的典型行为 | 相对 ACID 的直观 |
 |------|------------------|------------------|
@@ -161,7 +161,7 @@ flowchart TB
 
 ## 4. CAP 的现代理解与常见误区
 
-Brewer（2012）指出「三选二」容易误导：[^brewer-cap-twelve-years]
+Brewer（2012）指出「三选二」容易误导：[^brewer-cap12]
 
 1. **分区少见**：无分区时应尽量同时做好 C 与 A。
 2. **粒度很细**：不同子系统、操作、数据项可做不同选择——这为后文「ACID 与 BASE 并存」埋下伏笔。
@@ -171,8 +171,8 @@ Brewer（2012）指出「三选二」容易误导：[^brewer-cap-twelve-years]
 
 | 误区 | 更准确的说法 |
 |------|----------------|
-| 「永远只能保住两项」 | 定理约束的是**分区期间**的极限。[^brewer-cap-twelve-years] |
-| 「可以放弃 P」 | 共享数据分布式系统不能假装网络完美。[^hale-sacrifice-pt] |
+| 「永远只能保住两项」 | 定理约束的是**分区期间**的极限。[^brewer-cap12] |
+| 「可以放弃 P」 | 共享数据分布式系统不能假装网络完美。[^hale-cpt] |
 | 「一致性 = 最终相同」 | CAP 的 C 通常指强一致；最终一致是弱模型。[^gilbert-lynch-cap][^vogels-ec] |
 | 「可用性 = 低延迟」 | CAP 的 A 是「能响应」；延迟是另一 SLA 维度。 |
 | 「某产品永远 CP/AP」 | 读模式、超时、法定人数、客户端缓存都会改变实际体验。 |
@@ -241,7 +241,7 @@ CAP 管「分区时怎么办」；PACELC 提醒「平时也要为延迟付账」
 
 ## 7. CP 路径与复制状态机
 
-选定 **CP**，意味着分区期间宁可拒绝部分请求，也要保住强一致。工程标准骨架是 **复制状态机（Replicated State Machine）**：[^ongaro-raft][^lamport-paxos-simple]
+选定 **CP**，意味着分区期间宁可拒绝部分请求，也要保住强一致。工程标准骨架是 **复制状态机（Replicated State Machine）**：[^ongaro-raft][^lamport-paxos]
 
 1. 客户端命令进入**复制日志**；  
 2. 共识模块保证各副本日志最终包含**相同顺序的相同命令**；  
@@ -534,7 +534,7 @@ Pritchett 把 BASE 写成 *An ACID Alternative*，用意是：**在分区与规�
 3. **PACELC** 提醒无分区时仍常在延迟与一致性之间权衡。[^abadi-pacelc]  
 4. **BASE + 最终一致语义** 是 **AP 路径**的工程语言。[^vogels-ec][^pritchett-base]  
 5. **复制状态机 + 多数派共识** 是 **CP 路径**的标准骨架；**FLP** 说明活性依赖超时等假设。[^ongaro-raft][^lamport-paxos][^flp1985]  
-6. **Paxos / Raft / ZAB** 分别从单值共识、可理解日志复制、主备原子广播逼近同一目标。[^ongaro-raft][^lamport-paxos][^junqueira-zab]  
+6. **Paxos / Raft / ZAB** 分别从单值共识、可理解日志复制、主备原子广播逼近同一目标。[^ongaro-raft][^lamport-paxos][^junqueira-zab][^zookeeper-docs]  
 7. **真实系统按数据并存**：账本偏 ACID/CP，可补偿链路偏 BASE/AP。  
 8. **选型顺序**：业务代价 → 是否共享写 → CP/AP → 是否需要共识 → 选具体协议。
 

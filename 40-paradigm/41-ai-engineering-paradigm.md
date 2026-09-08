@@ -10,7 +10,7 @@ AI 降低「写出代码」的边际成本，但若协作方式、验证机制�
 
 > **真正的问题不是「个人能不能变快」——答案已经足够清楚；而是：个人变快之后，组织有没有新的协作方式、验证机制与治理边界来承接这种变化？**
 
-**40-paradigm 系列导读：** 上游见 [40](./40-unix-agent-stateless-philosophy.md) 工具为何要职责明确、可组合；下游见 [42](./42-agentic-sre-operations-playbook.md) 运维如何压缩可验证的恢复时间。横切镜片见 [43](./43-entropy-complex-systems-philosophy.md)：提效若只压效率维，熵会泄到评审、联调与治理——本文的 5+2 就是在给那些接熵的维度补结构。
+**40-paradigm 系列导读：** 上游见 [40](./40-unix-agent-stateless-philosophy.md) 工具为何要职责明确、可组合；下游见 [42](./42-agentic-sre-operations-playbook.md) 运维如何压缩可验证的恢复时间，以及 [44](./44-agentic-ops-frontier-treatise.md) Agentic Ops 产业前沿；协作机制见 [45](./45-agent-teams-collaboration-treatise.md)。横切镜片见 [43](./43-entropy-complex-systems-philosophy.md)：提效若只压效率维，熵会泄到评审、联调与治理——本文的 5+2 就是在给那些接熵的维度补结构。
 
 ## 摘要
 
@@ -28,7 +28,7 @@ AI 降低「写出代码」的边际成本，但若协作方式、验证机制�
 3. [What：5+2 新范式——用新的生产关系承接新的生产力](#3-what52-新范式用新的生产关系承接新的生产力)
 4. [新角色：从 Developer 到 Builder](#4-新角色从-developer-到-builder)
 5. [新组织：FDE、产品、平台三层协同](#5-新组织fde产品平台三层协同)
-6. [新工艺：四大闭环 + 两个底座](#6-新工艺四大闭环--两个底座)
+6. [新工艺：四大闭环 + 两个底座](#6-新工艺四大闭环-两个底座)
 7. [新流程：代码与能力在三层流动](#7-新流程代码与能力在三层流动)
 8. [新资产：从文件堆叠到语义连接](#8-新资产从文件堆叠到语义连接)
 9. [新工具：智能中枢与 Harness 工程](#9-新工具智能中枢与-harness-工程)
