@@ -152,7 +152,7 @@ knowledge_base/
 | 11 | [Information Theory Chronicle](./10-chronicle/11-information-theory-chronicle.md) | 信息如何被度量，并成为数字通信与统计学习的共同语言 | 信息熵、信道、香农 |
 | 12 | [Artificial Intelligence Chronicle](./10-chronicle/12-artificial-intelligence-chronicle.md) | 六种机制的本质与可观察量；承诺—能力鸿沟上的五阶段编年（智能体为第五阶段之延伸） | AI 编年、智能体从哪来 |
 | 13 | [World Hegemony Transfer Chronicle](./10-chronicle/13-world-hegemony-transfer-chronicle.md) | 荷→英→美是公共品接力；第一次工业革命是大分流奇点，不是欧洲早已单极领先；空窗比称号危险 | 霸权转移、大分流、Pax Britannica/Americana、多极辩论 |
-| 14 | [Internet History Chronicle](./10-chronicle/14-internet-history-chronicle.md) | 谁定义协议，谁就定义架构；谁卡入口，谁就收流量；收束与外溢互为下一阶段；2026 是智能体入口的交叠点 | ARPANET、TCP/IP、浏览器、门户、搜索、微信、推荐算法、大模型、智能体 |
+| 14 | [Internet History Chronicle](./10-chronicle/14-internet-history-chronicle.md) | 谁定义协议，谁就定义架构；谁卡入口，谁就收流量；2026 是智能体入口的交叠点；完整任务才是分水岭 | ARPANET、TCP/IP、搜索、微信、智能体、曾鸣、比雅虎更早、60 分奇点 |
 
 #### 20 · 明道 · 构
 
@@ -204,7 +204,7 @@ knowledge_base/
 | 信息论、香农、信道容量、**信息熵** | 11 |
 | AI 史、机制分类、智能体编年 | 12 |
 | 霸权转移、荷兰黄金时代、Pax Britannica/Americana、反向金德尔伯格、四次工业革命、**大分流**、多极辩论 | 13 |
-| 互联网史、ARPANET、TCP/IP、OSI、浏览器、门户、搜索、微信、推荐算法、ChatGPT、智能体、支付宝 | 14 |
+| 互联网史、ARPANET、TCP/IP、浏览器、门户、搜索、微信、推荐算法、ChatGPT、智能体、曾鸣、比雅虎更早、60 分奇点、支付宝 | 14 |
 | 企业架构、TOGAF、四大域、**六层域**、CSVLOD、科图采夫 | 20 |
 | 服务架构代际、复杂度转移 | 21 |
 | CAP、共识、强一致 vs 可用 | 22 |
@@ -230,6 +230,7 @@ knowledge_base/
 | 产业穿透 ↔ 制造业地理迁移 | 50 / 55 |
 | 世界霸权秩序 ↔ 制造业地理迁移 | 13 / 55 |
 | 计算池化 ↔ 网络之网络 / 协议与入口 | 10 / 14 |
+| 互联网入口链 ↔ 产业穿透与交叠点 | 14 / 50 |
 | 教学四大域 ↔ 实践六层 | 20 |
 | 死亡之谷 ↔ 智能体 / 企业操作系统 | 50 |
 
