@@ -36,3 +36,6 @@ Thumbs.db
 .obsidian/workspace.json
 
 .cursor/.venv-mkdocs/
+
+# 本地专论，不入库、不公开索引
+50-strategy/56-inflation-deflation-household-tax-treatise.md
