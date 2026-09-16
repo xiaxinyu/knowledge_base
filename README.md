@@ -149,7 +149,7 @@ knowledge_base/
 | 编号 | 文稿 | 核心命题 | 触发器（何时读） |
 |------|------|----------|------------------|
 | 10 | [Computing Cloud Chronicle](./10-chronicle/10-computing-cloud-chronicle.md) | 计算能力如何从专用机械变为按需共享资源池 | 云从何而来、资源池化 |
-| 11 | [Information Theory Chronicle](./10-chronicle/11-information-theory-chronicle.md) | 信息如何被度量，并成为数字通信与统计学习的共同语言 | 信息熵、信道、香农 |
+| 11 | [Information Theory Chronicle](./10-chronicle/11-information-theory-chronicle.md) | 信息如何被度量，并成为数字通信与统计学习的共同语言 | 信息熵、信道、香农、三把刀、冗余、汉明码 |
 | 12 | [Artificial Intelligence Chronicle](./10-chronicle/12-artificial-intelligence-chronicle.md) | 六种机制的本质与可观察量；承诺—能力鸿沟上的五阶段编年（智能体为第五阶段之延伸） | AI 编年、智能体从哪来 |
 | 13 | [World Hegemony Transfer Chronicle](./10-chronicle/13-world-hegemony-transfer-chronicle.md) | 荷→英→美是公共品接力；第一次工业革命是大分流奇点，不是欧洲早已单极领先；空窗比称号危险 | 霸权转移、大分流、世界工厂、Pax Britannica/Americana、多极辩论、波德、长期萧条、金银不等于资本主义、制造业迁移 |
 | 14 | [Internet History Chronicle](./10-chronicle/14-internet-history-chronicle.md) | 谁定义协议，谁就定义架构；谁卡入口，谁就收流量；2026 是智能体入口的交叠点；完整任务才是分水岭 | ARPANET、TCP/IP、搜索、微信、智能体、曾鸣、比雅虎更早、60 分奇点 |
@@ -201,7 +201,7 @@ knowledge_base/
 | 概念 / 关键词 | 编号 |
 |---------------|------|
 | 云计算史、资源池 | 10 |
-| 信息论、香农、信道容量、**信息熵** | 11 |
+| 信息论、香农、信道容量、**信息熵**、冗余、汉明码、三把刀 | 11 |
 | AI 史、机制分类、智能体编年 | 12 |
 | 霸权转移、荷兰黄金时代、Pax Britannica/Americana、反向金德尔伯格、四次工业革命、**大分流**、世界工厂、多极辩论 | 13 |
 | 互联网史、ARPANET、TCP/IP、浏览器、门户、搜索、微信、推荐算法、ChatGPT、智能体、曾鸣、比雅虎更早、60 分奇点、支付宝 | 14 |
