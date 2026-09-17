@@ -193,6 +193,7 @@ knowledge_base/
 | 53 | [Li Ka-shing Capital Allocation](./50-strategy/53-li-ka-shing-capital-allocation-treatise.md) | 形态转换、特许权与购买力；看起来准的转换当时多有卖方与相对价格；可带走的是三问，不是某一窗口里的资产 | 资本配置、周期转换 |
 | 54 | [Ning Gaoning Talent Selection](./50-strategy/54-ning-gaoning-talent-selection-treatise.md) | 履历与两化决策可核对；《三生万物》与五步组合；选人三则合验于烂摊子 | 选人、经理人、压力场景 |
 | 55 | [Global Manufacturing Migration Chronicle](./50-strategy/55-global-manufacturing-migration-chronicle.md) | 四次大迁移与雁行透镜；迁出国保留高附加值；China+1 / 近岸与增加值脱钩不同步 | 世界工厂、制造业迁移、China+1、近岸 |
+| 57 | [Dollar System Division of Labor](./50-strategy/57-dollar-system-division-of-labor-treatise.md) | 三层环流（资源—制造—消费）与四层利润金字塔；实物向消费端，美元回流美国；升级=向上跃迁 | 美元环流、美债回流、储备货币、国际分工、利润金字塔 |
 
 ### 3.2 概念反查
 
@@ -225,10 +226,12 @@ knowledge_base/
 | 资本配置、周期、特许权 | 53 |
 | 选人、经理人、压力决策 | 54 |
 | 制造业迁移、世界工厂、China+1、近岸、去工业化 | 55 |
+| 美元环流、美债回流、储备货币、国际分工、利润金字塔、石油美元 | 57 |
 | 看见结构 ↔ 控制散热 | 46 / 43 |
 | 运维落地 ↔ 产业前沿 ↔ 协作机制 | 42 / 44 / 45 |
 | 产业穿透 ↔ 制造业地理迁移 | 50 / 55 |
 | 世界霸权秩序 ↔ 制造业地理迁移 | 13 / 55 |
+| 美元环流与利润层 ↔ 霸权公共品 ↔ 工厂地理 | 57 / 13 / 55 |
 | 计算池化 ↔ 网络之网络 / 协议与入口 | 10 / 14 |
 | 互联网入口链 ↔ 产业穿透与交叠点 | 14 / 50 |
 | 教学四大域 ↔ 实践六层 | 20 |
@@ -284,12 +287,13 @@ AI 如何改变工程组织、如何承接被放大的速度。
 
 1. **50** 产业穿透、交叠点与死亡之谷  
 2. **55** 全球制造业四次大迁移与迁出国路径  
-3. **13** 五百年世界霸权转移（荷→英→美与当代过渡）  
-4. **51** 品牌译介三层  
-5. **52** Token 如何成为计量单位  
-6. **53** 资本如何在周期中配置  
-7. **54** 经理人如何在压力中被选出  
-8. **11** 信息如何被度量  
+3. **57** 美元环流、三层分工与利润金字塔  
+4. **13** 五百年世界霸权转移（荷→英→美与当代过渡）  
+5. **51** 品牌译介三层  
+6. **52** Token 如何成为计量单位  
+7. **53** 资本如何在周期中配置  
+8. **54** 经理人如何在压力中被选出  
+9. **11** 信息如何被度量  
 
 #### 速览
 
@@ -408,6 +412,7 @@ AI 如何改变工程组织、如何承接被放大的速度。
 | **优术** | 控制是搬运熵；系统是要素、连接与目标；堆 Agent 不是加法 | [43](./40-paradigm/43-entropy-complex-systems-philosophy.md) / [46](./40-paradigm/46-systems-thinking-philosophy.md) / [45](./40-paradigm/45-agent-teams-collaboration-treatise.md) |
 | **优术** | 2026 是基础设施刚熟、智能体刚开场的交叠点，不是爆发之年；预测变便宜不等于好决策；护城河在专有数据与主流程 | [50](./50-strategy/50-ai-industry-disruption-strategy.md) |
 | **优术** | 制造业迁移改的是重心与环节，不是前任归零；无法被 Token 化的判断、创意与信任，才有剩余溢价 | [55](./50-strategy/55-global-manufacturing-migration-chronicle.md) / [52](./50-strategy/52-token-economics-treatise.md) |
+| **优术** | 实物向消费端、美元回流美国是近四十年分工主轴的教学像；升级是金字塔上跃迁，去美元缓慢、替代未成型 | [57](./50-strategy/57-dollar-system-division-of-labor-treatise.md) / [13](./10-chronicle/13-world-hegemony-transfer-chronicle.md) |
 
 运维侧可核对的价值，是压缩 MTTR 中可并行、可检索、可证据化的时间段，而不是承诺无人值守自愈——见 [42](./40-paradigm/42-agentic-sre-operations-playbook.md)、[44](./40-paradigm/44-agentic-ops-frontier-treatise.md)。编排平台是持续收敛的控制计算机，节点即路由器——见 [23](./20-architecture/23-kubernetes-control-plane-doctrine.md)、[24](./20-architecture/24-calico-l3-dataplane-treatise.md)。资本配置可带走的是三问，选人三则合验于烂摊子——见 [53](./50-strategy/53-li-ka-shing-capital-allocation-treatise.md)、[54](./50-strategy/54-ning-gaoning-talent-selection-treatise.md)。品牌走出去，目标是少打折扣、多造溢价——见 [51](./50-strategy/51-brand-cultural-translation.md)。智能体编年见 [12](./10-chronicle/12-artificial-intelligence-chronicle.md)。互联网简史见 [14](./10-chronicle/14-internet-history-chronicle.md)。
 
