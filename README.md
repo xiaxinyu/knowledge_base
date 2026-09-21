@@ -163,6 +163,7 @@ knowledge_base/
 | 22 | [Distributed Consistency Treatise](./20-architecture/22-distributed-consistency-treatise.md) | 跨节点之后，强一致与持续可用如何取舍 | CAP、共识、一致性 |
 | 23 | [Kubernetes Control-Plane Doctrine](./20-architecture/23-kubernetes-control-plane-doctrine.md) | 编排平台是持续收敛的分布式控制计算机 | K8s 控制面、声明式收敛 |
 | 24 | [Calico L3 Dataplane Treatise](./20-architecture/24-calico-l3-dataplane-treatise.md) | 节点即路由器：控制面写表、内核转发；Service 虚地址经 DNAT / conntrack 到达 Endpoint | Calico、Pod 网络、Service |
+| 25 | [Architecture Thinking Treatise](./20-architecture/25-architecture-thinking-cto-treatise.md) | 架构师靠决策生存；价值是第一性；五级跳是跨维不是把写代码卷满 | 架构思维、郭东白、价值思维、从程序员到 CTO |
 
 #### 30 · 明道 · 治
 
@@ -211,6 +212,7 @@ knowledge_base/
 | CAP、共识、强一致 vs 可用 | 22 |
 | Kubernetes 控制面、声明式、调谐 | 23 |
 | Calico、L3、Service/DNAT | 24 |
+| 架构思维、价值思维、实证思维、从程序员到 CTO、生存法则 | 25 |
 | COBIT、治理 vs 管理 | 30 |
 | 平台服务质量、期望—感知差距 | 31 |
 | Unix 哲学、无状态 Agent、可组合 | 40 |
@@ -252,12 +254,13 @@ knowledge_base/
 5. **13** 五百年霸权转移与四次工业革命（取势）  
 6. **20** 战略如何翻译为可执行安排  
 7. **21** 架构代际迁移  
-8. **43** 熵与复杂度如何转移（一般原理）  
-9. **46** 系统思维：要素、连接、目标与反馈  
-10. **22** 跨节点一致性取舍  
-11. **23** 编排控制面原则  
-12. **24** 数据面如何写表转发  
-13. **40** 回到无状态与可组合  
+8. **25** 架构师如何决策：价值、六条法则与五级跳  
+9. **43** 熵与复杂度如何转移（一般原理）  
+10. **46** 系统思维：要素、连接、目标与反馈  
+11. **22** 跨节点一致性取舍  
+12. **23** 编排控制面原则  
+13. **24** 数据面如何写表转发  
+14. **40** 回到无状态与可组合  
 
 #### IT 治理 / CIO / 审计
 
@@ -406,6 +409,7 @@ AI 如何改变工程组织、如何承接被放大的速度。
 | **取势** | 荷→英→美是公共品接力，不是兵力奖牌；第一次工业革命是拉开差距的奇点，不是欧洲自文艺复兴以来一路领先 | [13](./10-chronicle/13-world-hegemony-transfer-chronicle.md) |
 | **取势** | 互联网的权力在协议与入口；捆绑 + 免费反复上演；收束与外溢互为下一阶段；2026 缺的是智能体的浏览器 | [14](./10-chronicle/14-internet-history-chronicle.md) |
 | **明道** | 企业架构把战略译成可执行安排并持续约束该建什么；教学用四大域，实践常见六层；不是照搬某一框架 | [20](./20-architecture/20-enterprise-architecture-treatise.md) |
+| **明道** | 写代码是架构师的必要能力，不是 CTO 的充分条件；价值思维是第一性 | [25](./20-architecture/25-architecture-thinking-cto-treatise.md) |
 | **明道** | 复杂度不会消失，只会转移；跨节点之后，强一致与持续可用必须取舍 | [21](./20-architecture/21-service-architecture-evolution.md) / [22](./20-architecture/22-distributed-consistency-treatise.md) |
 | **明道** | 治理与管理必须分离；平台质量是期望与感知的差距 | [30](./30-governance/30-cobit-it-governance-framework.md) / [31](./30-governance/31-platform-service-quality-case-study.md) |
 | **优术** | 遗忘有时强于记忆；个人写出代码变快之后，组织交付未必变快 | [40](./40-paradigm/40-unix-agent-stateless-philosophy.md) / [41](./40-paradigm/41-ai-engineering-paradigm.md) |
