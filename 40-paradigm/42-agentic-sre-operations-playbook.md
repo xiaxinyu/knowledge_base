@@ -1,4 +1,4 @@
-# SRE / DevOps 的智能体化：SLM、LLM、Agent 如何分工，以及 MTTR 的可验证压缩
+# 智能体化 SRE：模型分工与 MTTR 的可验证压缩
 
 > 监控加「AI」标签并不自动缩短故障恢复时间。行业真正发生的变化，是把 **SRE 的事故工作流**与 **DevOps 的变更工作流**，改造成可由 **小模型（SLM，Small Language Model）、大模型（LLM，Large Language Model）、智能体（Agent）** 分工执行的人机系统。可核对的价值，集中在一件事上：**压缩平均恢复时间（MTTR，Mean Time to Repair / Restore）中那些可并行、可检索、可证据化的时间段**——而不是承诺无人值守自愈。
 >

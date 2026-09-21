@@ -1,4 +1,4 @@
-# AI Agent × DevOps/SRE：2026 年十大前沿动向
+# Agentic Ops：2025–2026 年十条产业动向
 
 > 「AIOps 压发现、LLM + Agent 压理解取证、MTTR 怎么拆」——本库 [42](./42-agentic-sre-operations-playbook.md) 已立论，本文不重讲。
 >

@@ -130,7 +130,7 @@ knowledge_base/
 
 同域内按认知依赖递增：先概念，后演进，再原则，再落地。
 
-- **`10`**：`10`–`12` 为计算 / 信息 / 智能技术史；`13` 为世界霸权秩序五百年编年（第一次工业革命按大分流重写；与 [55](./50-strategy/55-global-manufacturing-migration-chronicle.md) 制造业地理迁移互参）；`14` 为互联网简史：协议、入口、注意力与「收束—外溢」。  
+- **`10`**：`10`–`12` 为计算 / 信息 / 智能技术史；`13` 为世界霸权秩序五百年编年（第一次工业革命按大分流重写；与 [55](./50-strategy/55-global-manufacturing-migration-chronicle.md) 制造业地理迁移互参）；`14` 为互联网编年：协议、入口、注意力与「收束—外溢」。  
 - **`20`**：`20` 为企业架构（教学四大域、实践六层）；`21`–`24` 为服务代际、一致性取舍、编排控制面与数据面写表。  
 - **`30`**：`30` 为 IT 治理框架（COBIT）；`31` 为平台质量实证。  
 - **`40`**：`40`–`42` 为智能协作的优术（工具哲学 → 组织范式 → 运维落地）；`43` 为熵与控制（横切）；`44` 为运维落地的产业前沿对照；`45` 为从 ReAct 到 Agent Teams 的协作机制专论；`46` 为系统思维（与 `43` 同为横切镜片）。  
@@ -148,7 +148,7 @@ knowledge_base/
 
 | 编号 | 文稿 | 核心命题 | 触发器（何时读） |
 |------|------|----------|------------------|
-| 10 | [Computing Cloud Chronicle](./10-chronicle/10-computing-cloud-chronicle.md) | 计算能力如何从专用机械变为按需共享资源池 | 云从何而来、资源池化 |
+| 10 | [Computing and Cloud Chronicle](./10-chronicle/10-computing-cloud-chronicle.md) | 计算能力如何从专用机械变为按需共享资源池 | 云从何而来、资源池化 |
 | 11 | [Information Theory Chronicle](./10-chronicle/11-information-theory-chronicle.md) | 信息如何被度量，并成为数字通信与统计学习的共同语言 | 信息熵、信道、香农、三把刀、冗余、汉明码 |
 | 12 | [Artificial Intelligence Chronicle](./10-chronicle/12-artificial-intelligence-chronicle.md) | 六种机制的本质与可观察量；承诺—能力鸿沟上的五阶段编年（智能体为第五阶段之延伸） | AI 编年、智能体从哪来 |
 | 13 | [World Hegemony Transfer Chronicle](./10-chronicle/13-world-hegemony-transfer-chronicle.md) | 荷→英→美是公共品接力；第一次工业革命是大分流奇点，不是欧洲早已单极领先；空窗比称号危险 | 霸权转移、大分流、世界工厂、Pax Britannica/Americana、多极辩论、波德、长期萧条、金银不等于资本主义、制造业迁移 |
@@ -180,7 +180,7 @@ knowledge_base/
 | 41 | [AI Engineering Paradigm](./40-paradigm/41-ai-engineering-paradigm.md) | 个人变快之后，组织有无新的协作与治理来承接 | 个人提效后组织怎么接 |
 | 42 | [Agentic SRE Operations Playbook](./40-paradigm/42-agentic-sre-operations-playbook.md) | 压缩 MTTR 中可并行、可检索、可证据化的时间段 | Agent 运维落地、MTTR |
 | 43 | [Entropy Complex Systems Philosophy](./40-paradigm/43-entropy-complex-systems-philosophy.md) | 控制是搬运熵；有序是局部现象；好系统是进化引擎还在转 | 热力学熵隐喻、控制、散热 |
-| 44 | [Agentic Ops Frontier Treatise](./40-paradigm/44-agentic-ops-frontier-treatise.md) | 2025–2026 Agentic Ops 十大动向：自治 RCA、比例治理、MCP/OTel 与评测底座 | Agentic Ops 产业动向 |
+| 44 | [Agentic Ops Frontier Treatise](./40-paradigm/44-agentic-ops-frontier-treatise.md) | 2025–2026 Agentic Ops 十条动向：自治 RCA、比例治理、MCP/OTel 与评测底座 | Agentic Ops 产业动向 |
 | 45 | [Agent Teams Collaboration Treatise](./40-paradigm/45-agent-teams-collaboration-treatise.md) | ReAct 之上的协作语义：协议通道 ≠ Team；堆人不是加法 | 多 Agent、Team、协议 |
 | 46 | [Systems Thinking Philosophy](./40-paradigm/46-systems-thinking-philosophy.md) | 系统=要素+连接+目标；谱系与杠杆点；看影子背后的结构，从线性到循环 | 系统思维、反馈、杠杆点 |
 
@@ -418,7 +418,7 @@ AI 如何改变工程组织、如何承接被放大的速度。
 | **优术** | 制造业迁移改的是重心与环节，不是前任归零；无法被 Token 化的判断、创意与信任，才有剩余溢价 | [55](./50-strategy/55-global-manufacturing-migration-chronicle.md) / [52](./50-strategy/52-token-economics-treatise.md) |
 | **优术** | 实物向消费端、美元回流美国是近四十年分工主轴的教学像；升级是金字塔上跃迁，去美元缓慢、替代未成型 | [57](./50-strategy/57-dollar-system-division-of-labor-treatise.md) / [13](./10-chronicle/13-world-hegemony-transfer-chronicle.md) |
 
-运维侧可核对的价值，是压缩 MTTR 中可并行、可检索、可证据化的时间段，而不是承诺无人值守自愈——见 [42](./40-paradigm/42-agentic-sre-operations-playbook.md)、[44](./40-paradigm/44-agentic-ops-frontier-treatise.md)。编排平台是持续收敛的控制计算机，节点即路由器——见 [23](./20-architecture/23-kubernetes-control-plane-doctrine.md)、[24](./20-architecture/24-calico-l3-dataplane-treatise.md)。资本配置可带走的是三问，选人三则合验于烂摊子——见 [53](./50-strategy/53-li-ka-shing-capital-allocation-treatise.md)、[54](./50-strategy/54-ning-gaoning-talent-selection-treatise.md)。品牌走出去，目标是少打折扣、多造溢价——见 [51](./50-strategy/51-brand-cultural-translation.md)。智能体编年见 [12](./10-chronicle/12-artificial-intelligence-chronicle.md)。互联网简史见 [14](./10-chronicle/14-internet-history-chronicle.md)。
+运维侧可核对的价值，是压缩 MTTR 中可并行、可检索、可证据化的时间段，而不是承诺无人值守自愈——见 [42](./40-paradigm/42-agentic-sre-operations-playbook.md)、[44](./40-paradigm/44-agentic-ops-frontier-treatise.md)。编排平台是持续收敛的控制计算机，节点即路由器——见 [23](./20-architecture/23-kubernetes-control-plane-doctrine.md)、[24](./20-architecture/24-calico-l3-dataplane-treatise.md)。资本配置可带走的是三问，选人三则合验于烂摊子——见 [53](./50-strategy/53-li-ka-shing-capital-allocation-treatise.md)、[54](./50-strategy/54-ning-gaoning-talent-selection-treatise.md)。品牌走出去，目标是少打折扣、多造溢价——见 [51](./50-strategy/51-brand-cultural-translation.md)。智能体编年见 [12](./10-chronicle/12-artificial-intelligence-chronicle.md)。互联网编年见 [14](./10-chronicle/14-internet-history-chronicle.md)。
 
 ### 6.2 态度
 

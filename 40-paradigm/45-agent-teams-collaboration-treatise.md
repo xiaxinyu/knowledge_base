@@ -1,4 +1,4 @@
-# 从 ReAct 到 Agent Teams：工程师视角的 Agent 协作机制
+# 从 ReAct 到 Agent Teams：协议通道与协作语义
 
 > 做了两个月的 Agent 开发，我越来越确信：当前 Agent 能真正完成任务，很大程度取决于 **ReAct（Reasoning + Acting）** 模式的出现。ReAct 来自 Yao 等人 2022 年的论文（ICLR 2023），核心循环是「Thought → Action → Observation」——思考下一步该做什么，执行动作，观察环境返回的信息，再进入下一轮思考。
 >
