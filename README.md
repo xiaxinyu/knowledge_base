@@ -130,7 +130,7 @@ knowledge_base/
 
 同域内按认知依赖递增：先概念，后演进，再原则，再落地。
 
-- **`10`**：`10`–`12` 为计算 / 信息 / 智能技术史；`13` 为世界霸权秩序五百年编年（第一次工业革命按大分流重写；与 [55](./50-strategy/55-global-manufacturing-migration-chronicle.md) 制造业地理迁移互参）；`14` 为互联网编年：协议、入口、注意力与「收束—外溢」。  
+- **`10`**：`10`–`12` 为计算 / 信息 / 智能技术史；`13` 为世界霸权秩序五百年编年（第一次工业革命按大分流重写；与 [55](./50-strategy/55-global-manufacturing-migration-chronicle.md) 制造业地理迁移互参）；`14` 为互联网编年：协议、入口、注意力与「收束—外溢」；`15` 为浏览器编年：代管陌生人的程序与被迫补上的规矩。  
 - **`20`**：`20` 为企业架构（教学四大域、实践六层）；`21`–`24` 为服务代际、一致性取舍、编排控制面与数据面写表。  
 - **`30`**：`30` 为 IT 治理框架（COBIT）；`31` 为平台质量实证。  
 - **`40`**：`40`–`42` 为智能协作的优术（工具哲学 → 组织范式 → 运维落地）；`43` 为熵与控制（横切）；`44` 为运维落地的产业前沿对照；`45` 为从 ReAct 到 Agent Teams 的协作机制专论；`46` 为系统思维（与 `43` 同为横切镜片）。  
@@ -153,6 +153,7 @@ knowledge_base/
 | 12 | [Artificial Intelligence Chronicle](./10-chronicle/12-artificial-intelligence-chronicle.md) | 六种机制的本质与可观察量；承诺—能力鸿沟上的五阶段编年（智能体为第五阶段之延伸） | AI 编年、智能体从哪来 |
 | 13 | [World Hegemony Transfer Chronicle](./10-chronicle/13-world-hegemony-transfer-chronicle.md) | 荷→英→美是公共品接力；第一次工业革命是大分流奇点，不是欧洲早已单极领先；空窗比称号危险 | 霸权转移、大分流、世界工厂、Pax Britannica/Americana、多极辩论、波德、长期萧条、金银不等于资本主义、制造业迁移 |
 | 14 | [Internet History Chronicle](./10-chronicle/14-internet-history-chronicle.md) | 谁定义协议，谁就定义架构；谁卡入口，谁就收流量；2026 是智能体入口的交叠点；完整任务才是分水岭 | ARPANET、TCP/IP、搜索、微信、智能体、曾鸣、比雅虎更早、60 分奇点 |
+| 15 | [Browser Custody Chronicle](./10-chronicle/15-browser-custody-chronicle.md) | 浏览器代管陌生人的程序；扩大代管范围，被迫补规矩；产品是「可点陌生链接」 | 浏览器、同源策略、沙盒、JavaScript、Flash、权限、Chromium、引擎集中、Electron |
 
 #### 20 · 明道 · 构
 
@@ -207,6 +208,7 @@ knowledge_base/
 | AI 史、机制分类、智能体编年 | 12 |
 | 霸权转移、荷兰黄金时代、Pax Britannica/Americana、反向金德尔伯格、四次工业革命、**大分流**、世界工厂、多极辩论 | 13 |
 | 互联网史、ARPANET、TCP/IP、浏览器、门户、搜索、微信、推荐算法、ChatGPT、智能体、曾鸣、比雅虎更早、60 分奇点、支付宝 | 14 |
+| 浏览器史、代管、同源策略、沙盒、CORS、CSP、JavaScript、Flash、权限提示、Chromium、引擎集中、Blink、Electron | 15 |
 | 企业架构、TOGAF、四大域、**六层域**、CSVLOD、科图采夫 | 20 |
 | 服务架构代际、复杂度转移 | 21 |
 | CAP、共识、强一致 vs 可用 | 22 |
@@ -235,6 +237,7 @@ knowledge_base/
 | 世界霸权秩序 ↔ 制造业地理迁移 | 13 / 55 |
 | 美元环流与利润层 ↔ 霸权公共品 ↔ 工厂地理 | 57 / 13 / 55 |
 | 计算池化 ↔ 网络之网络 / 协议与入口 | 10 / 14 |
+| 协议与入口 ↔ 浏览器代管与沙盒规矩 | 14 / 15 |
 | 互联网入口链 ↔ 产业穿透与交叠点 | 14 / 50 |
 | 教学四大域 ↔ 实践六层 | 20 |
 | 死亡之谷 ↔ 智能体 / 企业操作系统 | 50 |
@@ -249,18 +252,19 @@ knowledge_base/
 
 1. **10** 计算演进脉络  
 2. **14** 互联网如何成为网络之网络（协议、入口、收束与外溢）  
-3. **11** 信息如何被度量  
-4. **12** 人工智能如何走到大模型  
-5. **13** 五百年霸权转移与四次工业革命（取势）  
-6. **20** 战略如何翻译为可执行安排  
-7. **21** 架构代际迁移  
-8. **25** 架构师如何决策：价值、六条法则与五级跳  
-9. **43** 熵与复杂度如何转移（一般原理）  
-10. **46** 系统思维：要素、连接、目标与反馈  
-11. **22** 跨节点一致性取舍  
-12. **23** 编排控制面原则  
-13. **24** 数据面如何写表转发  
-14. **40** 回到无状态与可组合  
+3. **15** 浏览器如何代管陌生人的程序（同源、沙盒、权限）  
+4. **11** 信息如何被度量  
+5. **12** 人工智能如何走到大模型  
+6. **13** 五百年霸权转移与四次工业革命（取势）  
+7. **20** 战略如何翻译为可执行安排  
+8. **21** 架构代际迁移  
+9. **25** 架构师如何决策：价值、六条法则与五级跳  
+10. **43** 熵与复杂度如何转移（一般原理）  
+11. **46** 系统思维：要素、连接、目标与反馈  
+12. **22** 跨节点一致性取舍  
+13. **23** 编排控制面原则  
+14. **24** 数据面如何写表转发  
+15. **40** 回到无状态与可组合  
 
 #### IT 治理 / CIO / 审计
 
@@ -408,6 +412,7 @@ AI 如何改变工程组织、如何承接被放大的速度。
 | **取势** | 计算是专用机械变成按需资源池；信息度量的是不确定性的减少，不是日常所谓「意义」 | [10](./10-chronicle/10-computing-cloud-chronicle.md) / [11](./10-chronicle/11-information-theory-chronicle.md) |
 | **取势** | 荷→英→美是公共品接力，不是兵力奖牌；第一次工业革命是拉开差距的奇点，不是欧洲自文艺复兴以来一路领先 | [13](./10-chronicle/13-world-hegemony-transfer-chronicle.md) |
 | **取势** | 互联网的权力在协议与入口；捆绑 + 免费反复上演；收束与外溢互为下一阶段；2026 缺的是智能体的浏览器 | [14](./10-chronicle/14-internet-history-chronicle.md) |
+| **取势** | 浏览器代管陌生人的程序；产品是「可点陌生链接」，不是速度；规矩多半先出事再补 | [15](./10-chronicle/15-browser-custody-chronicle.md) |
 | **明道** | 企业架构把战略译成可执行安排并持续约束该建什么；教学用四大域，实践常见六层；不是照搬某一框架 | [20](./20-architecture/20-enterprise-architecture-treatise.md) |
 | **明道** | 写代码是架构师的必要能力，不是 CTO 的充分条件；价值思维是第一性 | [25](./20-architecture/25-architecture-thinking-cto-treatise.md) |
 | **明道** | 复杂度不会消失，只会转移；跨节点之后，强一致与持续可用必须取舍 | [21](./20-architecture/21-service-architecture-evolution.md) / [22](./20-architecture/22-distributed-consistency-treatise.md) |
@@ -418,7 +423,7 @@ AI 如何改变工程组织、如何承接被放大的速度。
 | **优术** | 制造业迁移改的是重心与环节，不是前任归零；无法被 Token 化的判断、创意与信任，才有剩余溢价 | [55](./50-strategy/55-global-manufacturing-migration-chronicle.md) / [52](./50-strategy/52-token-economics-treatise.md) |
 | **优术** | 实物向消费端、美元回流美国是近四十年分工主轴的教学像；升级是金字塔上跃迁，去美元缓慢、替代未成型 | [57](./50-strategy/57-dollar-system-division-of-labor-treatise.md) / [13](./10-chronicle/13-world-hegemony-transfer-chronicle.md) |
 
-运维侧可核对的价值，是压缩 MTTR 中可并行、可检索、可证据化的时间段，而不是承诺无人值守自愈——见 [42](./40-paradigm/42-agentic-sre-operations-playbook.md)、[44](./40-paradigm/44-agentic-ops-frontier-treatise.md)。编排平台是持续收敛的控制计算机，节点即路由器——见 [23](./20-architecture/23-kubernetes-control-plane-doctrine.md)、[24](./20-architecture/24-calico-l3-dataplane-treatise.md)。资本配置可带走的是三问，选人三则合验于烂摊子——见 [53](./50-strategy/53-li-ka-shing-capital-allocation-treatise.md)、[54](./50-strategy/54-ning-gaoning-talent-selection-treatise.md)。品牌走出去，目标是少打折扣、多造溢价——见 [51](./50-strategy/51-brand-cultural-translation.md)。智能体编年见 [12](./10-chronicle/12-artificial-intelligence-chronicle.md)。互联网编年见 [14](./10-chronicle/14-internet-history-chronicle.md)。
+运维侧可核对的价值，是压缩 MTTR 中可并行、可检索、可证据化的时间段，而不是承诺无人值守自愈——见 [42](./40-paradigm/42-agentic-sre-operations-playbook.md)、[44](./40-paradigm/44-agentic-ops-frontier-treatise.md)。编排平台是持续收敛的控制计算机，节点即路由器——见 [23](./20-architecture/23-kubernetes-control-plane-doctrine.md)、[24](./20-architecture/24-calico-l3-dataplane-treatise.md)。资本配置可带走的是三问，选人三则合验于烂摊子——见 [53](./50-strategy/53-li-ka-shing-capital-allocation-treatise.md)、[54](./50-strategy/54-ning-gaoning-talent-selection-treatise.md)。品牌走出去，目标是少打折扣、多造溢价——见 [51](./50-strategy/51-brand-cultural-translation.md)。智能体编年见 [12](./10-chronicle/12-artificial-intelligence-chronicle.md)。互联网编年见 [14](./10-chronicle/14-internet-history-chronicle.md)。浏览器代管与沙盒规矩见 [15](./10-chronicle/15-browser-custody-chronicle.md)。
 
 ### 6.2 态度
 

@@ -3,7 +3,7 @@
 > 尔曹身与名俱灭，不废江河万古流。  
 > ——杜甫《戏为六绝句》其二
 
-> 1957 年的一声短波脉冲，把航天竞赛写成了军备与通信的同一件事。互联网不是从浏览器开始的，而是从「核打击下通信如何幸存」与「网络之网络」开始的。全文一条链：每一次外溢，都对着上一阶段的收束僵化；每一次外溢之后，又演化出更底层的新入口完成收束。上卷写到门户与信任规则（§1–7）；下卷从搜索写到 AI（§8–12）；§13 把同一条链接到可核对的行业节点；§14–17 为同一访谈的四层读法（索引 / 口述 / 旁证 / 补遗，分工见读法）。可与本库 [10](./10-computing-cloud-chronicle.md)（计算如何池化）、[11](./11-information-theory-chronicle.md)（信息如何被度量）、[12](./12-artificial-intelligence-chronicle.md)（智能机制编年）、[13](./13-world-hegemony-transfer-chronicle.md)（标准与公共品）、[50](../50-strategy/50-ai-industry-disruption-strategy.md)（2026 交叠点与智能体入口）对照。
+> 1957 年的一声短波脉冲，把航天竞赛写成了军备与通信的同一件事。互联网不是从浏览器开始的，而是从「核打击下通信如何幸存」与「网络之网络」开始的。全文一条链：每一次外溢，都对着上一阶段的收束僵化；每一次外溢之后，又演化出更底层的新入口完成收束。上卷写到门户与信任规则（§1–7）；下卷从搜索写到 AI（§8–12）；§13 把同一条链接到可核对的行业节点；§14–17 为同一访谈的四层读法（索引 / 口述 / 旁证 / 补遗，分工见读法）。可与本库 [10](./10-computing-cloud-chronicle.md)（计算如何池化）、[11](./11-information-theory-chronicle.md)（信息如何被度量）、[12](./12-artificial-intelligence-chronicle.md)（智能机制编年）、[13](./13-world-hegemony-transfer-chronicle.md)（标准与公共品）、[15](./15-browser-custody-chronicle.md)（窗口内部如何代管）、[50](../50-strategy/50-ai-industry-disruption-strategy.md)（2026 交叠点与智能体入口）对照。
 
 先给一个直接答案：
 
