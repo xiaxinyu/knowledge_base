@@ -155,6 +155,7 @@ knowledge_base/
 | 14 | [Internet History Chronicle](./10-chronicle/14-internet-history-chronicle.md) | 谁定义协议，谁就定义架构；谁卡入口，谁就收流量；2026 是智能体入口的交叠点；完整任务才是分水岭 | ARPANET、TCP/IP、搜索、微信、智能体、曾鸣、比雅虎更早、60 分奇点 |
 | 15 | [Browser Custody Chronicle](./10-chronicle/15-browser-custody-chronicle.md) | 浏览器代管陌生人的程序；扩大代管范围，被迫补规矩；产品是「可点陌生链接」 | 浏览器、同源策略、沙盒、JavaScript、Flash、权限、Chromium、引擎集中、Electron、Manifest V3 |
 | 16 | [HTTP Protocol Chronicle](./10-chronicle/16-http-protocol-chronicle.md) | HTTP 语义连续，承载与并发代际替换；队头阻塞换层不消失 | HTTP、HTTP/2、HTTP/3、QUIC、队头阻塞、TLS、HTTPS |
+| 17 | [Large Language Model Chronicle](./10-chronicle/17-large-language-model-chronicle.md) | 语言建模从循环网络走到 Transformer；预训练、规模与对齐把续写变成产品 | LLM、Transformer、注意力、GPT、BERT、缩放律、RAG、ChatGPT、Decoder-Only |
 
 #### 20 · 明道 · 构
 
@@ -211,6 +212,7 @@ knowledge_base/
 | 互联网史、ARPANET、TCP/IP、浏览器、门户、搜索、微信、推荐算法、ChatGPT、智能体、曾鸣、比雅虎更早、60 分奇点、支付宝 | 14 |
 | 浏览器史、代管、同源策略、沙盒、CORS、CSP、JavaScript、Flash、权限提示、Chromium、Blink、引擎集中、Electron、WebView、Manifest V3 | 15 |
 | HTTP、HTTP/1.1、HTTP/2、HTTP/3、QUIC、SPDY、队头阻塞、TLS、HTTPS、ALPN、Alt-Svc、HPACK、多路复用 | 16 |
+| 大语言模型、LLM、Transformer、注意力、QKV、GPT、BERT、T5、缩放律、RAG、ChatGPT、Decoder-Only、幻觉、对齐 | 17 |
 | 企业架构、TOGAF、四大域、**六层域**、CSVLOD、科图采夫 | 20 |
 | 服务架构代际、复杂度转移 | 21 |
 | CAP、共识、强一致 vs 可用 | 22 |
@@ -259,16 +261,17 @@ knowledge_base/
 4. **16** HTTP 如何从 0.9 走到 QUIC（队头阻塞换层）  
 5. **11** 信息如何被度量  
 6. **12** 人工智能如何走到大模型  
-7. **13** 五百年霸权转移与四次工业革命（取势）  
-8. **20** 战略如何翻译为可执行安排  
-9. **21** 架构代际迁移  
-10. **25** 架构师如何决策：价值、六条法则与五级跳  
-11. **43** 熵与复杂度如何转移（一般原理）  
-12. **46** 系统思维：要素、连接、目标与反馈  
-13. **22** 跨节点一致性取舍  
-14. **23** 编排控制面原则  
-15. **24** 数据面如何写表转发  
-16. **40** 回到无状态与可组合  
+7. **17** 语言侧如何从循环网络走到 Transformer  
+8. **13** 五百年霸权转移与四次工业革命（取势）  
+9. **20** 战略如何翻译为可执行安排  
+10. **21** 架构代际迁移  
+11. **25** 架构师如何决策：价值、六条法则与五级跳  
+12. **43** 熵与复杂度如何转移（一般原理）  
+13. **46** 系统思维：要素、连接、目标与反馈  
+14. **22** 跨节点一致性取舍  
+15. **23** 编排控制面原则  
+16. **24** 数据面如何写表转发  
+17. **40** 回到无状态与可组合  
 
 #### IT 治理 / CIO / 审计
 
@@ -284,13 +287,14 @@ knowledge_base/
 AI 如何改变工程组织、如何承接被放大的速度。
 
 1. **12** 人工智能如何走到大模型  
-2. **40** 工具为何要职责明确、可观察  
-3. **41** 5+2 如何承接个人提效  
-4. **45** 从 ReAct 到 Agent Teams 的协作机制  
-5. **42** 运维侧如何智能体化  
-6. **44** Agentic Ops 产业前沿对照  
-7. **43** 用熵读组织与制度（横切镜片）  
-8. **50** 战略层如何重构护城河  
+2. **17** 语言侧如何从循环网络走到 Transformer / ChatGPT  
+3. **40** 工具为何要职责明确、可观察  
+4. **41** 5+2 如何承接个人提效  
+5. **45** 从 ReAct 到 Agent Teams 的协作机制  
+6. **42** 运维侧如何智能体化  
+7. **44** Agentic Ops 产业前沿对照  
+8. **43** 用熵读组织与制度（横切镜片）  
+9. **50** 战略层如何重构护城河  
 
 #### 品牌 / 战略负责人
 
@@ -418,6 +422,7 @@ AI 如何改变工程组织、如何承接被放大的速度。
 | **取势** | 互联网的权力在协议与入口；捆绑 + 免费反复上演；收束与外溢互为下一阶段；2026 缺的是智能体的浏览器 | [14](./10-chronicle/14-internet-history-chronicle.md) |
 | **取势** | 浏览器代管陌生人的程序；产品是「可点陌生链接」，不是速度；规矩多半先出事再补 | [15](./10-chronicle/15-browser-custody-chronicle.md) |
 | **取势** | HTTP 语义连续，换的是承载与并发；队头阻塞换层不消失；HTTP/3 定稿于 2022 | [16](./10-chronicle/16-http-protocol-chronicle.md) |
+| **取势** | 大语言模型的核心是条件续写；Transformer 之后是预训练、规模、对齐与产品破圈 | [17](./10-chronicle/17-large-language-model-chronicle.md) |
 | **明道** | 企业架构把战略译成可执行安排并持续约束该建什么；教学用四大域，实践常见六层；不是照搬某一框架 | [20](./20-architecture/20-enterprise-architecture-treatise.md) |
 | **明道** | 写代码是架构师的必要能力，不是 CTO 的充分条件；价值思维是第一性 | [25](./20-architecture/25-architecture-thinking-cto-treatise.md) |
 | **明道** | 复杂度不会消失，只会转移；跨节点之后，强一致与持续可用必须取舍 | [21](./20-architecture/21-service-architecture-evolution.md) / [22](./20-architecture/22-distributed-consistency-treatise.md) |
