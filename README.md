@@ -156,6 +156,7 @@ knowledge_base/
 | 15 | [Browser Custody Chronicle](./10-chronicle/15-browser-custody-chronicle.md) | 浏览器代管陌生人的程序；扩大代管范围，被迫补规矩；产品是「可点陌生链接」 | 浏览器、同源策略、沙盒、JavaScript、Flash、权限、Chromium、引擎集中、Electron、Manifest V3 |
 | 16 | [HTTP Protocol Chronicle](./10-chronicle/16-http-protocol-chronicle.md) | HTTP 语义连续，承载与并发代际替换；队头阻塞换层不消失 | HTTP、HTTP/2、HTTP/3、QUIC、队头阻塞、TLS、HTTPS |
 | 17 | [Large Language Model Chronicle](./10-chronicle/17-large-language-model-chronicle.md) | 语言建模从循环网络走到 Transformer；预训练、规模与对齐把续写变成产品 | LLM、Transformer、注意力、GPT、BERT、缩放律、RAG、ChatGPT、Decoder-Only |
+| 18 | [Historiography Reconstruction Treatise](./10-chronicle/18-historiography-reconstruction-treatise.md) | 历史不是过去本身；史料·解释·限制下的有边界重建；选择与记忆改写问题 | 历史认识论、史料、解释、丝绸之路、工业革命、海地革命、记忆、纽伦堡 |
 
 #### 20 · 明道 · 构
 
@@ -167,6 +168,7 @@ knowledge_base/
 | 23 | [Kubernetes Control-Plane Doctrine](./20-architecture/23-kubernetes-control-plane-doctrine.md) | 编排平台是持续收敛的分布式控制计算机 | K8s 控制面、声明式收敛 |
 | 24 | [Calico L3 Dataplane Treatise](./20-architecture/24-calico-l3-dataplane-treatise.md) | 节点即路由器：控制面写表、内核转发；Service 虚地址经 DNAT / conntrack 到达 Endpoint | Calico、Pod 网络、Service |
 | 25 | [Architecture Thinking Treatise](./20-architecture/25-architecture-thinking-cto-treatise.md) | 架构师靠决策生存；价值是第一性；五级跳是跨维不是把写代码卷满 | 架构思维、郭东白、价值思维、从程序员到 CTO |
+| 26 | [CPU Memory Access Treatise](./20-architecture/26-cpu-memory-access-treatise.md) | 一次 Load：VA→TLB/页表→PA→Cache Line→DRAM；慢常在链路不在算术 | 虚拟地址、MMU、TLB、页表、Cache、DRAM、局部性 |
 
 #### 30 · 明道 · 治
 
@@ -213,12 +215,14 @@ knowledge_base/
 | 浏览器史、代管、同源策略、沙盒、CORS、CSP、JavaScript、Flash、权限提示、Chromium、Blink、引擎集中、Electron、WebView、Manifest V3 | 15 |
 | HTTP、HTTP/1.1、HTTP/2、HTTP/3、QUIC、SPDY、队头阻塞、TLS、HTTPS、ALPN、Alt-Svc、HPACK、多路复用 | 16 |
 | 大语言模型、LLM、Transformer、注意力、QKV、GPT、BERT、T5、缩放律、RAG、ChatGPT、Decoder-Only、幻觉、对齐 | 17 |
+| 历史是什么、史料、解释、限制、有边界的重建、丝绸之路、海地革命、记忆与历史、纽伦堡、工厂法 | 18 |
 | 企业架构、TOGAF、四大域、**六层域**、CSVLOD、科图采夫 | 20 |
 | 服务架构代际、复杂度转移 | 21 |
 | CAP、共识、强一致 vs 可用 | 22 |
 | Kubernetes 控制面、声明式、调谐 | 23 |
 | Calico、L3、Service/DNAT | 24 |
 | 架构思维、价值思维、实证思维、从程序员到 CTO、生存法则 | 25 |
+| 虚拟地址、MMU、TLB、页表、Page Fault、Cache Line、L1D、DRAM、局部性、Working Set | 26 |
 | COBIT、治理 vs 管理 | 30 |
 | 平台服务质量、期望—感知差距 | 31 |
 | Unix 哲学、无状态 Agent、可组合 | 40 |
@@ -271,7 +275,8 @@ knowledge_base/
 14. **22** 跨节点一致性取舍  
 15. **23** 编排控制面原则  
 16. **24** 数据面如何写表转发  
-17. **40** 回到无状态与可组合  
+17. **26** 一次 Load 如何从虚地址走到 DRAM  
+18. **40** 回到无状态与可组合  
 
 #### IT 治理 / CIO / 审计
 
@@ -423,8 +428,10 @@ AI 如何改变工程组织、如何承接被放大的速度。
 | **取势** | 浏览器代管陌生人的程序；产品是「可点陌生链接」，不是速度；规矩多半先出事再补 | [15](./10-chronicle/15-browser-custody-chronicle.md) |
 | **取势** | HTTP 语义连续，换的是承载与并发；队头阻塞换层不消失；HTTP/3 定稿于 2022 | [16](./10-chronicle/16-http-protocol-chronicle.md) |
 | **取势** | 大语言模型的核心是条件续写；Transformer 之后是预训练、规模、对齐与产品破圈 | [17](./10-chronicle/17-large-language-model-chronicle.md) |
+| **取势** | 历史不是过去本身；史料·解释·限制下的有边界重建；选择与记忆改写问题 | [18](./10-chronicle/18-historiography-reconstruction-treatise.md) |
 | **明道** | 企业架构把战略译成可执行安排并持续约束该建什么；教学用四大域，实践常见六层；不是照搬某一框架 | [20](./20-architecture/20-enterprise-architecture-treatise.md) |
 | **明道** | 写代码是架构师的必要能力，不是 CTO 的充分条件；价值思维是第一性 | [25](./20-architecture/25-architecture-thinking-cto-treatise.md) |
+| **明道** | 一次 Load：虚地址经 TLB/页表到物理地址，再经 Cache 才可能到 DRAM；慢常在链路 | [26](./20-architecture/26-cpu-memory-access-treatise.md) |
 | **明道** | 复杂度不会消失，只会转移；跨节点之后，强一致与持续可用必须取舍 | [21](./20-architecture/21-service-architecture-evolution.md) / [22](./20-architecture/22-distributed-consistency-treatise.md) |
 | **明道** | 治理与管理必须分离；平台质量是期望与感知的差距 | [30](./30-governance/30-cobit-it-governance-framework.md) / [31](./30-governance/31-platform-service-quality-case-study.md) |
 | **优术** | 遗忘有时强于记忆；个人写出代码变快之后，组织交付未必变快 | [40](./40-paradigm/40-unix-agent-stateless-philosophy.md) / [41](./40-paradigm/41-ai-engineering-paradigm.md) |
@@ -433,7 +440,7 @@ AI 如何改变工程组织、如何承接被放大的速度。
 | **优术** | 制造业迁移改的是重心与环节，不是前任归零；无法被 Token 化的判断、创意与信任，才有剩余溢价 | [55](./50-strategy/55-global-manufacturing-migration-chronicle.md) / [52](./50-strategy/52-token-economics-treatise.md) |
 | **优术** | 实物向消费端、美元回流美国是近四十年分工主轴的教学像；升级是金字塔上跃迁，去美元缓慢、替代未成型 | [57](./50-strategy/57-dollar-system-division-of-labor-treatise.md) / [13](./10-chronicle/13-world-hegemony-transfer-chronicle.md) |
 
-运维侧可核对的价值，是压缩 MTTR 中可并行、可检索、可证据化的时间段，而不是承诺无人值守自愈——见 [42](./40-paradigm/42-agentic-sre-operations-playbook.md)、[44](./40-paradigm/44-agentic-ops-frontier-treatise.md)。编排平台是持续收敛的控制计算机，节点即路由器——见 [23](./20-architecture/23-kubernetes-control-plane-doctrine.md)、[24](./20-architecture/24-calico-l3-dataplane-treatise.md)。资本配置可带走的是三问，选人三则合验于烂摊子——见 [53](./50-strategy/53-li-ka-shing-capital-allocation-treatise.md)、[54](./50-strategy/54-ning-gaoning-talent-selection-treatise.md)。品牌走出去，目标是少打折扣、多造溢价——见 [51](./50-strategy/51-brand-cultural-translation.md)。智能体编年见 [12](./10-chronicle/12-artificial-intelligence-chronicle.md)。互联网编年见 [14](./10-chronicle/14-internet-history-chronicle.md)。浏览器代管与沙盒规矩见 [15](./10-chronicle/15-browser-custody-chronicle.md)。HTTP 从 0.9 到 QUIC 见 [16](./10-chronicle/16-http-protocol-chronicle.md)。
+运维侧可核对的价值，是压缩 MTTR 中可并行、可检索、可证据化的时间段，而不是承诺无人值守自愈——见 [42](./40-paradigm/42-agentic-sre-operations-playbook.md)、[44](./40-paradigm/44-agentic-ops-frontier-treatise.md)。编排平台是持续收敛的控制计算机，节点即路由器——见 [23](./20-architecture/23-kubernetes-control-plane-doctrine.md)、[24](./20-architecture/24-calico-l3-dataplane-treatise.md)。单机一次 Load 的虚实翻译与 Cache 链路见 [26](./20-architecture/26-cpu-memory-access-treatise.md)。资本配置可带走的是三问，选人三则合验于烂摊子——见 [53](./50-strategy/53-li-ka-shing-capital-allocation-treatise.md)、[54](./50-strategy/54-ning-gaoning-talent-selection-treatise.md)。品牌走出去，目标是少打折扣、多造溢价——见 [51](./50-strategy/51-brand-cultural-translation.md)。智能体编年见 [12](./10-chronicle/12-artificial-intelligence-chronicle.md)。互联网编年见 [14](./10-chronicle/14-internet-history-chronicle.md)。浏览器代管与沙盒规矩见 [15](./10-chronicle/15-browser-custody-chronicle.md)。HTTP 从 0.9 到 QUIC 见 [16](./10-chronicle/16-http-protocol-chronicle.md)。
 
 ### 6.2 态度
 
