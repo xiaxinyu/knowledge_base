@@ -279,7 +279,7 @@ ARPA 汇集多方科研力量，积累工程经验，完成理论、实验、项
 
 注意这句话，「不是让任何一个网络成为中心。」这是互联网最早的「去中心化」理想。但历史将证明，去中心化本身也需要规则，而规则的制定者就是权力的源头。
 
-1974 年 5 月，瑟夫和卡恩在《IEEE Transactions on Communications》（IEEE 通信学报，IEEE 即美国电气电子工程师学会）上发表论文《一种分组网络互连协议》（A Protocol for Packet Network Intercommunication）。论文提出「传输控制协议」（TCP，Transmission Control Protocol），首次把「连接」和「传输」分开，让数据包可在不同网络之间被路由、重组、纠错。1980 年，TCP/IP 拆成两层：TCP 负责端到端可靠传输，IP（Internet Protocol，互联网协议）负责寻址和路由。TCP/IP 协议簇基本定型。至此，「网络之网络」在技术上成型，互联网的所有条件已具备。
+1974 年 5 月，瑟夫和卡恩在《IEEE Transactions on Communications》（IEEE 通信学报，IEEE 即美国电气电子工程师学会）上发表论文《一种分组网络互连协议》（A Protocol for Packet Network Intercommunication）。论文提出一体的「传输控制协议」（TCP，Transmission Control Protocol），让数据包可在不同网络之间被路由、重组、纠错。约 1978 年起，这一设计拆成两层：TCP 负责端到端可靠传输，IP（Internet Protocol，互联网协议）负责寻址和路由；到 1981 年 RFC 791 / 793，协议簇基本定稿。至此，「网络之网络」在技术上成型，互联网的所有条件已具备。
 
 ### 2.5 时间差：中国与欧洲
 
@@ -446,7 +446,7 @@ PageRank 的核心逻辑可以用一个类比说明：如果把互联网想象�
 
 ### 8.2 AdWords：注意力明码标价
 
-2000 年 10 月，Google 推出 AdWords 广告系统。广告主可以为关键词竞价，广告出现在搜索结果页顶部或右侧。AdWords 的革命性设计是：搜索展示不仅看点击率，还要看竞价价格。这意味着，广告内容与用户搜索意图越匹配，广告的性价比越高。这套系统让「注意力」开始明码标价：你出价越高，你的信息就越可能被主动搜索的用户看到。
+2000 年 10 月，Google 推出 AdWords。广告主可以为关键词竞价，广告出现在搜索结果页顶部或右侧。相对当时常见的「价高者上」，后来站住的排序是出价与点击效果、相关度一起决定展示（再往后收成质量得分）：匹配越好，同样预算越容易被看见。注意力开始可以被标价，但不是谁出价高谁就一定排前面。
 
 ### 8.3 百度竞价排名
 
@@ -464,7 +464,7 @@ PageRank 的核心逻辑可以用一个类比说明：如果把互联网想象�
 
 2006 年 3 月 14 日，亚马逊发布 Simple Storage Service（S3），这是 AWS（Amazon Web Services）的第一个产品。它的逻辑极其朴素：亚马逊在运营电商的过程中，积累了大量的服务器、存储、带宽等 IT 基础设施。既然这些资源在非购物高峰期大量闲置，为什么不租给别的公司用？
 
-2006 年 AWS 上线时，华尔街的反应是「困惑和不以为然」。但硅谷的创业公司立刻嗅到了机会。Dropbox 和 Airbnb 是 AWS 的早期客户。真正的突破发生在 2009 年，流媒体巨头 Netflix 成为首家完全依赖 AWS 基础设施的大型上市公司。2013 年，AWS 与美国中央情报局（CIA）签约，当竞争对手 IBM 因这笔交易起诉政府时，保密交易才被曝光。根据 Gartner 统计数据，到 2015 年，AWS 在云基础设施即服务（IaaS）市场的份额达到 39.8%，比微软 Azure、Google Cloud 和 IBM 的合计份额还要高。
+2006 年 AWS 上线时，华尔街的反应是「困惑和不以为然」。但硅谷的创业公司立刻嗅到了机会。Dropbox 和 Airbnb 是 AWS 的早期客户。真正被广泛记住的早期案例是 Netflix：迁云约从 2008 年启动，2016 年 1 月才关掉流媒体业务最后的自有数据中心，不是 2009 年就已经完全依赖 AWS。2013 年，AWS 与美国中央情报局（CIA）签约，当竞争对手 IBM 因这笔交易起诉政府时，保密交易才被曝光。根据 Gartner 统计数据，到 2015 年，AWS 在云基础设施即服务（IaaS）市场的份额达到 39.8%，比微软 Azure、Google Cloud 和 IBM 的合计份额还要高。
 
 云计算变现的本质是：谁定义了「计算力如何被消费」，谁就定义了所有互联网公司的成本结构和创新速度。当你的代码跑在别人的服务器上，你的变现能力就在别人的条款里。
 
@@ -562,7 +562,7 @@ PageRank 的核心逻辑可以用一个类比说明：如果把互联网想象�
 
 ### 11.1 Transformer 与 ChatGPT
 
-2017 年 6 月，Google Brain 团队在神经信息处理系统大会（NIPS 2017，后改名为 NeurIPS）上发表论文《Attention Is All You Need》（注意力是你所需的一切），提出 Transformer 架构。论文作者包括瓦斯瓦尼（Ashish Vaswani）、沙泽尔（Noam Shazeer）等八位研究人员。他们提出了一种全新的神经网络结构：不再依赖传统的循环神经网络（RNN，Recurrent Neural Network）或卷积神经网络（CNN，Convolutional Neural Network），而是用「自注意力机制」（Self-Attention）捕捉序列中任意两个位置之间的关系。Transformer 的革命性在于：它让模型可以并行处理文本，训练速度大幅提升，同时能够捕捉长距离依赖。论文标题「Attention Is All You Need」后来成为 AI 领域最著名的双关语之一：注意力是你唯一需要的东西，也是人类正在被剥夺的东西。
+2017 年 6 月，Google Brain 团队的论文《Attention Is All You Need》（注意力是你所需的一切）在 arXiv 公布，同年 12 月在神经信息处理系统大会（NIPS 2017，后改名为 NeurIPS）发表，提出 Transformer 架构。论文作者包括瓦斯瓦尼（Ashish Vaswani）、沙泽尔（Noam Shazeer）等八位研究人员。他们提出了一种全新的神经网络结构：不再依赖传统的循环神经网络（RNN，Recurrent Neural Network）或卷积神经网络（CNN，Convolutional Neural Network），而是用「自注意力机制」（Self-Attention）捕捉序列中任意两个位置之间的关系。Transformer 的革命性在于：它让模型可以并行处理文本，训练速度大幅提升，同时能够捕捉长距离依赖。论文标题「Attention Is All You Need」后来成为 AI 领域最著名的双关语之一：注意力是你唯一需要的东西，也是人类正在被剥夺的东西。
 
 2018 年，OpenAI（开放人工智能公司）发布第一代 GPT（Generative Pre-trained Transformer，生成式预训练变换器），参数量 1.17 亿。2020 年 5 月，OpenAI 发布 GPT-3，参数量暴涨至 1750 亿。2022 年 11 月 30 日，OpenAI 发布 ChatGPT，基于 GPT-3.5，首次将大语言模型（Large Language Model）包装成对话界面。结果超出所有人预料：ChatGPT 上线 5 天，注册用户突破 100 万；上线两个月，月活跃用户达到 1 亿，成为当时历史上用户增长最快的消费级应用。
 

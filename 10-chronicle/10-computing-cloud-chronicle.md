@@ -119,9 +119,9 @@
 - 阿塔纳索夫（John Vincent Atanasoff）等人把电子数字计算付诸硬件：ABC 等专用机证明了电子实现的可行性（「第一台」存在争议）。
 - 冯·诺依曼（John von Neumann）指示了计算机应该怎么做：存储程序计算机，奠定了现代计算机的体系结构。
 
-### 2.4 1946：诞生了世界上第一台通用计算机
+### 2.4 1946：通用电子数字计算机的通行节点（ENIAC）
 
-1946 年 2 月 14 日，世界上第一台通用计算机 **ENIAC**（Electronic Numerical Integrator And Computer，电子数值积分计算机）于美国宾夕法尼亚大学诞生，发明人是美国人莫克利（John W. Mauchly）和艾克特（J. Presper Eckert）。
+1946 年 2 月 14 日，**ENIAC**（Electronic Numerical Integrator And Computer，电子数值积分计算机）在美国宾夕法尼亚大学向公众揭幕，主要研制者是莫克利（John W. Mauchly）和艾克特（J. Presper Eckert）。中文教材常称它为第一台通用电子数字计算机。更严格的区分是：它电子、可编程，但程序主要靠外部接线，不是存储程序计算机；Z3、Colossus 等另有「第一」之争。本文把它当作通用电子数字计算走向工程可用的标志节点。
 
 ENIAC 是第一代电子管计算机，是图灵完备的，并且能够重新编程以解决各种计算问题。同时，ENIAC 也是一个不折不扣的庞然大物，用了 18000 个电子管，占地 150 平方米，重达 30 吨，耗电功率约 150 千瓦，每秒钟可进行 5000 次运算。由于使用的电子管体积很大，耗电量大，易发热。因而，ENIAC 的工作时间不能太长，最初只用于帮助美国陆军的弹道研究实验室（BRL）计算火炮的火力表。
 
@@ -159,7 +159,7 @@ ENIAC 是第一代电子管计算机，是图灵完备的，并且能够重新�
 
 ### 3.2 1959：第一次提出了虚拟化技术的概念
 
-时间来到 1959 年 6 月 15 日，牛津大学的计算机教授，克里斯托弗·斯特雷奇（Christopher Strachey）在国际信息处理大会（International Conference on Information Processing）上发表了一篇名为《大型高速计算机中的分时系统》（"Time sharing in large fast computers"）的学术报告，他在文中首次提出了 **“虚拟化”** 的基本概念，还论述了什么是虚拟化技术。这篇文章被认为是最早的虚拟化技术论述，从此拉开了虚拟化发展的帷幕。[^strachey1959]
+1959 年 6 月，计算机科学家克里斯托弗·斯特雷奇（Christopher Strachey；牛津计算学教授是 1960 年代中期以后的职务）在国际信息处理大会（International Conference on Information Processing）上发表 *Time sharing in large fast computers*。报告讨论的是大型机分时。后世常把它回溯为虚拟化思想的早期论述，而不是已经给出虚拟机监视器的定义。[^strachey1959]
 
 Christopher Strachey 生平参见：[Computer History pioneers — Strachey](https://history.computer.org/pioneers/strachey.html)。
 
@@ -271,7 +271,7 @@ PDP-8 小型机简化了大型机的功能，但相对也价格低廉，在当�
 
 1974 年，Thompson 和 Ritchie 发表了第一篇关于 UNIX 的论文《The UNIX Time Sharing System》（UNIX 分时共享操作系统），从此 UNIX 广为人知。[^unix1974]
 
-1977 年，Dennis M. Ritchie 跨时代的论文《可移植的 C 语言编译程序》，标志 UNIX 成为了世界上第一个可移植的操作系统。与主机硬件设备完全解耦的 C 语言和 UNIX 使得程序员这门职业得以诞生，计算机技术不再是科学家们的专属，程序员们走向了台前。
+约 1977–1978 年，Stephen C. Johnson 的可移植 C 编译器（PCC），以及 Johnson 与 Dennis M. Ritchie 关于 C 程序和 UNIX 可移植性的论文，标志 UNIX 成为早期最有影响力的可移植操作系统之一。与主机硬件解耦之后，编程不再只是科学家的内部手艺，程序员得以走向台前。
 
 1978 年，Thompson 和 Ritchie 合作出版了《C程序设计语言》的第一版，也被 C 程序员称作 “K&R C”。这是第一本系统性介绍 C 语言编程方法的书籍，在 C 语言的发展和普及过程中起到了非常重要的作用，也被视为是 C 语言的业界标准规范，誉为 “C 语言圣经”，至今仍然广泛使用。
 
@@ -302,7 +302,7 @@ UNIX 和 C 语言的结合是一个伟大的时刻，在此之前，使用汇编
 
 > **说明**：Type I / Type II Hypervisor 的流行分类多见于后世教材与产品文献；Popek & Goldberg（1974）主要贡献是可虚拟化条件与 VMM 性质，不宜将后世分类学完全归于该文。
 
-现在回看，由于当时技术的原因，早期的 VMM 产品大多实现的是寄居式，例如：VMware 5.5 以前的版本、Xen 3.0 以前的版本。随着硬件虚拟化技术的诞生，几乎所有的 VMM 产品都转向了裸金属 Hypervisor 实现。例如：VMware 5.5 及以后版本、Xen 3.0 及以后版本以及 KVM。
+寄居式（Type II）与裸金属（Type I）不是同一产品「版本号一过就换型」。VMware Workstation 一类装在宿主操作系统之上，属 Type II；ESX / ESXi 自 2001 年起就是 Type I。Xen 自 2003 年的 1.0 起就是裸金属 Hypervisor；3.0（2005）补上的是 x86-64，以及借助 Intel VT-x 运行未修改客户机等能力。KVM 则是并入 Linux 内核的 Type I。
 
 ### 4.3 1978：第一片 x86 处理器，与早已提出的摩尔定律
 
@@ -380,7 +380,7 @@ GNU 包含了 3 个协议条款：
 
 1990 年，Linus Torvalds 还是芬兰赫尔辛基大学的一名学生，最初是用汇编语言写了一个在 Intel 80386 保护模式下处理多任务切换的程序，后来从 Minix 得到灵感，进一步产生了写一个比 Minix 更好的操作系统的想法。
 
-于是 Linus 开始写了一些硬件的设备驱动程序，以及一个小的文件系统。就这样诞生了 Linux 0.0.1（Linus's Unix）版本。但是它只具有一个操作系统内核的雏形，甚至不能运行，还必须在有 Minix 的主机上完成编译后才能运行。但这时的 Linus 已经完全沉迷其中，决定踢开 Minix，于是在 1991 年 10 月 5 号发布 Linux 0.0.2 版本，在这个版本中已经可以运行 Bash 和 GNU GCC 了。
+于是 Linus 开始写了一些硬件的设备驱动程序，以及一个小的文件系统。就这样诞生了 Linux 0.01（Linus's Unix）版本。但是它只具有一个操作系统内核的雏形，甚至不能运行，还必须在有 Minix 的主机上完成编译后才能运行。但这时的 Linus 已经完全沉迷其中，决定踢开 Minix，于是在 1991 年 10 月 5 号发布 Linux 0.02 版本，在这个版本中已经可以运行 Bash 和 GNU GCC 了。
 
 1991 年，Linus Torvalds 编写出了与 UNIX 兼容的 Linux Kernel 并在 GPL 条款下发布。随即引起了黑客们的注意，通过网络加入到了 Linux Kernel 的开发。由于一批高水平黑客的加入，使 Linux 发展迅猛，几乎一两个礼拜就有新版或修正版的出现。
 
@@ -450,7 +450,7 @@ VMware 商业化的成功，也标志着虚拟化技术已经从大型机开始�
 
 2000 年，Citrix（思杰）桌面虚拟化产品发布。
 
-2003 年，成立了 XenSource 公司并创立了开源虚拟化项目 Xen 1.0，通过半虚拟化技术（Para-Virtualization）为 x86-64 提供虚拟化支持。往后，基于 Xen 虚拟化解决方案陆续被 Red Hat、Novell 和 Sun 等的 Linux 发行版集成，作为默认的虚拟化解决方案。
+2003 年 10 月，剑桥大学发布 Xen 1.0：面向 x86（IA-32）的半虚拟化，客户内核需要移植。XenSource 约 2005 年由原团队成立，做企业级产品；x86-64 与硬件辅助虚拟化主要到 Xen 3.0（2005）才齐。其后 Xen 被 Red Hat、Novell 和 Sun 等发行版集成为默认虚拟化方案之一。
 
 Xen 实现的半虚拟化 VMM 在处理敏感指令和内核态指令的流程上相对更简单一些，把 Guest OS 原本要在 Ring0 上执行的特权指令改造成对 VMM 的调用（Hypercalls），这样 Guest OS 就不需要也不会执行 Ring0 的指令了。比较麻烦的就是要改造操作系统代码，所以无法支持闭源的 Windows OS。
 
@@ -705,7 +705,7 @@ Salesforce 的客户后来包括通用电气、荷兰航空、部分法国银行
 
 ### 8.2 2014：Kubernetes 开源项目成立
 
-2013 年，Pivotal 公司（敏捷开发领域的领导者）的 Matt Stine 首次提出云原生（CloudNative）的概念。
+2013 年前后，Pivotal 的 Matt Stine 开始系统推广云原生（Cloud Native），并把它整理成可迁移的架构特征。这个说法的使用早于这次整理，不宜写成他首次提出。
 
 2014 年 6 月，Google 开源 **Kubernetes** 容器编排平台。项目的初衷，是提供一种方便、快速、优雅的容器管理方式。
 

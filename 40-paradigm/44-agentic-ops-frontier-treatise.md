@@ -242,9 +242,9 @@ AWS **DevOps Agent** 进一步提供 **BYO MCP server**：除 CloudWatch / Datad
 
 | 概念 | 约定示例 | 运维用途 |
 | ---- | -------- | -------- |
-| 模型调用 | `chat` + `gen_ai.request.model` / token 用量 | 延迟、成本、提供者故障 |
-| 工具调用 | `execute_tool` + `gen_ai.tool.name` | 越权、死循环、下游依赖 |
-| Agent 调用 | `invoke_agent` + `gen_ai.agent.name` | 多 Agent 协作与责任边界 |
+| 模型调用 | `gen_ai.operation.name=chat`，并记 `gen_ai.request.model` 与 token 用量 | 延迟、成本、提供者故障 |
+| 工具调用 | `gen_ai.operation.name=execute_tool`，并记 `gen_ai.tool.name` | 越权、死循环、下游依赖 |
+| Agent 调用 | `gen_ai.operation.name=invoke_agent`，并记 `gen_ai.agent.name` | 多 Agent 协作与责任边界 |
 | 结束原因 | `gen_ai.response.finish_reasons` | 检测 tool_calls 循环等 |
 
 Datadog 已宣布 **原生支持** OpenTelemetry GenAI Semantic Conventions（v1.37+），使团队可用 OTel 一次埋点，经 Collector 策略管线进入 Agent Observability，而不必维护双轨 SDK。[^datadog-otel-genai] LangGraph、各 Agents SDK 的仪器化路径也在向同一约定靠拢——这意味着：

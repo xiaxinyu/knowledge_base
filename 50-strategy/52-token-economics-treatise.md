@@ -60,8 +60,8 @@ Token 先被算成便宜，再被做成生意，然后被做成资产。稀疏�
 
 当一个问题输入时，系统只会唤醒与该问题最相关的 8 个专家进行会诊，其余 248 个专家处于“休眠”状态。
 
-- **极致案例**：DeepSeek 的 6700 亿参数巨无霸，在处理每个问题时，实际被唤醒计算的参数仅有 370 亿（约 5.5%）。[^deepseek-v3]
-- **降本成效**：这使得同等智能水平下，它的算力需求直接暴降到传统架构的 1/20。这就叫“数学补物理”——不改变硬件 watt 数，只靠数学上的等价变换，就把每一焦耳电能的智力产出拉升了 20 倍。
+- **结构**：DeepSeek-V3 总参数 **671B**，每个 Token 激活约 **37B**（约 5.5%，相对本模型总参数约 1/18）。[^deepseek-v3]
+- **降本怎么理解**：少算的是本模型里未激活的专家，不是「与同等智能的稠密模型对照后，算力降到 1/20」。数学上跳过未选中的专家，同样功耗才能多做有效计算。
 
 ### 2.2 通信解耦：把数据中心的“拥堵高速”变成“立交桥”
 
@@ -71,7 +71,7 @@ MoE 虽然算得快，但带来了一个致命的物理副作用——通信爆�
 
 中国厂商在此展现了恐怖的系统级工程能力，硬生生用软件调度抹平了硬件的物理延迟：
 
-- **DeepSeek 的“计算通信重叠”**：他们开发了专门的 DeepEP 通信库，创造了一种“双批量流水线（DualPipe）”机制。简单来说，当 GPU 在处理第一批数据的计算时，网络卡已经在后台偷偷搬运第二批数据的通信了。计算和通信在时间轴上完美错位重叠，GPU 的流处理器（SM）资源被榨干到了极致，几乎没有一刻空闲。[^deepep] [^dualpipe]
+- **DeepSeek 的计算与通信重叠**：DeepEP 负责专家并行的 All-to-All；DualPipe 负责训练侧的双向流水线，把前向、后向计算和通信错开重叠。计算和通信叠在一起，流处理器才少空转。[^deepep] [^dualpipe]
 - **华为盘古的“组平衡路由（MoGE）”**：传统 MoE 经常导致某几张显卡忙死、其他显卡闲死。华为直接从数学上锁死规则，强制让每个显卡节点的工作量绝对均等，并结合昇腾 NPU 的底层特性，把通信算子与计算算子捏合在一起执行。[^moge]
 
 ### 2.3 负载砸实：拒绝“空载”，把每一瓦特电费榨出汁
@@ -127,7 +127,7 @@ MoE 虽然算得快，但带来了一个致命的物理副作用——通信爆�
 
 首当其冲的挑战，是虚拟智力产出背后极其沉重的物理代价。Token 并非凭空产生的数字幽灵，它的每一次生成，都伴随着真实世界中涡轮机的轰鸣与冷却塔的蒸发。
 
-国际能源署（IEA）在 2025 年的旗舰报告中给出了一个极其严峻的预测：到 2030 年，全球数据中心的用电量将翻倍。在这个增量中，绝大部分将由生成式 AI 的推理计算贡献。[^iea-2025]
+国际能源署（IEA）在 2025 年的旗舰报告里给出基准情形：到 2030 年，全球数据中心用电量大约翻倍。AI 是最重要的增长驱动之一；增量同时来自训练、推理和其他数字服务，不宜写成绝大部分只来自生成式推理。[^iea-2025]
 
 物理学实验证实，一次标准的大模型长文本查询，其耗电量大约是一次传统搜索引擎查询的 10 倍。若再叠上杰文斯悖论——效率提升反而刺激用量更快膨胀，则 Token 总消耗与数据中心用电都可能沿陡峭曲线上升；公开统计更常给出的是数据中心用电量级与查询能耗倍数，而非「全社会 Token 日均消耗每年千百倍」这类未校准口号，后者宜视为警示性外推而非已证实增速。[^query-energy] [^jevons] [^china-token-volume]
 
@@ -163,7 +163,7 @@ MoE 虽然算得快，但带来了一个致命的物理副作用——通信爆�
 
 前面所有内容都在表达一个主题：Token 已经不可逆地从一个晦涩的计算机科学术语，蜕变为 21 世纪智能经济的底层货币。
 
-它的日均消耗量在两年内膨胀了上千倍；它的生产成本正以每年一个数量级的速度下降，却反向抽干了全社会更多的资本投入；它的消费主体正在从血肉之躯向着不知疲倦的硅基智能体转移；它的底层架构演进直接重塑了全球算力的定价权；而它所承载的庞大智力价值，正在酝酿出一个规模庞大的算力金融衍生品市场。[^china-token-volume]
+中国官方披露的日均 Token 调用量，大约两年内增至千倍量级；生产成本下降的同时，全社会的资本投入仍在抽上去；消费主体正在从人转向不知疲倦的智能体；底层架构演进直接碰到全球算力的定价权；它所承载的智力服务，也在酝酿更大的算力金融安排。[^china-token-volume]
 
 我们今天所能观察到的所有疯狂与失序，不过是这场碳基向硅基跨越进程中的开头几页。
 
@@ -183,7 +183,7 @@ AI 工厂可以制造出无限的智能，但它无法制造出意义。Token �
 
 [^moe-origin]: 稀疏 MoE 的现代起点见 Noam Shazeer 等，[*Outrageously Large Neural Networks: The Sparsely-Gated Mixture-of-Experts Layer*](https://arxiv.org/abs/1701.06538)，arXiv:1701.06538，2017；规模化训练见 William Fedus, Barret Zoph, Noam Shazeer，[*Switch Transformers: Scaling to Trillion Parameter Models with Simple and Efficient Sparsity*](https://arxiv.org/abs/2101.03961)，arXiv:2101.03961，2021。
 
-[^deepseek-v3]: DeepSeek-AI，[*DeepSeek-V3 Technical Report*](https://arxiv.org/abs/2412.19437)，arXiv:2412.19437。官方口径为 **671B 总参数 / 每 Token 激活 37B**（约 5.5%）；每层含 1 个共享专家与 **256 个路由专家，每 Token 激活 8 个路由专家**。正文“6700 亿 / 370 亿”为同一数量级的取整。激活参数相对本模型总参数约为 1/18，正文“1/20”是同方向的约数，不是与同等智能 Dense 模型的严格对照实验。
+[^deepseek-v3]: DeepSeek-AI，[*DeepSeek-V3 Technical Report*](https://arxiv.org/abs/2412.19437)，arXiv:2412.19437。官方口径为 **671B 总参数 / 每 Token 激活 37B**（约 5.5%）；每层含 1 个共享专家与 **256 个路由专家，每 Token 激活 8 个路由专家**。37B / 671B 约 1/18，是相对本模型总参数的激活比例，不是与同等智能稠密模型的对照实验。
 
 [^deepep]: DeepSeek-AI，[*DeepEP: an efficient expert-parallel communication library*](https://github.com/deepseek-ai/DeepEP)。面向 MoE 专家并行的 All-to-All（dispatch / combine）通信库，强调高吞吐、低延迟与尽量少占用 SM。
 
@@ -201,13 +201,13 @@ AI 工厂可以制造出无限的智能，但它无法制造出意义。Token �
 
 [^fink-compute]: 贝莱德 CEO Larry Fink 2026 年 5 月公开表示，在供需紧张下，算力可能成为一类新的资产类别。路透社相关报道的转述见 [*中国传拟筹建 token 期货市场*](https://www.sinchew.com.my/news/20260529/finance/7545091)。
 
-[^iea-2025]: IEA，[*Energy and AI*](https://www.iea.org/reports/energy-and-ai)（2025 年 4 月旗舰报告）。Base Case：全球数据中心用电量由 2024 年约 **415 TWh** 升至 2030 年约 **945 TWh**，即翻倍有余；AI 是最重要增长驱动之一。后续 [*Key Questions on Energy and AI*](https://www.iea.org/reports/key-questions-on-energy-and-ai) 将 2025 年基数更新为约 485 TWh，2030 年仍约 950 TWh；其中 **AI 专用数据中心用电在同期约增至三倍**。正文“增量绝大部分来自生成式 AI 推理”是对驱动结构的概括：IEA 同时计入训练、推理与其他数字服务，并不把增量 100% 记在推理项下。
+[^iea-2025]: IEA，[*Energy and AI*](https://www.iea.org/reports/energy-and-ai)（2025 年 4 月旗舰报告）。Base Case：全球数据中心用电量由 2024 年约 **415 TWh** 升至 2030 年约 **945 TWh**，即翻倍有余；AI 是最重要增长驱动之一。后续 [*Key Questions on Energy and AI*](https://www.iea.org/reports/key-questions-on-energy-and-ai) 将 2025 年基数更新为约 485 TWh，2030 年仍约 950 TWh；其中 **AI 专用数据中心用电在同期约增至三倍**。IEA 同时计入训练、推理与其他数字服务。
 
 [^query-energy]: 约 “10 倍于传统搜索” 的口径，来自早期常用估算：Google 2009 年称一次搜索约 0.3 Wh，2023 前后将一次 ChatGPT 查询估为约 3 Wh。IEA *Energy and AI*（2025）亦曾转述这一数量级。更新估算显著更低：Epoch AI 估典型 GPT-4o 查询约 **0.3 Wh**，长输入可升至 **2.5–40 Wh**；Google 2025 年 8 月称 Gemini 中位文本提示约 **0.24 Wh**；Sam Altman 称 ChatGPT 平均查询约 **0.34 Wh**。正文强调的是**长文本查询**，更接近高耗端子区间，不宜外推为当前所有短文本提示。见 [Epoch AI](https://epoch.ai/gradient-updates/how-much-energy-does-chatgpt-use) 与 IEA *Key Questions on Energy and AI*（2026）：简单文本查询能耗已大幅下降，但推理、智能体与视频生成可比其高数百到数千倍。
 
 [^jevons]: William Stanley Jevons，*The Coal Question*（1865）。效率提高若使使用量更快膨胀，总消耗仍可上升——即杰文斯悖论。IEA 同期报告强调：单次任务能效以罕见速度改善，但采用量上升与更耗能的智能体 / 视频任务，仍可能推高总量。
 
-[^china-token-volume]: 路透社 2026 年 5 月引述的官方数据：中国日均 Token 调用量自 2024 年初起约增 **1000 倍**，至 2026 年 3 月底超过 **140 万亿**。转述见 [星洲网](https://www.sinchew.com.my/news/20260529/finance/7545091)。正文“两年内膨胀上千倍”与此口径一致；全球周度用量另见 OpenRouter 等第三方统计，口径不可直接与中国官方日均数据加总。
+[^china-token-volume]: 路透社 2026 年 5 月引述的官方数据：中国日均 Token 调用量自 2024 年初起约增 **1000 倍**，至 2026 年 3 月底超过 **140 万亿**。转述见 [星洲网](https://www.sinchew.com.my/news/20260529/finance/7545091)。这是中国官方日均口径，不可直接当成全球 Token 消耗。
 
 [^gats]: 最接近的既有盒子是 GATS **模式一（跨境交付）** 下的计算机与信息服务，以及 IMF / OECD 对 **digitally delivered services** 的统计试验。它们能抓住“远程交付的服务”，但并不单列“实时跨境认知劳动 / Token 推理”。正文说“找不到确切类目”，指的是缺乏与 Token 流量对应的独立贸易科目，而不是国际贸易统计里完全没有数字服务。
 

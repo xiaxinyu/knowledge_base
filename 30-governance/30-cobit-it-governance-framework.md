@@ -69,7 +69,7 @@ COBIT（Control Objectives for Information and Related Technology，信息及相
 | COBIT | 如何落实为目标、流程、责任、控制与证据 [1] | 治理层、管理层、审计 |
 | DTEF | 数字生态关系如何建立并维持信任 [4][5] | 董事会、数字化与风险负责人 |
 
-因此，COBIT 既不是 ISO/IEC 38500 的替代品，也不是 ITIL 或 ISO/IEC 27001 的替代品。前者提供原则，后两者提供架构方法、服务实践或安全管理体系；COBIT 提供的是把它们统筹进企业治理闭环的骨架。
+因此，COBIT 既不是 ISO/IEC 38500 的替代品，也不是 ITIL、ISO/IEC 27001 或 TOGAF 的替代品。38500 提供治理原则，ITIL 提供服务实践，27001 提供安全管理体系，TOGAF 提供架构方法；COBIT 提供的是把它们统筹进企业治理闭环的骨架。
 
 ### 1.3 版本演进
 

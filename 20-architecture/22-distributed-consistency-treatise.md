@@ -135,8 +135,8 @@ flowchart TB
 
 | 字母 | 名称 | 含义 |
 |------|------|------|
-| **C** | Consistency | 读返回**最近一次成功写入**（或错误）；形式化上接近线性一致读写共享存储。[^gilbert-lynch-cap][^gilbert-lynch-perspectives] |
-| **A** | Availability | **非故障节点**对请求在有限时间内给出响应。 |
+| **C** | Consistency | 读返回线性一致意义下的**最近一次成功写入**。分区时若做不到就拒绝，那是保 C、弃 A，不是 C 的定义里包含「报错」。[^gilbert-lynch-cap][^gilbert-lynch-perspectives] |
+| **A** | Availability | **非故障节点**收到的请求必须得到响应。形式化不保证时限；超时是工程附加。 |
 | **P** | Partition Tolerance | 节点间消息可任意丢失或延迟；系统仍须给出明确的 C/A 策略。 |
 
 直觉：写在分区一侧、读在另一侧——两侧都立刻应答，可能读不到最新写（牺牲 C）；坚持读到最新写，则一侧必须拒绝或阻塞（牺牲 A）。
@@ -368,7 +368,7 @@ Fischer、Lynch、Paterson（1985）证明：在**完全异步**、进程可能�
 **(3) 安全性**  
 - **Election Restriction**：Candidate 日志须至少与投票者一样新，才能获票——新 Leader 必含已提交条目。[^ongaro-raft]  
 - Leader 只追加、只向下游复制。  
-- 对前任 term 条目的提交有额外限制。  
+- **Raft 论文 §5.4.2**：Leader 不能只因多数副本就提交前任 term 的条目；须先让**本 term** 的条目（常为一条 no-op）在多数派提交，再凭日志匹配把更早的前缀一并提交。  
 
 成员变更用 **Joint Consensus**：过渡期同时满足新旧配置多数派。[^ongaro-raft]
 

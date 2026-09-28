@@ -12,7 +12,7 @@
 
 ## 摘要
 
-当程序执行 `int x = array[100];` 时，编译器生成含地址计算的机器指令，CPU 在返回该元素之前通常经过：虚拟地址生成；MMU 将虚拟页号译为物理页号（页内偏移不变）；优先查 TLB，Miss 则多级页表遍历（x86-64 常见四级，可选 LA57 五级），必要时 Page Fault 由 OS 处理；得到物理地址后查 Cache（常见 64B Cache Line，利用空间局部性）；L1D / L2 / L3 逐级 Miss 后才到 Memory Controller 与 DRAM，并回填 Cache Line。本文给出简化流水与心智模型，标明真实处理器会乱序、推测与重叠访存；并说明 Cache Miss 与 TLB Miss 是两类不同代价。理解这条链路，是理解「同样算术、天差地别的墙钟时间」的关键之一。
+当程序执行 `int x = array[100];` 时，编译器生成含地址计算的机器指令，CPU 在返回该元素之前通常经过：虚拟地址生成；MMU 将虚拟页号译为物理页号（页内偏移不变）；优先查 TLB，Miss 则多级页表遍历（x86-64 常见四级，可选 LA57 五级），必要时 Page Fault 由 OS 处理；再查 Cache（常见 64B Cache Line）。L1 常按页内偏移做虚拟索引，与 TLB 重叠，标签仍用物理地址比对；L1D / L2 / L3 逐级 Miss 后才到 Memory Controller 与 DRAM，并回填 Cache Line。本文给出简化流水与心智模型，标明真实处理器会乱序、推测与重叠访存；并说明 Cache Miss 与 TLB Miss 是两类不同代价。理解这条链路，是理解「同样算术、天差地别的墙钟时间」的关键之一。
 
 **关键词：** 虚拟地址；MMU；TLB；页表；Page Fault；Cache Line；L1D；DRAM；局部性；Working Set
 
@@ -28,7 +28,7 @@
 3. [MMU：虚拟页到物理页](#3-mmu虚拟页到物理页)
 4. [TLB：避免每次都走页表](#4-tlb避免每次都走页表)
 5. [TLB Miss 与页表遍历](#5-tlb-miss-与页表遍历)
-6. [物理地址之后：先问 Cache](#6-物理地址之后先问-cache)
+6. [查 Cache：标签要比对物理页](#6-查-cache标签要比对物理页)
 7. [Cache Line、Hit 与 Miss](#7-cache-linehit-与-miss)
 8. [Cache 全 Miss：Memory Controller 与 DRAM](#8-cache-全-missmemory-controller-与-dram)
 9. [串起来：一次 Load 的简化路径](#9-串起来一次-load-的简化路径)
@@ -193,7 +193,7 @@ Physical Page
 
 ---
 
-## 6. 物理地址之后：先问 Cache
+## 6. 查 Cache：标签要比对物理页
 
 假设 CPU 已成功完成：
 
@@ -227,9 +227,9 @@ CPU Core
 
 L1 通常最小最快；更低层级更大、更慢。L1 常分为 **L1I**（指令）与 **L1D**（数据）；`array[100]` 这类 Load 查的是 **L1D**。[^cache-hier]
 
-教学上可先记：翻译给出可用的物理地址语义后，再进 Cache 查找。实现上，L1 常见 **VIPT**（虚拟索引、物理标签）等，把索引与翻译重叠，不改变「最终要用对的物理页」这一约束。
+教学顺序可以先写成「译出物理页，再查 Cache」。实现上，L1 常见 **VIPT**（虚拟索引、物理标签）：用虚拟地址里**未经翻译的页内偏移**做组索引，因此可以和 TLB 并行；标签比对仍要物理页号。索引若用到页号，同一物理页的不同虚拟别名会打架，所以 L1 的路数与容量受页大小约束。更下级 Cache 更常接近「先有物理地址再查」（PIPT）。[^cache-hier]
 
-**所以 · 边界在哪：** 有了 PA，下一步通常不是 DRAM，而是问 Cache。
+**所以 · 边界在哪：** 下一步通常不是 DRAM，而是问 Cache；L1 不必等完整物理地址才开始索引，但命中与否仍由物理标签裁定。
 
 ---
 
@@ -373,7 +373,7 @@ CPU → Cache Hierarchy ─Miss→ Memory Controller → DRAM → Data
 2. **MMU 译页号、保偏移**；粒度是页（常 4 KiB，可有大页）。  
 3. **TLB 缓存翻译**；Hit 免走页表，Miss 可能多次访存 + 缺页。  
 4. **x86-64 常见四级页表**；LA57 可启五级以扩大 VA。  
-5. **有了 PA 先查 Cache**；Load 走 L1D；传输粒度常为 64B Cache Line。  
+5. **先问 Cache，再谈 DRAM**；L1 常用 VIPT（页内偏移索引、物理标签）；Load 走 L1D；传输粒度常为 64B Cache Line。  
 6. **Hit/Miss 逐级下沉**；全 Miss 经 Memory Controller 到 DRAM，并回填行。  
 7. **地址不是搜索标签**；是翻译、查找与选通的输入。  
 8. **Cache Miss ≠ TLB Miss**；局部性、布局与 Working Set 决定墙钟时间。
@@ -392,7 +392,7 @@ CPU → Cache Hierarchy ─Miss→ Memory Controller → DRAM → Data
 
 [^la57]: Intel 5-level paging（CR4.LA57）：在 IA-32e 模式下将线性地址宽度扩至 57 bit；Ice Lake 一代起出现于服务器等产品。未置位时仍用四级分页。见 Intel 白皮书 *5-Level Paging and 5-Level EPT* 及后续 SDM 叙述。
 
-[^cache-hier]: 多级 Cache（L1/L2/L3）为现代 CPU 标配；L1 常分指令/数据。容量与延迟随型号变化；正文只取「越近越快、越远越大」结构。L1 的 VIPT 等实现使索引与翻译可重叠，不取消物理标签校验。
+[^cache-hier]: 多级 Cache（L1/L2/L3）为现代 CPU 标配；L1 常分指令/数据。容量与延迟随型号变化；正文只取「越近越快、越远越大」结构。L1 的 VIPT 用页内偏移做组索引、物理地址做标签，索引才能与翻译重叠；组索引一旦用到页号，别名就会冲突。
 
 [^cache-line]: 64-byte Cache Line 在 x86 服务器与客户端上极为常见；并非所有架构皆然。Cache 按行对齐填充，利用空间局部性。见 Intel 关于 Cache 组织的公开文档及系统教材。
 

@@ -580,7 +580,7 @@ flowchart LR
 | **DNAT** | 目的地址与端口 | ClusterIP / NodePort → 某个 Endpoint 的 Pod IP:Port |
 | **SNAT / MASQUERADE** | 源地址 | NodePort 且 `externalTrafficPolicy: Cluster` 时常见：把源改成节点 IP，使回程必经本机 |
 
-ClusterIP（如 `10.96.0.50`）是**虚地址**：不配在任何网卡上，FIB 里也没有「去这个 IP 从哪块网卡出去」。客户端把包发给它之后，必须在**查路由之前**把目的改成真实 Endpoint，后面才能走 §3 的 Pod 路径。执行改写的是内核 netfilter（或 IPVS / eBPF），不是 kube-proxy 进程。[13][18]
+ClusterIP（如 `10.96.0.50`）是 **Service 的虚地址**，客户端不把它当成某块 Pod 网卡。iptables / nftables 模式下，它通常不落业务网卡，FIB 里也没有「去这个 VIP 从哪块网卡出去」；须在查路由之前（PREROUTING / OUTPUT）把目的改成 Endpoint。IPVS 模式不同：VIP 会挂到 `kube-ipvs0`，包先路由到本机，再由 IPVS 转发。执行改写的是内核（netfilter、IPVS 或 eBPF），不是 kube-proxy 进程本身。[13][18]
 
 iptables 模式下发生在 nat 表：
 
