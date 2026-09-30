@@ -105,7 +105,22 @@
 
 组成原理的基本对象因此不是一张部件清单，而是：**数据在部件之间如何流动，以及控制信号如何决定这种流动。**
 
-进一步可以把任何机器指令画成「执行过程图」。例如 `add r1, r2, r3`：从 `r2`、`r3` 读出，送入 ALU，结果在适当时钟边沿写回 `r1`。追问「谁选择 ALU 的输入」「谁产生加法控制信号」「结果在哪个边沿写入」，就会自然进入数据通路、多路选择器、时序逻辑——概念被放进真实执行过程，比单独背「ALU 是算术逻辑单元」更稳。
+进一步可以把任何机器指令画成「执行过程图」。例如 `add r1, r2, r3`（`r1 ← r2 + r3`）：
+
+```mermaid
+flowchart LR
+  PC[PC] --> IMEM[取指]
+  IMEM --> IR[IR / 译码]
+  IR --> RF[寄存器堆<br/>读 r2, r3]
+  RF --> ALU[ALU 相加]
+  ALU --> WB[时钟边沿写回 r1]
+  CTRL[控制器] -.-> IMEM
+  CTRL -.-> RF
+  CTRL -.-> ALU
+  CTRL -.-> WB
+```
+
+追问「谁选择 ALU 的输入」「谁产生加法控制信号」「结果在哪个边沿写入」，就会自然进入数据通路、多路选择器、时序逻辑——概念被放进真实执行过程，比单独背「ALU 是算术逻辑单元」更稳。
 
 寄存器是能保存状态的时序电路；ALU 多为组合逻辑（加法器、逻辑单元与选择电路）；多路选择器决定哪一路进入下一阶段。组合逻辑的输出主要由当前输入决定；时序逻辑有状态，须在时钟控制下更新。**计算与保存要分开：** ALU 可以立刻算出结果，若没有寄存器在边沿锁存，下一阶段就无法可靠使用它。CPU 因而可理解为一个受时钟驱动的状态转换系统。[^cod]
 
@@ -139,42 +154,32 @@ CPU 首先要回答：**这个 VA 对应哪一块物理内存？** ——这就�
 
 现代 CPU 中包含负责（或参与）内存地址转换的硬件，通常称为 **Memory Management Unit（MMU）**。
 
-一个虚拟地址可以从概念上分成两部分：
+一个虚拟地址（以常见 **4 KiB** 页为例）可以分成：高位的虚拟页号与低 **12** 位的页内偏移。
 
 ```text
-Virtual Address
-┌───────────────────────┬──────────────┐
-│ Virtual Page Number   │ Page Offset  │
-└───────────────────────┴──────────────┘
+Virtual Address (概念模型，页大小 = 4 KiB)
+┌─────────────────────────────────┬────────────────────┐
+│     Virtual Page Number (VPN)   │  Page Offset (12b) │
+│         （页号，参与翻译）        │   页内字节，不翻译  │
+└─────────────────────────────────┴────────────────────┘
 ```
 
 内存被划分成固定大小的单元，称为 **Page**。**4 KiB** 是一种常见页大小；现代处理器与 OS 也支持更大的页，以减少页表项数量、提高 TLB 覆盖率（代价是内部碎片与管理复杂度）。[^page-size]
 
-操作系统维护 **Page Table**，描述虚拟页如何映射到物理页。从概念上看：
+操作系统维护 **Page Table**，描述虚拟页如何映射到物理页。翻译只改页号，**Page Offset 原样拼回**：
 
 ```text
-Virtual Page 1234
-       ↓
-Physical Page 5678
+        Virtual Address                         Physical Address
+┌──────────────┬────────────┐            ┌──────────────┬────────────┐
+│     VPN      │   Offset   │            │     PPN      │   Offset   │
+└──────┬───────┴────────────┘            └──────▲───────┴────────────┘
+       │                                        │
+       │            Page Table / TLB            │
+       └──────────── VPN ──► PPN ───────────────┘
+                    （Offset 不变，直接下传）
 ```
 
-在地址翻译过程中，**Page Offset 不会改变**。例如：
-
-```text
-Virtual Address
-┌───────────────┬────────────┐
-│ Virtual Page  │   Offset   │
-└───────────────┴────────────┘
-        │
-        │ Page Table
-        ↓
-┌───────────────┬────────────┐
-│ Physical Page │   Offset   │
-└───────────────┴────────────┘
-          Physical Address
-```
-
-因此，硬件转换的是虚拟页号，同时保持偏移不变，再拼出物理地址。[^mmu]
+因此，硬件转换的是虚拟页号（VPN → PPN），同时保持偏移不变，再拼出物理地址。[^mmu]
 
 **所以 · 边界在哪：** 翻译的粒度是页，不是「每个字节一张地图」。
 
@@ -184,14 +189,15 @@ Virtual Address
 
 这里有一个明显问题：**页表本身也存储在内存中**。如果每次地址翻译都必须访问 RAM，那么一次数据访问可能先要多次访存，才能知道数据到底在哪。
 
-现代 CPU 用一种特殊的翻译缓存解决这个问题：**Translation Lookaside Buffer（TLB）**。TLB 保存最近用过的虚→实翻译。从概念上看：
+现代 CPU 用一种特殊的翻译缓存解决这个问题：**Translation Lookaside Buffer（TLB）**。TLB 保存最近用过的虚→实翻译：
 
-```text
-Virtual Page
-     ↓
-    TLB
-     ↓
-Physical Page
+```mermaid
+flowchart TD
+  VA["VPN（来自虚拟地址）"] --> TLB{TLB}
+  TLB -->|Hit| PPN["得到 PPN，拼上 Offset → PA"]
+  TLB -->|Miss| WALK["Page-Table Walk<br/>（必要时 Page Fault → OS）"]
+  WALK --> FILL["填入 TLB 后重试 / 继续"]
+  FILL --> PPN
 ```
 
 - 翻译已在 TLB 中 → **TLB Hit**：可避免当场遍历页表。  
@@ -205,28 +211,24 @@ Physical Page
 
 ## 5. TLB Miss 与页表遍历
 
-现代系统通常使用**多级页表**。例如，在典型的 64 位架构中，CPU 在获得物理页号之前，可能需要遍历多个 paging structure level：
+现代系统通常使用**多级页表**。以 **x86-64 四级分页、4 KiB 页** 为例：规范可用线性地址约 **48 bit**（高位须为规范符号扩展）；MMU 用各 9 bit 索引四级表，最低 **12 bit** 为页内偏移：[^la57]
 
 ```text
-Virtual Address
-      │
-      ▼
-   Level 1
-      │
-      ▼
-   Level 2
-      │
-      ▼
-   Level 3
-      │
-      ▼
-   Level 4
-      │
-      ▼
-Physical Page
+ 63          48 47      39 38      30 29      21 20      12 11           0
+┌──────────────┬──────────┬──────────┬──────────┬──────────┬─────────────┐
+│  canonical   │  PML4    │  PDPT    │   PD     │   PT     │   Offset    │
+│  sign-ext    │  idx 9b  │  idx 9b  │  idx 9b  │  idx 9b  │    12 bit   │
+└──────────────┴────┬─────┴────┬─────┴────┬─────┴────┬─────┴─────────────┘
+                    │          │          │          │            │
+                    ▼          ▼          ▼          ▼            │
+                 PML4 ──►   PDPT ──►    PD ──►     PT            │
+              (CR3 指向)                                      不翻译 │
+                                                                 │
+                                                    PTE 给出 PPN ─┘
+                                                    PA = PPN ‖ Offset
 ```
 
-在 **x86-64** 中，传统的**四级分页**被广泛使用：自上而下常记为 PML4 → PDPT → PD → PT（上图 Level 1–4 对应这一走法）。支持 **LA57** 的处理器还可启用**五级分页**（多一层 PML5），把可用线性地址从约 **48 bit** 扩到 **57 bit**；须由系统软件置位，不是所有机器默认开启。[^la57]
+走法：`CR3` 指向 PML4；用 `VA[47:39]`…`VA[20:12]` 依次索引，最后用 `VA[11:0]` 作为页内偏移。支持 **LA57** 时再加一层 PML5，线性地址扩到约 **57 bit**；须由系统软件置位，不是所有机器默认开启。[^la57]
 
 这些页表结构本身也在内存中，故一次 TLB Miss 可能在 walk 期间触发**多次**访存（中间层命中页表缓存时可减少次数）。OS 还可用大页、透明大页等扩大单次翻译的覆盖（权衡碎片与延迟）。[^drepper]
 
@@ -238,21 +240,25 @@ Physical Page
 
 得到可用的物理页语义之后，下一步通常**不是**直奔 DRAM，而是先问片上 **Cache Hierarchy**。DRAM 的延迟与带宽远逊于 Cache；把热数据留在离核心更近的地方，是性能的基本盘。教学上可先画成「先翻译、再查 Cache」；实现上，L1 的索引往往与 TLB **重叠进行**（见下）。
 
-一个简化的层次可以表示为：
+一个简化的层次可以表示为（Load 数据走 **L1D**）：
 
-```text
-CPU Core
-   │
-   ├── L1 Cache
-   │
-   ├── L2 Cache
-   │
-   ├── L3 Cache（常为多核共享）
-   │
-   └── Main Memory (DRAM)
+```mermaid
+flowchart TB
+  Core[CPU Core]
+  L1I[L1I 指令]
+  L1D[L1D 数据]
+  L2[L2]
+  L3[L3 常多核共享]
+  DRAM[Main Memory / DRAM]
+  Core --> L1I
+  Core --> L1D
+  L1I --> L2
+  L1D --> L2
+  L2 --> L3
+  L3 --> DRAM
 ```
 
-L1 通常最小最快；更低层级更大、更慢。L1 常分为 **L1I**（指令）与 **L1D**（数据）；`array[100]` 这类 Load 查的是 **L1D**。末级 Cache 是否包含下级副本（inclusive / exclusive）因微架构而异，不影响「先近后远」的读法。[^cache-hier]
+L1 通常最小最快；更低层级更大、更慢。末级 Cache 是否包含下级副本（inclusive / non-inclusive）因微架构而异，不影响「先近后远」的读法。[^cache-hier]
 
 实现上，L1 常见 **VIPT**（虚拟索引、物理标签）：用虚拟地址里**未经翻译的页内偏移**做组索引，因此可以和 TLB 并行；标签比对仍要物理页号。索引若用到页号，同一物理页的不同虚拟别名会进不同组，所以 L1 的路数与容量受页大小约束。更下级 Cache 更常接近「先有物理地址再查」（PIPT）。[^cache-hier]
 
@@ -262,14 +268,25 @@ L1 通常最小最快；更低层级更大、更慢。L1 常分为 **L1I**（指
 
 「CPU 要访问的地址，如何落到某一行 Cache？」——不要先背相联度表，先答三问：要访问什么地址？这个地址如何选中一组并比对标签？未命中时硬件下一步做什么？
 
-教学上，一次 Cache 查找把地址（在 PIPT 路径上是 PA；VIPT 的索引用 VA 的页内偏移，见 §6）切成三段：[^cache-map]
+教学上，一次 Cache 查找把地址切成三段（PIPT 用完整 PA；VIPT 的 **Set Index + Offset** 可取自 VA 的页内偏移，**Tag** 仍用物理页相关位，见 §6）。下例刻意取 **32 KiB · 8-way · 64 B/line**：组索引 6 bit + 行内偏移 6 bit = 12 bit，恰好落在 4 KiB 页的页内偏移内，因而可与 TLB 并行做 VIPT：[^cache-map]
 
 ```text
-Address
-┌──────────────┬────────────┬──────────────┐
-│     Tag      │ Set Index  │ Block Offset │
-└──────────────┴────────────┴──────────────┘
-   组内比对用        选哪一组         行内第几字节
+例：32 KiB 数据阵列 · 8-way · 64 B/line · 假设 48-bit PA
+     ←──────── tag 36b ────────→← index 6b →← off 6b →
+┌──────────────────────────────┬────────────┬──────────┐
+│            Tag               │ Set Index  │  Offset  │
+└───────────────┬──────────────┴─────┬──────┴────┬─────┘
+                │                    │           │
+                │              选中某一个 set      │
+                │                    ▼           │
+                │            ┌── set 的 N 路 ──┐  │
+                │            │ way0: V|Tag|Data│  │
+                └─ 比对 Tag ─►│ way1: V|Tag|Data│  │
+                  + Valid    │ ...             │  │
+                             └────────┬────────┘  │
+                                      │ hit       │
+                                      ▼           ▼
+                                   该行 Data ──► 按 Offset 取字节
 ```
 
 | 字段 | 作用 |
@@ -284,7 +301,7 @@ Address
 \text{数据容量} = \#\text{sets} \times \#\text{ways} \times \text{行字节数}
 \]
 
-（另有 tag、valid、一致性状态等位开销，上式不计。）例：32 KiB、4-way、64B 行 → 行数 \(32768/64=512\)，set 数 \(512/4=128\)，故 index **7 bit**、offset **6 bit**；其余为 tag（随地址宽度而定）。[^cache-map]
+（另有 tag、valid、一致性状态等位开销，上式不计。）上例：32 KiB、8-way、64B 行 → 行数 \(32768/64=512\)，set 数 \(512/8=64\) → index **6 bit**、offset **6 bit**；其余为 tag。若改成同容量 4-way，则 set 数翻倍、index 需 **7 bit**，会吃进页号位——纯 VIPT 下可能别名冲突，须靠更高相联、页着色或改用 PIPT。[^cache-map]
 
 未命中时：按替换策略（如 LRU 近似、随机等）选出牺牲行，从下一级 Cache 或 DRAM **整行填充**，再按 offset 取出请求字节。写策略（write-through / write-back）与写分配另论；正文只钉「定位 + 填充行」。
 
@@ -296,14 +313,20 @@ Address
 
 CPU Cache 通常不会按「每个字节一个独立格子」来组织。它们使用固定大小的数据块，称为 **Cache Line**。许多现代平台上常见 **64 bytes** 一行，具体组织（相联度、组数、写策略）取决于微架构。[^cache-line]
 
-假设 CPU 需要访问地址 `0x1008`。Cache 实际上可能加载整个对齐块，例如：
+假设 CPU 需要访问地址 `0x1008`。Cache 按**对齐的 Cache Line** 装入，不是从 `0x1008` 起再读 64 字节：
 
 ```text
-0x1000 ───────────────── 0x103F
-        64-byte Cache Line
+请求字节 0x1008
+        │
+        ▼
+0x1000              0x1008                         0x103F
+  ├───────────────────┼──────────────────────────────┤
+  │◄──────────── 对齐的 64-byte Cache Line ──────────►│
+  └──────────────────────────────────────────────────┘
+  ↑ 行起点 = 地址 − (地址 mod 64)
 ```
 
-需要的数据落在这一行里。Cache Line 按边界对齐，**并不是**「从请求地址起再读 64 字节」。这种设计利用了 **Spatial Locality**：若程序访问了一个位置，接下来往往也会访问附近位置。
+需要的数据落在这一行里。这种设计利用了 **Spatial Locality**：若程序访问了一个位置，接下来往往也会访问附近位置。
 
 ```c
 for (int i = 0; i < 1000; i++) {
@@ -313,23 +336,17 @@ for (int i = 0; i < 1000; i++) {
 
 连续元素在内存中相邻时，一次行填充可以服务多次迭代——这正是顺序扫描常比随机跳跃更快的结构原因之一。
 
-CPU 会在对应 Cache 层级中寻找所需 Cache Line：
+CPU 在对应 Cache 层级中寻找所需 Cache Line：
 
-```text
-        Memory Access
-             │
-             ▼
-           L1D
-          /    \
-       Hit      Miss
-       │          │
-       ▼          ▼
-     Data       L2
-               /  \
-            Hit    Miss
-            │        │
-            ▼        ▼
-          Data      L3 → … → DRAM
+```mermaid
+flowchart TD
+  Acc[数据访问] --> L1{L1D}
+  L1 -->|Hit| D1[返回数据]
+  L1 -->|Miss| L2{L2}
+  L2 -->|Hit| D2[返回数据<br/>并可回填上级]
+  L2 -->|Miss| L3{L3}
+  L3 -->|Hit| D3[返回数据]
+  L3 -->|Miss| DRAM[Memory Controller → DRAM<br/>按 Cache Line 填充]
 ```
 
 - **Cache Hit**：在该级找到，延迟相对低。  
@@ -345,8 +362,13 @@ CPU 会在对应 Cache 层级中寻找所需 Cache Line：
 
 各级 Cache 皆 Miss 后，请求走向 **Main Memory**（通常是 DRAM）。内存子系统与 **Memory Controller** 通信，由控制器按物理地址选通位置：
 
-```text
-CPU → Cache Hierarchy ─Miss→ Memory Controller → DRAM → Data
+```mermaid
+flowchart LR
+  C[Cache Hierarchy<br/>全 Miss] --> MC[Memory Controller]
+  MC --> DRAM[DRAM]
+  DRAM --> FB[按 Cache Line 回填]
+  FB --> C2[写入某级 Cache]
+  C2 --> D[数据回核心]
 ```
 
 回填时仍按更大粒度：把数据放入一条 Cache Line，使邻域后续访问有机会命中。一次 DRAM 访问往往是在**填充一行**，而不只是吐回最初那一个字节。[^dram]
@@ -359,31 +381,26 @@ CPU → Cache Hierarchy ─Miss→ Memory Controller → DRAM → Data
 
 ## 9. 串起来：一次 Load 的简化路径
 
-执行 `x = array[100];` 时，教学用路径可收成：
+执行 `x = array[100];` 时，教学用路径可收成（实线为因果顺序；虚线表示 L1 **VIPT** 下索引可与 TLB 并行）：
 
-```text
-        CPU executes load
-                │
-                ▼
-      Generate virtual address
-                │
-                ▼
-             Check TLB
-            /         \
-         Hit           Miss → Page-table walk
-         │               /         \
-         │         Valid page   Page fault → OS
-         │               │
-         └───────────────┴─► Physical address
-                              │
-                              ▼
-                        Check L1D → L2 → L3 → DRAM
-                              │
-                              ▼
-                         Data → Core
+```mermaid
+flowchart TD
+  LD[执行 Load / 生成 VA] --> TLB{查 TLB}
+  LD -.->|VIPT: 用页内偏移做<br/>L1 set index| IDX[并行：选 L1 set]
+  TLB -->|Hit| PA[得到 PA]
+  TLB -->|Miss| WALK[Page-table walk]
+  WALK -->|页有效| PA
+  WALK -->|缺页 / 权限| PF[Page Fault → OS]
+  PA --> TAG[用物理 Tag 比对 L1D]
+  IDX --> TAG
+  TAG -->|Hit| DATA[数据回核心]
+  TAG -->|Miss| L23[L2 / L3]
+  L23 -->|Hit| DATA
+  L23 -->|Miss| MEM[Memory Controller → DRAM<br/>整行回填 Cache]
+  MEM --> DATA
 ```
 
-真实处理器会重叠、推测、乱序、预取，并并发多个请求；L1 的 VIPT 路径上，组索引还可与 TLB 查询重叠（§6）。本图只保**基本原理**。§10–§13 不再重画全图，只钉心智、代价与流水线。
+真实处理器会重叠、推测、乱序、预取，并并发多个请求。本图只保**基本原理**。§10–§13 不再重画全图，只钉心智、代价与流水线。
 
 **所以 · 边界在哪：** 能跟上这张简图，就够读大多数「为啥这么慢」的讨论。
 
