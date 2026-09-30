@@ -168,7 +168,7 @@ knowledge_base/
 | 23 | [Kubernetes Control-Plane Doctrine](./20-architecture/23-kubernetes-control-plane-doctrine.md) | 编排平台是持续收敛的分布式控制计算机 | K8s 控制面、声明式收敛 |
 | 24 | [Calico L3 Dataplane Treatise](./20-architecture/24-calico-l3-dataplane-treatise.md) | 节点即路由器：控制面写表、内核转发；Service 虚地址经 DNAT / conntrack 到达 Endpoint | Calico、Pod 网络、Service |
 | 25 | [Architecture Thinking Treatise](./20-architecture/25-architecture-thinking-cto-treatise.md) | 架构师靠决策生存；价值是第一性；五级跳是跨维不是把写代码卷满 | 架构思维、郭东白、价值思维、从程序员到 CTO |
-| 26 | [CPU Memory Access Treatise](./20-architecture/26-cpu-memory-access-treatise.md) | 一次 Load：VA→TLB/页表→PA→Cache Line→DRAM；慢常在链路不在算术 | 虚拟地址、MMU、TLB、页表、Cache、DRAM、局部性 |
+| 26 | [CPU Memory Access Treatise](./20-architecture/26-cpu-memory-access-treatise.md) | 语句→指令→数据通路；一次 Load：VA→TLB/页表→PA→Cache（tag/set/offset）→DRAM；慢常在链路 | 虚拟地址、MMU、TLB、页表、Cache、DRAM、局部性、流水线 |
 
 #### 30 · 明道 · 治
 
@@ -222,7 +222,7 @@ knowledge_base/
 | Kubernetes 控制面、声明式、调谐 | 23 |
 | Calico、L3、Service/DNAT | 24 |
 | 架构思维、价值思维、实证思维、从程序员到 CTO、生存法则 | 25 |
-| 虚拟地址、MMU、TLB、页表、Page Fault、Cache Line、L1D、DRAM、局部性、Working Set | 26 |
+| 虚拟地址、MMU、TLB、页表、Page Fault、Cache Line、L1D、DRAM、局部性、Working Set、数据通路、流水线、tag/set/offset | 26 |
 | COBIT、治理 vs 管理 | 30 |
 | 平台服务质量、期望—感知差距 | 31 |
 | Unix 哲学、无状态 Agent、可组合 | 40 |
