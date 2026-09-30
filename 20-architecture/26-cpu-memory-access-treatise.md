@@ -169,14 +169,14 @@ Virtual Address (概念模型，页大小 = 4 KiB)
 操作系统维护 **Page Table**，描述虚拟页如何映射到物理页。翻译只改页号，**Page Offset 原样拼回**：
 
 ```text
-        Virtual Address                         Physical Address
-┌──────────────┬────────────┐            ┌──────────────┬────────────┐
-│     VPN      │   Offset   │            │     PPN      │   Offset   │
-└──────┬───────┴────────────┘            └──────▲───────┴────────────┘
-       │                                        │
-       │            Page Table / TLB            │
-       └──────────── VPN ──► PPN ───────────────┘
-                    （Offset 不变，直接下传）
+ Virtual Address                      Physical Address
+┌──────────┬──────────┐              ┌──────────┬──────────┐
+│   VPN    │  Offset  │              │   PPN    │  Offset  │
+└────┬─────┴──────────┘              └────▲─────┴──────────┘
+     │                                    │
+     │         Page Table / TLB           │
+     └──────── VPN ──────► PPN ───────────┘
+               Offset 不变，直接下传
 ```
 
 因此，硬件转换的是虚拟页号（VPN → PPN），同时保持偏移不变，再拼出物理地址。[^mmu]
@@ -195,8 +195,9 @@ Virtual Address (概念模型，页大小 = 4 KiB)
 flowchart TD
   VA["VPN（来自虚拟地址）"] --> TLB{TLB}
   TLB -->|Hit| PPN["得到 PPN，拼上 Offset → PA"]
-  TLB -->|Miss| WALK["Page-Table Walk<br/>（必要时 Page Fault → OS）"]
-  WALK --> FILL["填入 TLB 后重试 / 继续"]
+  TLB -->|Miss| WALK[Page-Table Walk]
+  WALK -->|页有效| FILL[填入 TLB]
+  WALK -->|缺页 / 权限| PF[Page Fault → OS]
   FILL --> PPN
 ```
 
@@ -431,7 +432,16 @@ flowchart TD
 
 ## 12. 流水线：多条指令同时在路上
 
-掌握「单条指令如何走完」之后，再看流水线。经典教学模型把 RISC 执行拆成五级：**IF（取指）→ ID（译码 / 读寄存器）→ EX（运算或有效地址）→ MEM（访存）→ WB（写回）**。核心思想是让不同指令同时处于不同阶段，提高单位时间完成的指令数（吞吐），而不是把单条指令的墙钟延迟神奇地缩成 1/5。[^pipeline]
+掌握「单条指令如何走完」之后，再看流水线。经典教学模型把 RISC 执行拆成五级：
+
+```text
+  指令 i     IF → ID → EX → MEM → WB
+  指令 i+1       IF → ID → EX → MEM → WB
+  指令 i+2           IF → ID → EX → MEM → WB
+                 ─── 同一拍可有多条指令分处不同阶段 ───
+```
+
+即 **IF（取指）→ ID（译码 / 读寄存器）→ EX（运算或有效地址）→ MEM（访存）→ WB（写回）**。核心思想是让不同指令同时处于不同阶段，提高单位时间完成的指令数（吞吐），而不是把单条指令的墙钟延迟神奇地缩成 1/5。[^pipeline]
 
 此时问题从「指令怎么执行」转向「多条指令叠在一起时会发生什么」——三类相关（hazard）：[^pipeline]
 
@@ -440,6 +450,15 @@ flowchart TD
 | **结构相关** | 争用同一硬件（如单口存储器同时取指与访存） | 分离 I/D Cache、增加端口、暂停 |
 | **数据相关** | 后指令需要前指令尚未写回的结果 | **转发（forwarding）** 多可消掉 ALU→ALU 相关；**Load-Use** 在经典五级里数据要到 MEM 末才就绪，紧跟的使用仍常须 **暂停一拍**，再转发 |
 | **控制相关** | 分支结果未定，下一条 PC 不明 | 尽早判断、分支预测、预测错误则冲刷 |
+
+Load-Use 在时间轴上可收成：
+
+```text
+  Load:    IF  ID  EX  MEM  WB
+  Use:         IF  ID  Stall EX  MEM  WB
+                   ↑        ↑
+                   需要 Load 结果，但 MEM 尚未结束 → 插一拍气泡后再转发
+```
 
 乱序执行、寄存器重命名与多发射，仍沿着同一逻辑：提高指令级并行，同时保持 ISA 要求的程序语义。它们不取消本文的访存链——Load 依然要过 TLB 与 Cache；只是多条访存可以重叠、重排。[^pipeline]
 
@@ -493,7 +512,7 @@ flowchart TD
 
 [^cache-line]: 64-byte Cache Line 在 x86 服务器与客户端上极为常见；并非所有架构皆然。Cache 按行对齐填充，利用空间局部性。见 Intel 关于 Cache 组织的公开文档及系统教材。
 
-[^cache-map]: 地址切分为 tag / index / offset 为组相联 Cache 的标准模型。行宽决定 offset 位数；set 数决定 index 位数；其余为 tag。例：32 KiB、4-way、64B 行 → 128 sets → 7-bit index、6-bit offset。见 Patterson & Hennessy, *Computer Organization and Design* 存储层次章节，以及常见课程讲义中的 Cache 位宽计算。
+[^cache-map]: 地址切分为 tag / index / offset 为组相联 Cache 的标准模型。行宽决定 offset 位数；set 数决定 index 位数；其余为 tag。例：32 KiB、8-way、64B 行 → 64 sets → 6-bit index、6-bit offset（二者之和 ≤ 12 bit 时，可在 4 KiB 页上做纯 VIPT）。见 Patterson & Hennessy, *Computer Organization and Design* 存储层次章节，以及常见课程讲义中的 Cache 位宽计算。
 
 [^dram]: 内存控制器将物理地址映射到 DRAM 的 channel/bank/row/column 等；一次未命中常按 burst 填充 Cache Line。细节见 JEDEC / 控制器文档；正文取教学粒度。
 
