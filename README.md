@@ -128,13 +128,13 @@ knowledge_base/
 | **80–89** | 安全与风险 | — |
 | **90–99** | 方法与元知识 | — |
 
-同域内按认知依赖递增：先概念，后演进，再原则，再落地。
+同域内按认知依赖递增：先概念，后演进，再原则，再落地。域简介如下（与 §3.1 索引表一致；冲突以索引表为准）：
 
-- **`10`**：`10`–`12` 为计算 / 信息 / 智能技术史；`13` 为世界霸权秩序五百年编年（第一次工业革命按大分流重写；与 [55](./50-strategy/55-global-manufacturing-migration-chronicle.md) 制造业地理迁移互参）；`14` 为互联网编年：协议、入口、注意力与「收束—外溢」；`15` 为浏览器编年：代管陌生人的程序与被迫补上的规矩；`16` 为 HTTP 编年：从 0.9 到 QUIC；`17` 为语言模型编年：从循环网络到 Transformer 与 ChatGPT；`18` 为历史认识论：史料、解释与有边界的重建。  
-- **`20`**：`20` 为企业架构（教学四大域、实践六层）；`21`–`24` 为服务代际、一致性取舍、编排控制面与数据面写表；`25` 为架构思维与从程序员到 CTO；`26` 为一次 Load 的虚实翻译与 Cache 链路；`27` 为 MQTT over QUIC：弱网下的传输层替换；`28` 为微服务间通信：HTTP 与 RPC 慢在哪。  
-- **`30`**：`30` 为 IT 治理框架（COBIT）；`31` 为平台质量实证。  
-- **`40`**：`40`–`42` 为智能协作的优术（工具哲学 → 组织范式 → 运维落地）；`43` 为熵与控制（横切）；`44` 为运维落地的产业前沿对照；`45` 为从 ReAct 到 Agent Teams 的协作机制专论；`46` 为系统思维（与 `43` 同为横切镜片）。  
-- **`50`**：不是上下卷，而是同一问的多个切面。按编号：`50` 局、`51` 译、`52` 币、`53` 配、`54` 人、`55` 迁、`57` 环（`56` 空号）。口诀 **局、迁、译、币、配、人** 只记前六个切面，不是文件顺序，也不含美元环流。产业如何被穿透（含 2026 交叠点与死亡之谷），意义如何跨文化传递，Token 如何成为智能经济的计量单位，资本如何在周期中配置，经理人如何在压力中被选出，制造业重心如何代际迁移，美元环流如何把实物与利润拆到不同层。
+- **`10`**：技术与秩序长河 + 读史方法。`10`–`12` 计算 / 信息 / 智能；`13` 霸权与工业革命（与 [55](./50-strategy/55-global-manufacturing-migration-chronicle.md) 互参）；`14`–`16` 互联网 → 浏览器 → HTTP/QUIC；`17` 语言模型；`18` 历史认识论（读编年的方法篇，不是又一段国别史）。  
+- **`20`**：系统如何立身，内分三簇（编号不重排，阅读可按簇跳）：**企业与服务** `20`–`21`、`25`、`28`；**分布式平台** `22`–`24`；**机器与传输** `26`–`27`（`27` 与史域 [16](./10-chronicle/16-http-protocol-chronicle.md) 同谈 QUIC，一史一用）。  
+- **`30`**：`30` IT 治理（COBIT）；`31` 平台质量实证。域薄，空号留给后续控制 / 审计专题。  
+- **`40`**：智能协作与横切镜片。`40`–`42` 工具哲学 → 组织范式 → 运维落地；`44`–`45` 产业前沿与多 Agent 协作；`43` / `46` 为熵与系统思维（横切，可与任一篇合读）。  
+- **`50`**：同一问的多个切面，不是上下卷。公开索引：`50` 局、`51` 译、`52` 币、`53` 配、`54` 人、`55` 迁、`57` 环。口诀 **局、迁、译、币、配、人** 只记前六切面的检索习惯，不是文件顺序，也不含 `57`。`51` 品牌译介日后可迁入预留区 `60`；**`56` 有本地稿但不入库、不进公开索引**（文首自声明 + `.gitignore`），公开地图留空该号；下一公开稿用 `58`。
 
 ---
 
@@ -167,10 +167,10 @@ knowledge_base/
 | 22 | [Distributed Consistency Treatise](./20-architecture/22-distributed-consistency-treatise.md) | 跨节点之后，强一致与持续可用如何取舍 | CAP、共识、一致性 |
 | 23 | [Kubernetes Control-Plane Doctrine](./20-architecture/23-kubernetes-control-plane-doctrine.md) | 编排平台是持续收敛的分布式控制计算机 | K8s 控制面、声明式收敛 |
 | 24 | [Calico L3 Dataplane Treatise](./20-architecture/24-calico-l3-dataplane-treatise.md) | 节点即路由器：控制面写表、内核转发；Service 虚地址经 DNAT / conntrack 到达 Endpoint | Calico、Pod 网络、Service |
-| 25 | [Architecture Thinking Treatise](./20-architecture/25-architecture-thinking-cto-treatise.md) | 架构师靠决策生存；价值是第一性；五级跳是跨维不是把写代码卷满 | 架构思维、郭东白、价值思维、从程序员到 CTO |
+| 25 | [Architecture Thinking (CTO) Treatise](./20-architecture/25-architecture-thinking-cto-treatise.md) | 架构师靠决策生存；价值是第一性；五级跳是跨维不是把写代码卷满 | 架构思维、郭东白、价值思维、从程序员到 CTO |
 | 26 | [CPU Memory Access Treatise](./20-architecture/26-cpu-memory-access-treatise.md) | 语句→指令→数据通路；一次 Load：VA→TLB/页表→PA→Cache（tag/set/offset）→DRAM；慢常在链路 | 虚拟地址、MMU、TLB、页表、Cache、DRAM、局部性、流水线 |
 | 27 | [MQTT over QUIC Treatise](./20-architecture/27-mqtt-over-quic-treatise.md) | MQTT 语义不变，传输换 QUIC；压弱网失联窗口与重连风暴；单 Stream 主流，多 Stream 演进 | MQTT、QUIC、连接迁移、队头阻塞、0-RTT、弱网、车联网 |
-| 28 | [HTTP vs RPC Treatise](./20-architecture/28-http-rpc-microservice-communication-treatise.md) | 比的是组合不是四字对立；慢常在 JSON/头/连接模型；gRPC 也是 HTTP/2；多数业务通信非瓶颈 | HTTP、RPC、gRPC、REST、JSON、Protobuf、Dubbo、OpenFeign |
+| 28 | [Microservice Communication Treatise](./20-architecture/28-http-rpc-microservice-communication-treatise.md) | 比的是组合不是四字对立；慢常在 JSON/头/连接模型；gRPC 也是 HTTP/2；多数业务通信非瓶颈 | HTTP、RPC、gRPC、REST、JSON、Protobuf、Dubbo、OpenFeign |
 
 #### 30 · 明道 · 治
 
@@ -198,8 +198,8 @@ knowledge_base/
 | 50 | [AI Industry Disruption Strategy](./50-strategy/50-ai-industry-disruption-strategy.md) | 2026 是交叠点不是爆发之年；预测变便宜≠好决策；护城河在数据与主流程 | AI 冲击产业、死亡之谷、智能体、护城河 |
 | 51 | [Brand Cultural Translation](./50-strategy/51-brand-cultural-translation.md) | 跨文化少打折扣、多造溢价 | 品牌跨文化译介 |
 | 52 | [Token Economics Treatise](./50-strategy/52-token-economics-treatise.md) | Token 先因稀疏计算而廉价，再因商业与金融化成为底层货币；无法被 Token 化的判断才有剩余溢价 | Token 经济、计价 |
-| 53 | [Li Ka-shing Capital Allocation](./50-strategy/53-li-ka-shing-capital-allocation-treatise.md) | 形态转换、特许权与购买力；看起来准的转换当时多有卖方与相对价格；可带走的是三问，不是某一窗口里的资产 | 资本配置、周期转换 |
-| 54 | [Ning Gaoning Talent Selection](./50-strategy/54-ning-gaoning-talent-selection-treatise.md) | 履历与两化决策可核对；《三生万物》与五步组合；选人三则合验于烂摊子 | 选人、经理人、压力场景 |
+| 53 | [Li Ka-shing Capital Allocation Treatise](./50-strategy/53-li-ka-shing-capital-allocation-treatise.md) | 形态转换、特许权与购买力；看起来准的转换当时多有卖方与相对价格；可带走的是三问，不是某一窗口里的资产 | 资本配置、周期转换 |
+| 54 | [Ning Gaoning Talent Selection Treatise](./50-strategy/54-ning-gaoning-talent-selection-treatise.md) | 履历与两化决策可核对；《三生万物》与五步组合；选人三则合验于烂摊子 | 选人、经理人、压力场景 |
 | 55 | [Global Manufacturing Migration Chronicle](./50-strategy/55-global-manufacturing-migration-chronicle.md) | 四次大迁移与雁行透镜；迁出国保留高附加值；China+1 / 近岸与增加值脱钩不同步 | 世界工厂、制造业迁移、China+1、近岸 |
 | 57 | [Dollar System Division of Labor](./50-strategy/57-dollar-system-division-of-labor-treatise.md) | 三层环流（资源—制造—消费）与四层利润金字塔；实物向消费端，美元回流美国；升级=向上跃迁 | 美元环流、美债回流、储备货币、国际分工、利润金字塔 |
 
@@ -215,11 +215,12 @@ knowledge_base/
 | 霸权转移、荷兰黄金时代、Pax Britannica/Americana、反向金德尔伯格、四次工业革命、**大分流**、世界工厂、多极辩论 | 13 |
 | 互联网史、ARPANET、TCP/IP、浏览器、门户、搜索、微信、推荐算法、ChatGPT、智能体、曾鸣、比雅虎更早、60 分奇点、支付宝 | 14 |
 | 浏览器史、代管、同源策略、沙盒、CORS、CSP、JavaScript、Flash、权限提示、Chromium、Blink、引擎集中、Electron、WebView、Manifest V3 | 15 |
-| HTTP、HTTP/1.1、HTTP/2、HTTP/3、QUIC、SPDY、队头阻塞、TLS、HTTPS、ALPN、Alt-Svc、HPACK、多路复用 | 16 / 27 / 28 |
+| HTTP、HTTP/1.1、HTTP/2、HTTP/3、QUIC、SPDY、队头阻塞、TLS、HTTPS、ALPN、Alt-Svc、HPACK、多路复用 | 16 |
 | 大语言模型、LLM、Transformer、注意力、QKV、GPT、BERT、T5、缩放律、RAG、ChatGPT、Decoder-Only、幻觉、对齐 | 17 |
 | 历史是什么、史料、解释、限制、有边界的重建、丝绸之路、海地革命、记忆与历史、纽伦堡、工厂法 | 18 |
 | 企业架构、TOGAF、四大域、**六层域**、CSVLOD、科图采夫 | 20 |
 | 服务架构代际、复杂度转移 | 21 |
+| 服务代际 ↔ 服务间通信选型 | 21 / 28 |
 | CAP、共识、强一致 vs 可用 | 22 |
 | Kubernetes 控制面、声明式、调谐 | 23 |
 | Calico、L3、Service/DNAT | 24 |
@@ -250,6 +251,7 @@ knowledge_base/
 | 美元环流与利润层 ↔ 霸权公共品 ↔ 工厂地理 | 57 / 13 / 55 |
 | 协议与入口 ↔ 浏览器代管与沙盒规矩 | 14 / 15 |
 | 浏览器代管 ↔ HTTP 承载与 HTTPS | 15 / 16 |
+| HTTP 编年 ↔ MQTT over QUIC ↔ 服务间 HTTP/RPC | 16 / 27 / 28 |
 | 计算池化 ↔ 网络之网络 / 协议与入口 | 10 / 14 |
 | 互联网入口链 ↔ 产业穿透与交叠点 | 14 / 50 |
 | 教学四大域 ↔ 实践六层 | 20 |
@@ -273,15 +275,15 @@ knowledge_base/
 8. **13** 五百年霸权转移与四次工业革命（取势）  
 9. **20** 战略如何翻译为可执行安排  
 10. **21** 架构代际迁移  
-11. **25** 架构师如何决策：价值、六条法则与五级跳  
-12. **43** 熵与复杂度如何转移（一般原理）  
-13. **46** 系统思维：要素、连接、目标与反馈  
-14. **22** 跨节点一致性取舍  
-15. **23** 编排控制面原则  
-16. **24** 数据面如何写表转发  
-17. **26** 一次 Load 如何从虚地址走到 DRAM  
-18. **27** MQTT 如何接到 QUIC（弱网传输层替换）  
-19. **28** 微服务间通信：HTTP 与 RPC 慢在哪  
+11. **28** 服务间通信：HTTP 与 RPC 慢在哪（接 21 的选型自由）  
+12. **25** 架构师如何决策：价值、六条法则与五级跳  
+13. **43** 熵与复杂度如何转移（一般原理）  
+14. **46** 系统思维：要素、连接、目标与反馈  
+15. **22** 跨节点一致性取舍  
+16. **23** 编排控制面原则  
+17. **24** 数据面如何写表转发  
+18. **26** 一次 Load 如何从虚地址走到 DRAM  
+19. **27** MQTT 如何接到 QUIC（弱网传输；史见 16）  
 20. **40** 回到无状态与可组合  
 
 #### IT 治理 / CIO / 审计
@@ -345,7 +347,7 @@ AI 如何改变工程组织、如何承接被放大的速度。
 | 一级标题 | 与文件名同向：文件名是检索键，标题是阅读入口，不必逐字相同，不得指到另一篇 |
 | 摘要 | 目录前用一段话交代问题、主线与结论，不替代正文论证 |
 
-新增时：先定区号，再取该域下一个空序号，最后用「主题 + 体裁」命名。例如史域下一空号为 `19`，治理域下一篇为 `32-…-framework.md`，战略域 `56` 仍空。
+新增时：先定区号，再取该域下一个**公开索引**空序号，最后用「主题 + 体裁」命名。例如史域下一空号为 `19`，治理域下一篇为 `32-…-framework.md`。战略域：`56` 有本地不入库稿（见 `.gitignore`），公开地图视其为占用空位——下一篇公开稿用 `58`，勿把 `56` 写进 §3.1，也不要另起同号覆盖本地稿。
 
 ### 4.2 体裁
 
@@ -424,7 +426,7 @@ AI 如何改变工程组织、如何承接被放大的速度。
 
 ### 6.1 跨篇河床
 
-索引里的「核心命题」是各篇入口。下面十句是跨篇之后仍站得住的判断——不替代正文，只作河床。论证与出处在对应文稿。
+索引里的「核心命题」是各篇入口。下列判断是跨篇之后仍站得住的余数——不替代正文，只作河床。论证与出处在对应文稿。
 
 | 境界 | 判断 | 文 |
 |------|------|-----|
