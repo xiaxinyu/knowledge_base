@@ -1,18 +1,18 @@
 # MQTT over QUIC：弱网下的传输层替换
 
-> 一辆车驶入隧道：5G → 4G → 无信号 → 再回 5G。物理上「有没有网」与业务上「MQTT 会话是否还活着」往往不是同一件事。MQTT 语义可以不变；变的是底下那一层传输。
+> 一辆车驶入隧道：5G → 4G → 无信号 → 再回 5G。物理上「有没有网」，与业务上「MQTT 还连着吗」，常常不是同一件事。MQTT 的主题、QoS、会话语义可以不变；要换的是底下那一层传输。
 >
-> 本文把 **MQTT over QUIC** 收成一条链：**弱网错配 → TCP 三重代价 → QUIC 如何对症 → MQTT 如何映到 Stream → 落地边界**。可与本库 [16](../10-chronicle/16-http-protocol-chronicle.md)（HTTP/3 接到 QUIC）、[14](../10-chronicle/14-internet-history-chronicle.md)（协议即架构）、[21](./21-service-architecture-evolution.md)（复杂度换层）对照：彼处写 Web 语义换传输；此处写物联网消息协议换传输。
+> 本文按一条因果链展开：**弱网为何与 TCP 错配 → TCP 上的三重结构代价 → QUIC 如何对症 → MQTT 如何映到 Stream → 落地与选型边界**。可与 [16](../10-chronicle/16-http-protocol-chronicle.md)（HTTP/3 接到 QUIC）、[14](../10-chronicle/14-internet-history-chronicle.md)（协议即架构）、[21](./21-service-architecture-evolution.md)（复杂度换层）对照：彼处写 Web 语义换传输，此处写物联网消息协议换传输。
 
 先给一个直接答案：
 
-> **MQTT over QUIC 不是新的 MQTT，而是把既有 MQTT 字节跑在 QUIC（RFC 9000）上。** 要压的是两类痛：终端「物理有网、业务失联」的窗口，以及 Broker 侧海量设备几乎同时重连的风暴。QUIC 以 **Connection ID** 支撑连接迁移、将传输与 TLS 1.3 握手合成 **1-RTT / 0-RTT**、并在 **Stream** 粒度做丢包恢复——对症 TCP 的四元组绑死、握手叠层与单字节流队头阻塞。边界也须钉死：今日主流仍是 **单双向 Stream 承载整条 MQTT 连接**；按主题 / 优先级拆多 Stream 是演进，不是默认已兑现。UDP 不通须能回落 TCP；0-RTT 有重放风险；某云「开了 QUIC 端口」≠ 连接迁移已在生产可用。
+> **MQTT over QUIC 不是另一种发布订阅协议，而是把既有 MQTT 字节（3.1.1 / 5.0）跑在 QUIC（RFC 9000）上。** 要压的是两件事：终端侧「物理已有网、业务仍失联」的窗口，以及 Broker 侧大量设备几乎同时重连的风暴。QUIC 用 **Connection ID** 标识逻辑连接（路径变了仍可续）、把可靠传输与 TLS 1.3 级握手合成约 **1-RTT / 0-RTT**，并在 **Stream** 上做流级丢包恢复——分别对症 TCP 的五元组绑死、握手叠层、单字节流队头阻塞。今日产业主流仍是 **一条双向 Stream 扛整条 MQTT 连接**；按主题或优先级拆多 Stream 是演进能力，不是默认已兑现。UDP 被拦须能回落 TCP；0-RTT 有重放风险；某云「开了 QUIC 端口」不等于连接迁移已在生产可用。
 
-**20-architecture 位置：** [16](../10-chronicle/16-http-protocol-chronicle.md) 写 HTTP 如何接到 QUIC；本文写 **MQTT 如何接到同一条传输**。开源侧 EMQX / NanoMQ 等已推进多年；公有云侧（如腾讯云 TDMQ MQTT）在产品商业化后提供 `mqtt-quic` 接入点——正文区分 **协议能力** 与 **某产品某版本是否已可生产使用**。
+**20-architecture 位置：** [16](../10-chronicle/16-http-protocol-chronicle.md) 写 HTTP 如何接到 QUIC；本文写 **MQTT 如何接到同一条传输**。开源侧 EMQX / NanoMQ 等已推进多年；公有云侧（如腾讯云 TDMQ MQTT）提供 `mqtt-quic` 接入点。正文始终区分三层：**RFC 能力**、**OASIS 映射草案状态**、**某一产品版本是否可生产使用**。
 
 ## 摘要
 
-TCP 在有线与数据中心长期成立的假设——**丢包多半意味着拥塞**——在移动与蜂窝链路上经常不成立：丢包更常来自衰减、切换与干扰。MQTT 跑在 TCP（及 TCP+TLS）上时，弱网会放大三重结构代价：地址一变就要重建连接与应用会话；单一有序字节流造成传输层队头阻塞；连接生死由内核超时主导，应用发现偏慢。QUIC 在 UDP 上提供多路可靠流、内置 TLS 1.3 级加密、连接迁移与更短握手，既是 HTTP/3 的底层传输，也被用来承载 MQTT。产业以 **单 Stream 映射一条 MQTT 连接** 为主（OASIS 侧有 Single Stream Mode 的 Committee Note 推进）；多 Stream 可隔离控制流与高低频数据，映射与互操作仍在演进。选型先问三句：路径是否允许 UDP？失联窗口与重连风暴是否真是瓶颈？会话恢复靠 MQTT Session，还是还指望传输层迁移？
+TCP 在有线与数据中心长期成立的假设——**丢包多半意味着拥塞**——在移动与蜂窝链路上经常不成立：丢包更常来自衰减、切换与干扰。MQTT 跑在 TCP（及 TCP+TLS）上时，弱网会放大三重结构代价：地址一变就要重建连接与应用会话；单一有序字节流造成传输层队头阻塞；连接生死由内核超时主导，应用发现偏慢。QUIC 在 UDP 上提供多路可靠流、内置 TLS 1.3 级加密、连接迁移与更短握手——既是 HTTP/3 的底层，也被用来承载 MQTT。产业落地以 **单 Stream 映射一条 MQTT 连接** 为主；OASIS MQTT TC 上 *MQTT over QUIC — Single Stream Mode* 仍是 Committee Note **草案**（2026 年已有 Draft 1–3 审阅），不是已定稿的 MQTT 新大版本。多 Stream 可隔离控制流与高低频数据，但映射规则、互操作与部分实现的会话恢复仍有边界。选型先问三句：路径是否允许 UDP？失联窗口与重连风暴是否真是瓶颈？会话恢复靠 MQTT Session 参数，还是还指望传输层迁移？
 
 **关键词：** MQTT；QUIC；Connection ID；连接迁移；队头阻塞；0-RTT；Stream；Keep Alive；Session；弱网；车联网
 
@@ -77,9 +77,9 @@ TCP 在有线与数据中心长期成立的假设——**丢包多半意味着�
 | ---- | ------ |
 | **MQTT** | 发布 / 订阅消息协议；常见于物联网与车联网；传输层历史上以 TCP 为主。 |
 | **QUIC** | UDP 上的多路安全传输（RFC 9000）；HTTP/3 的底层；可靠与拥塞控制在用户态实现。[^rfc9000] |
-| **四元组** | TCP 连接身份：源 IP、源端口、目的 IP、目的端口。文档口语常称**五元组**（再含协议号）；路径变化时二者都会失效。 |
+| **五元组** | 连接在路径上的身份：源 IP、源端口、目的 IP、目的端口、协议号。TCP 文档也常只谈前四项（四元组）；路径变化时旧身份失效。 |
 | **Connection ID** | QUIC 用来标识逻辑连接的 ID；IP / 端口可变，连接仍可续。[^rfc9000] |
-| **连接迁移** | 客户端换地址后，经路径验证把同一 QUIC 连接迁到新路径；RFC 9000 本版由客户端发起。[^rfc9000] |
+| **连接迁移** | 客户端换地址后，经 **PATH_CHALLENGE / PATH_RESPONSE** 路径验证，把同一 QUIC 连接迁到新路径；RFC 9000 本版**仅客户端可发起**迁移。[^rfc9000] |
 | **Stream** | QUIC 上的逻辑通道；丢包恢复与流控可按流独立。 |
 | **队头阻塞（HOL）** | 先到的缺失阻塞后到的已就绪数据。TCP 字节流是连接级；QUIC 多 Stream 可降到流级。 |
 | **1-RTT / 0-RTT** | 首次建连约 1 个往返后可带应用数据；持有会话票据时可 0-RTT 发早期数据（有重放风险）。[^rfc9001] |
@@ -90,21 +90,22 @@ TCP 在有线与数据中心长期成立的假设——**丢包多半意味着�
 ### 1.2 边界
 
 1. **本文写协议机理与选型边界，不是某一云厂商的操作手册。** 端口、SDK、计费以当时产品文档为准。  
-2. **「MQTT over QUIC」在 OASIS 侧以 Committee Note / 草案推进为主**（如 Single Stream Mode），并非已定稿的 MQTT 新大版本；互操作以实现与测试矩阵为准。[^oasis-quic]  
+2. **「MQTT over QUIC」在 OASIS 侧以 Committee Note 草案推进**（*Single Stream Mode*，2026 年 Draft 1–3 审阅中），**不是**已批准的 MQTT 新大版本；互操作以实现与测试矩阵为准。[^oasis-quic]  
 3. **单 Stream 映射 ≠ 多主题已无队头阻塞。** 一流上的 MQTT 包序仍在；多 Stream 才谈业务级隔离。  
-4. **连接迁移是 RFC 能力，不是每个 Broker / SDK 的已交付清单。** 路径验证、CID 轮换、NAT、中间盒与产品开关都会卡住。  
-5. **场景中的秒数是教学量级，不是可外推的 SLA。** 墙钟取决于 RTO、RTT、TLS 版本、会话是否恢复与实现质量。
+4. **连接迁移是 RFC 9000 能力，不是每个 Broker / SDK 的已交付清单。** 路径验证、CID 轮换、NAT、中间盒与产品开关都会卡住。  
+5. **实现成熟度参差。** 例如 EMQX 文档仍写明：多 Stream 路径下会话状态保留、QoS 1/2 流中断后的消息状态，尚有明确限制——「开了 QUIC」≠「MQTT Session 行为已与 TCP 路径完全等价」。[^emqx-limit]  
+6. **场景中的秒数是教学量级，不是可外推的 SLA。** 墙钟取决于 RTO、RTT、TLS 版本、会话是否恢复与实现质量。
 
 ---
 
 ## 2. 场景：失联窗口与重连风暴
 
-用一个车联网教学场景钉住问题（数字为量级，不是实测报告）：
+先用一个车联网教学场景钉住问题（数字为量级，不是实测报告），再回头拆机理。
 
-车辆在数十秒内经历蜂窝衰减与恢复。TCP 路径上常见两段延迟叠在一起：
+车辆在数十秒内经历蜂窝衰减与恢复。TCP 路径上，痛苦通常叠成两段：
 
-1. **死亡宣告偏慢：** 信号变差时，内核仍按丢包 / 拥塞逻辑重传与退避；应用层往往要等超时才知「事实断连」。  
-2. **复活偏贵：** 连接被判定死亡后，再走 TCP 握手 + TLS + MQTT CONNECT，并恢复订阅、清理旧连接。弱信号下 RTT 拉长，每一跳都更疼。
+1. **死亡宣告偏慢：** 信号变差时，内核仍按丢包 / 拥塞逻辑重传与退避；应用层往往要等超时，才知「事实已经断连」。  
+2. **复活偏贵：** 判定死亡之后，再走 TCP 握手 + TLS + MQTT CONNECT，并恢复订阅、清理旧连接。弱信号下 RTT 拉长，每一跳都更疼。
 
 两端同时痛：
 
@@ -113,7 +114,7 @@ TCP 在有线与数据中心长期成立的假设——**丢包多半意味着�
 | **终端** | 一段「物理上可能已有网、业务上仍失联」的窗口 |
 | **服务端** | 同一地理障碍后，大量设备几乎同时重连 → 握手、鉴权、会话恢复、旧连接回收叠加成**重连风暴** |
 
-QUIC 不能消灭隧道，但可以压缩「宣告死亡 + 重建会话」的成本；若连接迁移生效，部分切换甚至不必走到应用层重连。下一节先说明：为何在移动网上，TCP 的默认反应常常不对症。
+QUIC 不能消灭隧道，但可以压缩「宣告死亡 + 重建会话」的成本；若连接迁移真正生效，部分切换甚至不必走到应用层重连。要理解收益从哪来，须先看清：在移动网上，TCP 的默认反应为何常常不对症。
 
 **所以 · 边界在哪：** 优化对象是失联窗口与重连风暴，不是「让无线信道不再丢包」。
 
@@ -125,7 +126,7 @@ TCP 诞生并成熟于有线与数据中心语境。其经典拥塞控制把**�
 
 移动与蜂窝链路里，丢包的主因经常不是瓶颈队列满，而是无线信道：衰减、多径、切换、瞬时干扰。此时「降速退避」可能是错动作——路径上仍有带宽，只是刚好丢了若干包。更现代的拥塞控制（如 BBR 一类）试图更多看延迟与带宽估计，但 **MQTT 设备侧仍大量跑在通用内核 TCP 栈上**，超时与重传参数应用难以精细干预。
 
-错配落到 MQTT，就表现为下一节的三重结构代价——不是实现写得差，而是传输假设与场景不一致。
+于是错配落到 MQTT，就表现为下一节的三重结构代价——不是某次实现写得差，而是**传输层假设与弱网场景不一致**。
 
 **所以 · 边界在哪：** 批评的是「丢包≡拥塞」在弱网的错配，不是宣布 TCP 在数据中心失效。
 
@@ -133,9 +134,11 @@ TCP 诞生并成熟于有线与数据中心语境。其经典拥塞控制把**�
 
 ## 4. TCP 上的三重结构代价
 
+把上一节的错配落到协议结构上，常见是三条，且可叠加。
+
 ### 4.1 重连代价高
 
-TCP 连接身份绑在四元组上。设备从蜂窝切到 Wi-Fi、或 NAT 重绑导致对外地址变化，**旧四元组上的连接在协议意义上已经结束**，必须重新建连。
+TCP 连接身份绑在路径五元组（或四元组）上。设备从蜂窝切到 Wi-Fi、或 NAT 重绑导致对外地址变化，**旧身份上的连接在协议意义上已经结束**，必须重新建连。
 
 叠层成本（冷启动、无丢包的理想量级）：
 
@@ -175,22 +178,24 @@ MQTT **Keep Alive** 可补一刀：超时无活动则断开。心跳设在数十
 
 ## 5. QUIC：四条能力如何对症
 
-QUIC（RFC 9000）由 Google 早期实践推动，经 IETF 标准化；运行在 UDP 之上，并把可靠传输、多路流与加密握手收进用户态。HTTP/3（RFC 9114）是其最广为人知的应用映射；MQTT 是另一条。[^rfc9000][^rfc9114]
+QUIC（RFC 9000）由 Google 早期实践推动，经 IETF 标准化；运行在 UDP 之上，并把可靠传输、多路流与加密握手收进用户态。HTTP/3（RFC 9114）是其最广为人知的应用映射；MQTT over QUIC 是另一条应用映射——**换的是传输，不是把 MQTT 改成 HTTP/3**。[^rfc9000][^rfc9114]
+
+读法很简单：上一节三条代价，下面四条能力分别对哪一条、边界在哪。
 
 | QUIC 能力 | 对症哪一条 TCP 代价 | 要说清的边界 |
 | --------- | ------------------- | ------------ |
-| **Connection ID + 连接迁移** | 四元组绑死 → 一切重来 | 客户端发起；需路径验证；新路径拥塞状态宜重估；稳定 CID 有关联风险，实践常轮换 CID[^rfc9000] |
+| **Connection ID + 连接迁移** | 五元组绑死 → 一切重来 | 仅客户端发起；须路径验证；新路径拥塞状态宜重估；稳定 CID 有关联风险，实践常轮换 CID[^rfc9000] |
 | **1-RTT / 0-RTT 握手** | TCP+TLS 叠 RTT | 0-RTT 早期数据可被重放，只适合幂等 / 可容忍重放的载荷[^rfc9001] |
 | **多 Stream、流级恢复** | 连接级队头阻塞 | **仅当业务真拆到多 Stream 时** 才隔离主题；单 Stream 映射仍共享一流有序 |
 | **用户态拥塞控制 + 默认加密** | 内核栈难改；TLS 另叠一层 | 实现与调参质量参差；UDP 被拦时必须回落 |
 
-对 MQTT 最敏感的，往往是前两条在弱网切换里的组合：迁移成功则加密上下文与传输状态可续，应用层甚至无感；迁移失败或未实现，则至少还能靠更短握手压缩重连。**MQTT Session 是否保留，仍由 MQTT 会话参数决定**——传输层迁移是「尽量别拆到要重 CONNECT」，不是替代 Session Expiry。
+对 MQTT 最敏感的，往往是前两条在弱网切换里的组合：迁移成功则加密上下文与传输状态可续，应用层甚至无感；迁移失败或产品未实现，则至少还能靠更短握手压缩重连。**MQTT Session 是否保留，仍由 MQTT 会话参数决定**——传输层迁移是「尽量别拆到要重 CONNECT」，不是替代 Session Expiry。
 
-切网时两条路径对比（QUIC 侧为 RFC 能力示意；产品是否完整支持须实测）：[^rfc9000]
+切网时两条路径对比如下（QUIC 侧为 RFC 能力示意；产品是否完整支持须实测）：[^rfc9000]
 
 ```mermaid
 flowchart TB
-  subgraph TCP["TCP：身份绑四元组"]
+  subgraph TCP["TCP：身份绑路径五元组"]
     T1[源 IP / 端口变化] --> T2[旧连接死亡]
     T2 --> T3[TCP + TLS 再握手]
     T3 --> T4[MQTT CONNECT<br/>恢复或重建 Session]
@@ -209,15 +214,17 @@ flowchart TB
 
 ## 6. MQTT 如何映到 QUIC
 
+传输层能力说完了，还差最后一环：MQTT 字节如何落在 QUIC 的 Stream 上。
+
 ### 6.1 语义不变，传输替换
 
-> **兼容 MQTT 3.1.1 / 5.0 的包格式与语义；QUIC 替换传输层。** 客户端建立 QUIC 连接后，在 Stream 上跑既有 MQTT 字节。
+> **兼容 MQTT 3.1.1 / 5.0 的包格式与语义；QUIC 只替换传输层。** 客户端建立 QUIC 连接后，在 Stream 上跑既有 MQTT 字节。
 
 不是「发明另一种发布订阅语义」，也不是「HTTP/3 的别名」。
 
 ### 6.2 单 Stream：今日主流
 
-产业与标准化讨论里，**单双向 Stream 承载一条 MQTT 连接**是当前主路径：实现简单、保序与现有 MQTT 一致，先吃到握手、迁移、用户态恢复等传输红利。OASIS MQTT TC 上已有 *MQTT over QUIC — Single Stream Mode* 的 Committee Note 草案贡献（不修改 MQTT 包格式；定稿状态以 TC 为准）。[^oasis-quic]
+产业与标准化讨论里，**单双向 Stream 承载一条 MQTT 连接**是当前主路径：实现简单、保序与现有 MQTT 一致，先吃到握手、迁移、用户态恢复等传输红利。OASIS MQTT TC 上 *MQTT over QUIC — Single Stream Mode* Committee Note 草案（不修改 MQTT 包格式；2026 年 Draft 1–3 审阅中）正是这一路径的正式化尝试——**定稿与否以 TC 为准，正文不将其写成已批准标准**。[^oasis-quic]
 
 ```text
   QUIC Connection（CID）
@@ -255,7 +262,7 @@ flowchart TB
 
 相关主题若强依赖全局次序，应映到**同一** Data Stream；次序只在流内保证。[^emqx-quic]
 
-EMQX 自 5.0 引入、5.1 起将含多 Stream 的 MQTT over QUIC 视为 generally available，并常见 QUIC 失败时回落 TCP/TLS；NanoMQ 等可用 QUIC 桥接把边缘传统客户端接到云侧 QUIC 监听。[^emqx-quic][^nanomq]
+EMQX 自 5.0 实验引入、5.1 起将含多 Stream 的 MQTT over QUIC 视为 generally available，并常见 QUIC 失败时回落 TCP/TLS；NanoMQ 等可用 QUIC 桥接把边缘传统客户端接到云侧 QUIC 监听。[^emqx-quic][^nanomq] 同时须读清实现边界：EMQX 文档写明，当前路径下**会话状态保留尚未完整支持**——客户端若须重连，往往要在数据流上重新订阅；数据流异常关闭时，QoS 1/2 消息状态也可能不保留。[^emqx-limit] 多 Stream 换来的是主题隔离与控制面活性，不是「MQTT Session 语义自动升级」。
 
 代价是映射规则、流生命周期与互操作更复杂。
 
@@ -267,13 +274,15 @@ EMQX 自 5.0 引入、5.1 起将含多 Stream 的 MQTT over QUIC 视为 generall
 | **0-RTT** | QUIC | 重连时尽快重送数据 |
 | **Session Expiry / Clean Start** | MQTT | 传输断了之后，会话状态留多久、是否恢复 |
 
-三者叠加才像完整故事；只开 QUIC 端口但 Session 立即过期，重连风暴仍可能很重。
+三者叠加才像完整故事；只开 QUIC 端口但 Session 立即过期，重连风暴仍可能很重。迁移成功时，应用层甚至不必重 CONNECT；迁移失败或未实现时，短握手只能缩短重连，**会话能不能接上仍看 MQTT 参数与 Broker 实现**。
 
-**所以 · 边界在哪：** 先确认映射是单流还是多流，再决定「无队头阻塞」能说到哪一步。
+**所以 · 边界在哪：** 先确认映射是单流还是多流，再决定「无队头阻塞」能说到哪一步；再核对实现是否真的保留了你依赖的 Session 行为。
 
 ---
 
 ## 7. 产业落地与选型
+
+机理清楚之后，落地只剩能力表、谁在做、何时值得做、少踩哪些坑。
 
 ### 7.1 能力对照
 
@@ -290,8 +299,8 @@ EMQX 自 5.0 引入、5.1 起将含多 Stream 的 MQTT over QUIC 视为 generall
 
 ### 7.2 谁在落地
 
-- **开源 Broker / 边缘：** EMQX 5.0 实验引入，5.1 起视为 GA（含多 Stream）；客户端侧常见回落 TCP/TLS；NanoMQ / NanoSDK 提供桥接与 C 系路径。[^emqx-quic][^nanomq]  
-- **公有云示例（腾讯云 TDMQ MQTT）：** 产品于 **2024-12-26** 结束公测并商业化计费；其后有 **QUIC 端口开放** 记录。文档中 `mqtt-quic` 常见默认端口 **14567**、ALPN **`mqtt`**，并写明仅支持 IETF RFC 9000。同一产品线的 *MQTT over QUIC* 说明仍可能标注**实验性、不建议生产**，且**连接迁移尚未完整支持**——「端口已开」与「迁移 / 生产可用」必须分开核对。[^tdmq]
+- **开源 Broker / 边缘：** EMQX 5.0 实验引入，5.1 起视为 GA（含多 Stream）；客户端侧常见回落 TCP/TLS；NanoMQ / NanoSDK 提供桥接与 C 系路径。GA 不等于「所有 MQTT Session 语义已与 TCP 路径对齐」，见 §6.3 与文档 Limitations。[^emqx-quic][^emqx-limit][^nanomq]  
+- **公有云示例（腾讯云 TDMQ MQTT）：** 产品于 **2024-12-26** 结束公测并商业化计费；其后有 **QUIC 端口开放** 记录。文档中 `mqtt-quic` 常见默认端口 **14567**、ALPN **`mqtt`**，并写明仅支持 IETF RFC 9000。同一产品线的 *MQTT over QUIC* 说明仍标注**实验性、不建议生产**，且**连接迁移尚未完整支持**——「端口已开」与「迁移 / 生产可用」必须分开核对。[^tdmq]
 
 ### 7.3 更值得评估的场景
 
@@ -307,7 +316,7 @@ EMQX 自 5.0 引入、5.1 起将含多 Stream 的 MQTT over QUIC 视为 generall
 ### 7.4 接入时少踩的坑
 
 1. **UDP 与中间盒：** 企业网 / 部分运营商对 UDP 不友好；客户端宜具备回落 TCP/TLS（或边缘 QUIC 桥接）。  
-2. **只换传输、不调会话：** Session Expiry、QoS、遗嘱与离线消息策略仍要设计。  
+2. **只换传输、不调会话：** Session Expiry、QoS、遗嘱与离线消息策略仍要设计；并核对 Broker 在 QUIC 路径上是否真保留会话。  
 3. **把演示当成 SLA：** 隧道叙事里的秒数不可写进合同。  
 4. **0-RTT 乱塞控制指令：** 重放可能导致重复动作；控制面宜走 1-RTT 或应用层去重。  
 5. **把 RFC 能力写成产品承诺：** 尤其是连接迁移——以当前地域文档与实测为准。
@@ -325,7 +334,7 @@ EMQX 自 5.0 引入、5.1 起将含多 Stream 的 MQTT over QUIC 视为 generall
             │
             ▼
   ┌─────────────────────────────────────┐
-  │ TCP：四元组死亡 · 字节流 HOL · 内核超时 │
+  │ TCP：五元组死亡 · 字节流 HOL · 内核超时 │
   └─────────────────┬───────────────────┘
                     ▼
   ┌─────────────────────────────────────┐
@@ -346,20 +355,20 @@ EMQX 自 5.0 引入、5.1 起将含多 Stream 的 MQTT over QUIC 视为 generall
 
 ## 9. 本章要点
 
-1. **MQTT over QUIC = 语义不变 + 传输替换**；不是新的发布订阅协议。  
+1. **MQTT over QUIC = 语义不变 + 传输替换**；不是新的发布订阅协议，也不是 HTTP/3 的别名。  
 2. **弱网错配：** 无线丢包常被 TCP 当成拥塞来退避。  
 3. **三重代价：** 重连贵、连接级 HOL、故障发现慢。  
 4. **QUIC 对症：** 迁移、短握手、流级恢复、用户态拥塞控制与内置加密。  
-5. **单 Stream 是今日主流**；多 Stream 才谈主题级无阻塞。  
-6. **迁移 ≠ Session：** 传输续连与 MQTT 会话保留是两层旋钮。  
-7. **0-RTT 有重放风险**；UDP 不通要回落；产品能力以文档与实测为准。  
-8. **优先场景：** 切网频繁、长 RTT、重连风暴贵的移动物联网。
+5. **单 Stream 是今日主流**；多 Stream 才谈主题级隔离；营销「彻底无 HOL」在单流落地里过满。  
+6. **迁移 ≠ Session：** 传输续连与 MQTT 会话保留是两层旋钮；实现可能尚未对齐 TCP 路径的会话行为。  
+7. **标准化与产品分开读：** OASIS CN 仍是草案；RFC 能力 ≠ 某云已可生产。  
+8. **0-RTT 有重放风险**；UDP 不通要回落；优先场景是切网频繁、长 RTT、重连风暴贵的移动物联网。
 
 ---
 
 ## 10. 参考文献
 
-[^rfc9000]: RFC 9000, *QUIC: A UDP-Based Multiplexed and Secure Transport*, May 2021. Connection ID、连接迁移（客户端发起）、流多路复用等。
+[^rfc9000]: RFC 9000, *QUIC: A UDP-Based Multiplexed and Secure Transport*, May 2021. Connection ID、连接迁移（§9，本版仅客户端发起）、路径验证（§8 PATH_CHALLENGE / PATH_RESPONSE）、流多路复用等。
 
 [^rfc9001]: RFC 9001, *Using TLS to Secure QUIC*. QUIC 与 TLS 1.3 的结合；1-RTT / 0-RTT；0-RTT 应用数据的重放风险说明。
 
@@ -371,14 +380,16 @@ EMQX 自 5.0 引入、5.1 起将含多 Stream 的 MQTT over QUIC 视为 generall
 
 [^mqtt5]: OASIS *MQTT Version 5.0*. Clean Start、Session Expiry Interval、Keep Alive 等会话与活性机制。Session 可跨越多次 Network Connection，但仍依赖及时重连。
 
-[^oasis-quic]: OASIS MQTT TC：*MQTT over QUIC — Single Stream Mode* Committee Note 草案等公开贡献（如 TC 文档区 / GitHub `oasis-tcs/mqtt` 讨论）。**以 TC 当前状态为准**；本文不将其表述为已批准的最终国际标准。
+[^oasis-quic]: OASIS MQTT TC：*MQTT over QUIC — Single Stream Mode* Committee Note 草案。公开轨迹包括 2026-05 Draft 1 上传、GitHub `oasis-tcs/mqtt` 贡献区合并，以及 2026-08 前后 Draft 3 审阅请求（如 PR #133）。**Committee Note 经 TC 全多数票批准后方为正式 CN；本文写作时仍按草案处理，不表述为已批准国际标准。**
 
-[^emqx-quic]: EMQX 文档：*MQTT over QUIC* 介绍与 Features（单 / 多 Stream、回落 TCP、控制流与数据流分工、按主题 / QoS 映射、流内保序等）。*What's New*（5.1）：5.0 实验引入，5.1 起视为 generally available。细节随版本变化。
+[^emqx-quic]: EMQX 文档：*MQTT over QUIC* 介绍与 Features（单 / 多 Stream、回落 TCP、控制流与数据流分工、按主题 / QoS 映射、流内保序、连接迁移叙述等）。*What's New*（5.1）：5.0 实验引入，5.1 起视为 generally available。细节随版本变化。
+
+[^emqx-limit]: EMQX *MQTT over QUIC* Introduction → Limitations：当前不支持完整保留会话状态（重连后往往须在数据流上重新订阅）；数据流被任一侧意外关闭时，QoS 1/2 消息状态不保留。属产品文档边界，用以纠正「GA = 与 TCP 路径 Session 行为完全等价」。
 
 [^emqx-hol]: EMQ 工程叙述：单 Stream 上大块低优先级报文可阻塞同流 Keep Alive，导致 MQTT 层超时；多 Stream 将 PING 放在控制流、数据分主题开流，用以缓解主题间 HOL。见 *How Multi-Stream of QUIC Could Mitigate the HOL Blocking Issue of MQTT Connection* 一类公开博文；属实现经验，不是 RFC 条文。
 
 [^nanomq]: NanoMQ 文档：*MQTT over QUIC Bridge*——边缘以 QUIC 桥接云侧 Broker；可配置 hybrid（QUIC 优先、回落 TCP/TLS）、单 / 多 Stream 等。用于「端侧仍是 TCP MQTT、上云走 QUIC」的过渡路径。
 
-[^tdmq]: 腾讯云：*关于 TDMQ MQTT 版结束公测和商业化通知*（2024-12-26 起商业化）；*新功能发布记录*（QUIC 端口开放）；*网络连接说明*（`mqtt-quic` 等接入点）；*MQTT over QUIC*（端口 14567、ALPN `mqtt`、仅 IETF RFC 9000；文中仍可能标注实验性，且连接迁移未完整支持）。**以当前控制台与地域文档为准。**
+[^tdmq]: 腾讯云文档：*关于 TDMQ MQTT 版结束公测和商业化通知*（2024-12-26 起商业化）；*网络连接说明*（`mqtt-quic` 接入点）；*MQTT over QUIC*（端口 14567、ALPN `mqtt`、仅 IETF RFC 9000；明确标注实验性、不建议生产，且连接迁移未完整支持）。**以当前控制台与地域文档为准。**
 
 **声明：** 正文是弱网场景下 MQTT 传输层替换的教学整理，不是某一代内核、某一款 SDK 或某一云地域的周期精确模型。冲突时以 RFC、OASIS 文档、厂商发布说明与实测为准。
