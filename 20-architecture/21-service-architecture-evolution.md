@@ -154,7 +154,7 @@ SOA 面对的问题与原始分布式类似——分布式环境下的服务通�
 
 | 问题 | 常见选项（示例） |
 | ------ | ------------------ |
-| 远程调用 | Dubbo、gRPC、Thrift、Finagle…… |
+| 远程调用 | Dubbo、gRPC、Thrift、Finagle……（HTTP 与 RPC 组合差多少见 [28](./28-http-rpc-microservice-communication-treatise.md)） |
 | 服务发现 | Eureka、Consul、Nacos、ZooKeeper、etcd…… |
 | 配置 / 熔断等 | Spring Cloud 生态、自研或厂商方案 |
 

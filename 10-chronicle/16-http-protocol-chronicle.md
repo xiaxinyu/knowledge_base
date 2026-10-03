@@ -2,7 +2,7 @@
 
 > 网页越来越花，协议表面上还叫 HTTP；变的多半不是「请求—响应」这四个字，而是一次连接里能并行走多少、丢一个包会不会堵住全家、以及路上能不能被看光。
 >
-> 本文是 HTTP 从实验单行协议走到 HTTP/3 的编年：语义层大体连续，承载与并发模型代际替换。可与本库 [14](./14-internet-history-chronicle.md)（协议即权力）、[15](./15-browser-custody-chronicle.md)（浏览器如何代管）、[40](../40-paradigm/40-unix-agent-stateless-philosophy.md)（无状态与可组合）、[11](./11-information-theory-chronicle.md)（可靠传输与冗余）对照。
+> 本文是 HTTP 从实验单行协议走到 HTTP/3 的编年：语义层大体连续，承载与并发模型代际替换。可与本库 [14](./14-internet-history-chronicle.md)（协议即权力）、[15](./15-browser-custody-chronicle.md)（浏览器如何代管）、[40](../40-paradigm/40-unix-agent-stateless-philosophy.md)（无状态与可组合）、[11](./11-information-theory-chronicle.md)（可靠传输与冗余）、[27](../20-architecture/27-mqtt-over-quic-treatise.md)（MQTT 接到同一条 QUIC 运输）对照。
 
 先给一个直接答案：
 

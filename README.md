@@ -131,7 +131,7 @@ knowledge_base/
 同域内按认知依赖递增：先概念，后演进，再原则，再落地。
 
 - **`10`**：`10`–`12` 为计算 / 信息 / 智能技术史；`13` 为世界霸权秩序五百年编年（第一次工业革命按大分流重写；与 [55](./50-strategy/55-global-manufacturing-migration-chronicle.md) 制造业地理迁移互参）；`14` 为互联网编年：协议、入口、注意力与「收束—外溢」；`15` 为浏览器编年：代管陌生人的程序与被迫补上的规矩；`16` 为 HTTP 编年：从 0.9 到 QUIC；`17` 为语言模型编年：从循环网络到 Transformer 与 ChatGPT；`18` 为历史认识论：史料、解释与有边界的重建。  
-- **`20`**：`20` 为企业架构（教学四大域、实践六层）；`21`–`24` 为服务代际、一致性取舍、编排控制面与数据面写表；`25` 为架构思维与从程序员到 CTO；`26` 为一次 Load 的虚实翻译与 Cache 链路。  
+- **`20`**：`20` 为企业架构（教学四大域、实践六层）；`21`–`24` 为服务代际、一致性取舍、编排控制面与数据面写表；`25` 为架构思维与从程序员到 CTO；`26` 为一次 Load 的虚实翻译与 Cache 链路；`27` 为 MQTT over QUIC：弱网下的传输层替换；`28` 为微服务间通信：HTTP 与 RPC 慢在哪。  
 - **`30`**：`30` 为 IT 治理框架（COBIT）；`31` 为平台质量实证。  
 - **`40`**：`40`–`42` 为智能协作的优术（工具哲学 → 组织范式 → 运维落地）；`43` 为熵与控制（横切）；`44` 为运维落地的产业前沿对照；`45` 为从 ReAct 到 Agent Teams 的协作机制专论；`46` 为系统思维（与 `43` 同为横切镜片）。  
 - **`50`**：不是上下卷，而是同一问的多个切面。按编号：`50` 局、`51` 译、`52` 币、`53` 配、`54` 人、`55` 迁、`57` 环（`56` 空号）。口诀 **局、迁、译、币、配、人** 只记前六个切面，不是文件顺序，也不含美元环流。产业如何被穿透（含 2026 交叠点与死亡之谷），意义如何跨文化传递，Token 如何成为智能经济的计量单位，资本如何在周期中配置，经理人如何在压力中被选出，制造业重心如何代际迁移，美元环流如何把实物与利润拆到不同层。
@@ -169,6 +169,8 @@ knowledge_base/
 | 24 | [Calico L3 Dataplane Treatise](./20-architecture/24-calico-l3-dataplane-treatise.md) | 节点即路由器：控制面写表、内核转发；Service 虚地址经 DNAT / conntrack 到达 Endpoint | Calico、Pod 网络、Service |
 | 25 | [Architecture Thinking Treatise](./20-architecture/25-architecture-thinking-cto-treatise.md) | 架构师靠决策生存；价值是第一性；五级跳是跨维不是把写代码卷满 | 架构思维、郭东白、价值思维、从程序员到 CTO |
 | 26 | [CPU Memory Access Treatise](./20-architecture/26-cpu-memory-access-treatise.md) | 语句→指令→数据通路；一次 Load：VA→TLB/页表→PA→Cache（tag/set/offset）→DRAM；慢常在链路 | 虚拟地址、MMU、TLB、页表、Cache、DRAM、局部性、流水线 |
+| 27 | [MQTT over QUIC Treatise](./20-architecture/27-mqtt-over-quic-treatise.md) | MQTT 语义不变，传输换 QUIC；压弱网失联窗口与重连风暴；单 Stream 主流，多 Stream 演进 | MQTT、QUIC、连接迁移、队头阻塞、0-RTT、弱网、车联网 |
+| 28 | [HTTP vs RPC Treatise](./20-architecture/28-http-rpc-microservice-communication-treatise.md) | 比的是组合不是四字对立；慢常在 JSON/头/连接模型；gRPC 也是 HTTP/2；多数业务通信非瓶颈 | HTTP、RPC、gRPC、REST、JSON、Protobuf、Dubbo、OpenFeign |
 
 #### 30 · 明道 · 治
 
@@ -213,7 +215,7 @@ knowledge_base/
 | 霸权转移、荷兰黄金时代、Pax Britannica/Americana、反向金德尔伯格、四次工业革命、**大分流**、世界工厂、多极辩论 | 13 |
 | 互联网史、ARPANET、TCP/IP、浏览器、门户、搜索、微信、推荐算法、ChatGPT、智能体、曾鸣、比雅虎更早、60 分奇点、支付宝 | 14 |
 | 浏览器史、代管、同源策略、沙盒、CORS、CSP、JavaScript、Flash、权限提示、Chromium、Blink、引擎集中、Electron、WebView、Manifest V3 | 15 |
-| HTTP、HTTP/1.1、HTTP/2、HTTP/3、QUIC、SPDY、队头阻塞、TLS、HTTPS、ALPN、Alt-Svc、HPACK、多路复用 | 16 |
+| HTTP、HTTP/1.1、HTTP/2、HTTP/3、QUIC、SPDY、队头阻塞、TLS、HTTPS、ALPN、Alt-Svc、HPACK、多路复用 | 16 / 27 / 28 |
 | 大语言模型、LLM、Transformer、注意力、QKV、GPT、BERT、T5、缩放律、RAG、ChatGPT、Decoder-Only、幻觉、对齐 | 17 |
 | 历史是什么、史料、解释、限制、有边界的重建、丝绸之路、海地革命、记忆与历史、纽伦堡、工厂法 | 18 |
 | 企业架构、TOGAF、四大域、**六层域**、CSVLOD、科图采夫 | 20 |
@@ -223,6 +225,8 @@ knowledge_base/
 | Calico、L3、Service/DNAT | 24 |
 | 架构思维、价值思维、实证思维、从程序员到 CTO、生存法则 | 25 |
 | 虚拟地址、MMU、TLB、页表、Page Fault、Cache Line、L1D、DRAM、局部性、Working Set、数据通路、流水线、tag/set/offset | 26 |
+| MQTT、MQTT over QUIC、Connection ID、连接迁移、0-RTT、Stream、Keep Alive、弱网、车联网、重连风暴 | 27 |
+| HTTP vs RPC、gRPC、REST、JSON、Protobuf、Dubbo、Triple、OpenFeign、微服务通信、序列化 | 28 |
 | COBIT、治理 vs 管理 | 30 |
 | 平台服务质量、期望—感知差距 | 31 |
 | Unix 哲学、无状态 Agent、可组合 | 40 |
@@ -262,7 +266,7 @@ knowledge_base/
 1. **10** 计算演进脉络  
 2. **14** 互联网如何成为网络之网络（协议、入口、收束与外溢）  
 3. **15** 浏览器如何代管陌生人的程序（同源、沙盒、权限）  
-4. **16** HTTP 如何从 0.9 走到 QUIC（队头阻塞换层）  
+4. **16** HTTP 如何从 0.9 走到 QUIC（队头阻塞换层）；物联网侧接同一传输见 **27**  
 5. **11** 信息如何被度量  
 6. **12** 人工智能如何走到大模型  
 7. **17** 语言侧如何从循环网络走到 Transformer  
@@ -276,7 +280,9 @@ knowledge_base/
 15. **23** 编排控制面原则  
 16. **24** 数据面如何写表转发  
 17. **26** 一次 Load 如何从虚地址走到 DRAM  
-18. **40** 回到无状态与可组合  
+18. **27** MQTT 如何接到 QUIC（弱网传输层替换）  
+19. **28** 微服务间通信：HTTP 与 RPC 慢在哪  
+20. **40** 回到无状态与可组合  
 
 #### IT 治理 / CIO / 审计
 
@@ -432,6 +438,8 @@ AI 如何改变工程组织、如何承接被放大的速度。
 | **明道** | 企业架构把战略译成可执行安排并持续约束该建什么；教学用四大域，实践常见六层；不是照搬某一框架 | [20](./20-architecture/20-enterprise-architecture-treatise.md) |
 | **明道** | 写代码是架构师的必要能力，不是 CTO 的充分条件；价值思维是第一性 | [25](./20-architecture/25-architecture-thinking-cto-treatise.md) |
 | **明道** | 一次 Load：虚地址经 TLB/页表到物理地址，再经 Cache 才可能到 DRAM；慢常在链路 | [26](./20-architecture/26-cpu-memory-access-treatise.md) |
+| **明道** | MQTT 语义可不变；弱网下换的是传输——QUIC 压失联窗口与重连风暴，单 Stream 尚未等于业务无阻塞 | [27](./20-architecture/27-mqtt-over-quic-treatise.md) |
+| **明道** | 「HTTP vs RPC」比的是组合；慢常在序列化与连接模型；gRPC 也是 HTTP/2；多数业务通信不是瓶颈 | [28](./20-architecture/28-http-rpc-microservice-communication-treatise.md) |
 | **明道** | 复杂度不会消失，只会转移；跨节点之后，强一致与持续可用必须取舍 | [21](./20-architecture/21-service-architecture-evolution.md) / [22](./20-architecture/22-distributed-consistency-treatise.md) |
 | **明道** | 治理与管理必须分离；平台质量是期望与感知的差距 | [30](./30-governance/30-cobit-it-governance-framework.md) / [31](./30-governance/31-platform-service-quality-case-study.md) |
 | **优术** | 遗忘有时强于记忆；个人写出代码变快之后，组织交付未必变快 | [40](./40-paradigm/40-unix-agent-stateless-philosophy.md) / [41](./40-paradigm/41-ai-engineering-paradigm.md) |
@@ -440,7 +448,7 @@ AI 如何改变工程组织、如何承接被放大的速度。
 | **优术** | 制造业迁移改的是重心与环节，不是前任归零；无法被 Token 化的判断、创意与信任，才有剩余溢价 | [55](./50-strategy/55-global-manufacturing-migration-chronicle.md) / [52](./50-strategy/52-token-economics-treatise.md) |
 | **优术** | 实物向消费端、美元回流美国是近四十年分工主轴的教学像；升级是金字塔上跃迁，去美元缓慢、替代未成型 | [57](./50-strategy/57-dollar-system-division-of-labor-treatise.md) / [13](./10-chronicle/13-world-hegemony-transfer-chronicle.md) |
 
-运维侧可核对的价值，是压缩 MTTR 中可并行、可检索、可证据化的时间段，而不是承诺无人值守自愈——见 [42](./40-paradigm/42-agentic-sre-operations-playbook.md)、[44](./40-paradigm/44-agentic-ops-frontier-treatise.md)。编排平台是持续收敛的控制计算机，节点即路由器——见 [23](./20-architecture/23-kubernetes-control-plane-doctrine.md)、[24](./20-architecture/24-calico-l3-dataplane-treatise.md)。单机一次 Load 的虚实翻译与 Cache 链路见 [26](./20-architecture/26-cpu-memory-access-treatise.md)。资本配置可带走的是三问，选人三则合验于烂摊子——见 [53](./50-strategy/53-li-ka-shing-capital-allocation-treatise.md)、[54](./50-strategy/54-ning-gaoning-talent-selection-treatise.md)。品牌走出去，目标是少打折扣、多造溢价——见 [51](./50-strategy/51-brand-cultural-translation.md)。智能体编年见 [12](./10-chronicle/12-artificial-intelligence-chronicle.md)。互联网编年见 [14](./10-chronicle/14-internet-history-chronicle.md)。浏览器代管与沙盒规矩见 [15](./10-chronicle/15-browser-custody-chronicle.md)。HTTP 从 0.9 到 QUIC 见 [16](./10-chronicle/16-http-protocol-chronicle.md)。
+运维侧可核对的价值，是压缩 MTTR 中可并行、可检索、可证据化的时间段，而不是承诺无人值守自愈——见 [42](./40-paradigm/42-agentic-sre-operations-playbook.md)、[44](./40-paradigm/44-agentic-ops-frontier-treatise.md)。编排平台是持续收敛的控制计算机，节点即路由器——见 [23](./20-architecture/23-kubernetes-control-plane-doctrine.md)、[24](./20-architecture/24-calico-l3-dataplane-treatise.md)。单机一次 Load 的虚实翻译与 Cache 链路见 [26](./20-architecture/26-cpu-memory-access-treatise.md)。资本配置可带走的是三问，选人三则合验于烂摊子——见 [53](./50-strategy/53-li-ka-shing-capital-allocation-treatise.md)、[54](./50-strategy/54-ning-gaoning-talent-selection-treatise.md)。品牌走出去，目标是少打折扣、多造溢价——见 [51](./50-strategy/51-brand-cultural-translation.md)。智能体编年见 [12](./10-chronicle/12-artificial-intelligence-chronicle.md)。互联网编年见 [14](./10-chronicle/14-internet-history-chronicle.md)。浏览器代管与沙盒规矩见 [15](./10-chronicle/15-browser-custody-chronicle.md)。HTTP 从 0.9 到 QUIC 见 [16](./10-chronicle/16-http-protocol-chronicle.md)。MQTT over QUIC 与弱网传输层替换见 [27](./20-architecture/27-mqtt-over-quic-treatise.md)。微服务里 HTTP 与 RPC 慢在哪见 [28](./20-architecture/28-http-rpc-microservice-communication-treatise.md)。
 
 ### 6.2 态度
 
