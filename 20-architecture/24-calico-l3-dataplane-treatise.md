@@ -309,7 +309,7 @@ calico 插件各字段：
 
 | 字段 | 标本值 | 含义 |
 |------|--------|------|
-| `datastore_type` | `kubernetes` | CNI 走 kdd：经 kube-apiserver 读写 CRD，**不直连 etcd**（§2.1）。插件默认值其实是 `etcdv3`；K8s 安装必须显式写成 `kubernetes`。[15] |
+| `datastore_type` | `kubernetes` | CNI 走 kdd：经 kube-apiserver 读写 CRD，**不直连 etcd**（§2.1）。插件默认值是 `etcdv3`；K8s 安装必须显式写成 `kubernetes`。[15] |
 | `nodename` | `__KUBERNETES_NODE_NAME__` | 占位符，init 容器替换为本机 Kubernetes Node 名。须与 datastore 中的 node 一致，否则 IPAM / WorkloadEndpoint 对不上节点 |
 | `log_level` / `log_file_path` | `info` / `/var/log/calico/cni/cni.log` | **CNI 插件自己的日志**，在宿主机上，不在 `calico-node` 容器的 stdout。Pod 卡在 `ContainerCreating` 时先看这里 |
 | `ipam.type` | `calico-ipam` | 使用 Calico 块分配（§6.1），而非 `host-local` 取 Node 的 `podCIDR` |
