@@ -133,8 +133,8 @@ knowledge_base/
 - **`10`**：技术与秩序长河 + 读史方法。`10`–`12` 计算 / 信息 / 智能；`13` 霸权与工业革命（与 [55](./50-strategy/55-global-manufacturing-migration-chronicle.md) 互参）；`14`–`16` 互联网 → 浏览器 → HTTP/QUIC；`17` 语言模型；`18` 历史认识论（读编年的方法篇，不是又一段国别史）。  
 - **`20`**：系统如何立身，内分三簇（编号不重排，阅读可按簇跳）：**企业与服务** `20`–`21`、`25`、`28`；**分布式平台** `22`–`24`；**机器与传输** `26`–`27`（`27` 与史域 [16](./10-chronicle/16-http-protocol-chronicle.md) 同谈 QUIC，一史一用）。  
 - **`30`**：`30` IT 治理（COBIT）；`31` 平台质量实证。域薄，空号留给后续控制 / 审计专题。  
-- **`40`**：智能协作与横切镜片。`40`–`42` 工具哲学 → 组织范式 → 运维落地；`44`–`45` 产业前沿与多 Agent 协作；`43` / `46` 为熵与系统思维（横切，可与任一篇合读）。  
-- **`50`**：同一问的多个切面，不是上下卷。公开索引：`50` 局、`51` 译、`52` 币、`53` 配、`54` 人、`55` 迁、`57` 环。口诀 **局、迁、译、币、配、人** 只记前六切面的检索习惯，不是文件顺序，也不含 `57`。`51` 品牌译介日后可迁入预留区 `60`；**`56` 有本地稿但不入库、不进公开索引**（文首自声明 + `.gitignore`），公开地图留空该号；下一公开稿用 `58`。
+- **`40`**：智能协作与横切镜片。`40`–`42` 工具哲学 → 组织范式 → 运维落地；`44`–`45` 产业前沿与多 Agent 协作；`43` / `46` 为熵与系统思维（横切）；`47` 以 Brooks「无银弹」重读 AI 提效（偶然 / 本质）。  
+- **`50`**：同一问的多个切面，不是上下卷。公开索引：`50` 局、`51` 译、`52` 币、`53` 配、`54` 人、`55` 迁、`57` 环、`58` 层（地位／文化资本）。口诀 **局、迁、译、币、配、人** 仍只记前六切面的检索习惯，不是文件顺序；`57`/`58` 另记。`51` 品牌译介与 `58` 品味／地位日后可迁入预留区 `60`；**`56` 有本地稿但不入库、不进公开索引**（文首自声明 + `.gitignore`），公开地图留空该号；下一公开稿用 `59`。
 
 ---
 
@@ -190,6 +190,7 @@ knowledge_base/
 | 44 | [Agentic Ops Frontier Treatise](./40-paradigm/44-agentic-ops-frontier-treatise.md) | 2025–2026 Agentic Ops 十条动向：自治 RCA、比例治理、MCP/OTel 与评测底座 | Agentic Ops 产业动向 |
 | 45 | [Agent Teams Collaboration Treatise](./40-paradigm/45-agent-teams-collaboration-treatise.md) | ReAct 之上的协作语义：协议通道 ≠ Team；堆人不是加法 | 多 Agent、Team、协议 |
 | 46 | [Systems Thinking Philosophy](./40-paradigm/46-systems-thinking-philosophy.md) | 系统=要素+连接+目标；谱系与杠杆点；看影子背后的结构，从线性到循环 | 系统思维、反馈、杠杆点 |
+| 47 | [No Silver Bullet / AI Essential Difficulty](./40-paradigm/47-no-silver-bullet-ai-essential-difficulty-philosophy.md) | AI 主清偶然之难；本质之难仍在；十倍须对齐分母；难的是精确决定要构建什么 | No Silver Bullet、Brooks、偶然/本质复杂度、AI 提效、需求 |
 
 #### 50 · 优术 · 略
 
@@ -202,6 +203,7 @@ knowledge_base/
 | 54 | [Ning Gaoning Talent Selection Treatise](./50-strategy/54-ning-gaoning-talent-selection-treatise.md) | 履历与两化决策可核对；《三生万物》与五步组合；选人三则合验于烂摊子 | 选人、经理人、压力场景 |
 | 55 | [Global Manufacturing Migration Chronicle](./50-strategy/55-global-manufacturing-migration-chronicle.md) | 四次大迁移与雁行透镜；迁出国保留高附加值；China+1 / 近岸与增加值脱钩不同步 | 世界工厂、制造业迁移、China+1、近岸 |
 | 57 | [Dollar System Division of Labor](./50-strategy/57-dollar-system-division-of-labor-treatise.md) | 三层环流（资源—制造—消费）与四层利润金字塔；实物向消费端，美元回流美国；升级=向上跃迁 | 美元环流、美债回流、储备货币、国际分工、利润金字塔 |
+| 58 | [Status and Cultural Capital Treatise](./50-strategy/58-status-cultural-capital-stratification-treatise.md) | 阶级≠阶层；韦伯三轴与布迪厄三资本；语域／学区／媒介再生产品味；绝对流动≠相对开放；跨越常多代 | 阶层、韦伯、布迪厄、文化资本、品味、habitus、语域、社会流动、品牌定位 |
 
 ### 3.2 概念反查
 
@@ -237,14 +239,19 @@ knowledge_base/
 | Agentic Ops 前沿、MCP、OTel、RCA | 44 |
 | ReAct、Agent Teams、A2A/多 Agent | 45 |
 | 系统思维、反馈回路、杠杆点、涌现 | 46 |
+| No Silver Bullet、偶然复杂度、本质复杂度、银弹、Brooks、决定要构建什么 | 47 |
+| AI 提效 ↔ 偶然/本质 ↔ 组织承接 | 47 / 41 |
 | AI 产业冲击、护城河、**死亡之谷**、2026 交叠点、智能体入口 | 50 |
 | 品牌、文化译介 | 51 |
+| 阶层、地位、文化资本、布迪厄、韦伯、品味、habitus、语域、拉丁语源、社会流动 | 58 |
+| 品牌地位坐标 ↔ 品味与文化资本 | 51 / 58 |
 | Token、智能经济计量 | 52 |
 | 资本配置、周期、特许权 | 53 |
 | 选人、经理人、压力决策 | 54 |
 | 制造业迁移、世界工厂、China+1、近岸、去工业化 | 55 |
 | 美元环流、美债回流、储备货币、国际分工、利润金字塔、石油美元 | 57 |
 | 看见结构 ↔ 控制散热 | 46 / 43 |
+| 无银弹 / 本质之难 ↔ 复杂度代际转移 | 47 / 21 |
 | 运维落地 ↔ 产业前沿 ↔ 协作机制 | 42 / 44 / 45 |
 | 产业穿透 ↔ 制造业地理迁移 | 50 / 55 |
 | 世界霸权秩序 ↔ 制造业地理迁移 | 13 / 55 |
@@ -301,27 +308,29 @@ AI 如何改变工程组织、如何承接被放大的速度。
 
 1. **12** 人工智能如何走到大模型  
 2. **17** 语言侧如何从循环网络走到 Transformer / ChatGPT  
-3. **40** 工具为何要职责明确、可观察  
-4. **41** 5+2 如何承接个人提效  
-5. **45** 从 ReAct 到 Agent Teams 的协作机制  
-6. **42** 运维侧如何智能体化  
-7. **44** Agentic Ops 产业前沿对照  
-8. **43** 用熵读组织与制度（横切镜片）  
-9. **50** 战略层如何重构护城河  
+3. **47** 偶然之难与本质之难：AI 清掉了什么（Brooks）  
+4. **40** 工具为何要职责明确、可观察  
+5. **41** 5+2 如何承接个人提效  
+6. **45** 从 ReAct 到 Agent Teams 的协作机制  
+7. **42** 运维侧如何智能体化  
+8. **44** Agentic Ops 产业前沿对照  
+9. **43** 用熵读组织与制度（横切镜片）  
+10. **50** 战略层如何重构护城河  
 
 #### 品牌 / 战略负责人
 
-产业穿透、制造业迁移、跨文化译介、智能经济计价、资本配置与选人。
+产业穿透、制造业迁移、跨文化译介、智能经济计价、资本配置、选人与地位品味。
 
 1. **50** 产业穿透、交叠点与死亡之谷  
 2. **55** 全球制造业四次大迁移与迁出国路径  
 3. **57** 美元环流、三层分工与利润金字塔  
 4. **13** 五百年世界霸权转移（荷→英→美与当代过渡）  
 5. **51** 品牌译介三层  
-6. **52** Token 如何成为计量单位  
-7. **53** 资本如何在周期中配置  
-8. **54** 经理人如何在压力中被选出  
-9. **11** 信息如何被度量  
+6. **58** 阶层、文化资本与品味如何再生产（品牌地位坐标的上游）  
+7. **52** Token 如何成为计量单位  
+8. **53** 资本如何在周期中配置  
+9. **54** 经理人如何在压力中被选出  
+10. **11** 信息如何被度量  
 
 #### 速览
 
@@ -347,7 +356,7 @@ AI 如何改变工程组织、如何承接被放大的速度。
 | 一级标题 | 与文件名同向：文件名是检索键，标题是阅读入口，不必逐字相同，不得指到另一篇 |
 | 摘要 | 目录前用一段话交代问题、主线与结论，不替代正文论证 |
 
-新增时：先定区号，再取该域下一个**公开索引**空序号，最后用「主题 + 体裁」命名。例如史域下一空号为 `19`，治理域下一篇为 `32-…-framework.md`。战略域：`56` 有本地不入库稿（见 `.gitignore`），公开地图视其为占用空位——下一篇公开稿用 `58`，勿把 `56` 写进 §3.1，也不要另起同号覆盖本地稿。
+新增时：先定区号，再取该域下一个**公开索引**空序号，最后用「主题 + 体裁」命名。例如史域下一空号为 `19`，治理域下一篇为 `32-…-framework.md`。战略域：`56` 有本地不入库稿（见 `.gitignore`），公开地图留空该号；已用公开号至 `58`，下一公开稿用 `59`。勿把 `56` 写进 §3.1，也不要另起同号覆盖本地稿。
 
 ### 4.2 体裁
 
@@ -445,12 +454,14 @@ AI 如何改变工程组织、如何承接被放大的速度。
 | **明道** | 复杂度不会消失，只会转移；跨节点之后，强一致与持续可用必须取舍 | [21](./20-architecture/21-service-architecture-evolution.md) / [22](./20-architecture/22-distributed-consistency-treatise.md) |
 | **明道** | 治理与管理必须分离；平台质量是期望与感知的差距 | [30](./30-governance/30-cobit-it-governance-framework.md) / [31](./30-governance/31-platform-service-quality-case-study.md) |
 | **优术** | 遗忘有时强于记忆；个人写出代码变快之后，组织交付未必变快 | [40](./40-paradigm/40-unix-agent-stateless-philosophy.md) / [41](./40-paradigm/41-ai-engineering-paradigm.md) |
+| **优术** | AI 主清偶然之难；本质之难仍在；难的是精确决定要构建什么；局部十倍不是银弹 | [47](./40-paradigm/47-no-silver-bullet-ai-essential-difficulty-philosophy.md) |
 | **优术** | 控制是搬运熵；系统是要素、连接与目标；堆 Agent 不是加法 | [43](./40-paradigm/43-entropy-complex-systems-philosophy.md) / [46](./40-paradigm/46-systems-thinking-philosophy.md) / [45](./40-paradigm/45-agent-teams-collaboration-treatise.md) |
 | **优术** | 2026 是基础设施刚熟、智能体刚开场的交叠点，不是爆发之年；预测变便宜不等于好决策；护城河在专有数据与主流程 | [50](./50-strategy/50-ai-industry-disruption-strategy.md) |
+| **优术** | 阶级≠阶层；文化资本与品味代际再生产；绝对流动≠相对开放；品牌须自选地位坐标 | [58](./50-strategy/58-status-cultural-capital-stratification-treatise.md) / [51](./50-strategy/51-brand-cultural-translation.md) |
 | **优术** | 制造业迁移改的是重心与环节，不是前任归零；无法被 Token 化的判断、创意与信任，才有剩余溢价 | [55](./50-strategy/55-global-manufacturing-migration-chronicle.md) / [52](./50-strategy/52-token-economics-treatise.md) |
 | **优术** | 实物向消费端、美元回流美国是近四十年分工主轴的教学像；升级是金字塔上跃迁，去美元缓慢、替代未成型 | [57](./50-strategy/57-dollar-system-division-of-labor-treatise.md) / [13](./10-chronicle/13-world-hegemony-transfer-chronicle.md) |
 
-运维侧可核对的价值，是压缩 MTTR 中可并行、可检索、可证据化的时间段，而不是承诺无人值守自愈——见 [42](./40-paradigm/42-agentic-sre-operations-playbook.md)、[44](./40-paradigm/44-agentic-ops-frontier-treatise.md)。编排平台是持续收敛的控制计算机，节点即路由器——见 [23](./20-architecture/23-kubernetes-control-plane-doctrine.md)、[24](./20-architecture/24-calico-l3-dataplane-treatise.md)。单机一次 Load 的虚实翻译与 Cache 链路见 [26](./20-architecture/26-cpu-memory-access-treatise.md)。资本配置可带走的是三问，选人三则合验于烂摊子——见 [53](./50-strategy/53-li-ka-shing-capital-allocation-treatise.md)、[54](./50-strategy/54-ning-gaoning-talent-selection-treatise.md)。品牌走出去，目标是少打折扣、多造溢价——见 [51](./50-strategy/51-brand-cultural-translation.md)。智能体编年见 [12](./10-chronicle/12-artificial-intelligence-chronicle.md)。互联网编年见 [14](./10-chronicle/14-internet-history-chronicle.md)。浏览器代管与沙盒规矩见 [15](./10-chronicle/15-browser-custody-chronicle.md)。HTTP 从 0.9 到 QUIC 见 [16](./10-chronicle/16-http-protocol-chronicle.md)。MQTT over QUIC 与弱网传输层替换见 [27](./20-architecture/27-mqtt-over-quic-treatise.md)。微服务里 HTTP 与 RPC 慢在哪见 [28](./20-architecture/28-http-rpc-microservice-communication-treatise.md)。
+运维侧可核对的价值，是压缩 MTTR 中可并行、可检索、可证据化的时间段，而不是承诺无人值守自愈——见 [42](./40-paradigm/42-agentic-sre-operations-playbook.md)、[44](./40-paradigm/44-agentic-ops-frontier-treatise.md)。编排平台是持续收敛的控制计算机，节点即路由器——见 [23](./20-architecture/23-kubernetes-control-plane-doctrine.md)、[24](./20-architecture/24-calico-l3-dataplane-treatise.md)。单机一次 Load 的虚实翻译与 Cache 链路见 [26](./20-architecture/26-cpu-memory-access-treatise.md)。资本配置可带走的是三问，选人三则合验于烂摊子——见 [53](./50-strategy/53-li-ka-shing-capital-allocation-treatise.md)、[54](./50-strategy/54-ning-gaoning-talent-selection-treatise.md)。品牌走出去，目标是少打折扣、多造溢价——见 [51](./50-strategy/51-brand-cultural-translation.md)。阶层、文化资本与品味如何被学校与语域再生产——见 [58](./50-strategy/58-status-cultural-capital-stratification-treatise.md)。智能体编年见 [12](./10-chronicle/12-artificial-intelligence-chronicle.md)。互联网编年见 [14](./10-chronicle/14-internet-history-chronicle.md)。浏览器代管与沙盒规矩见 [15](./10-chronicle/15-browser-custody-chronicle.md)。HTTP 从 0.9 到 QUIC 见 [16](./10-chronicle/16-http-protocol-chronicle.md)。MQTT over QUIC 与弱网传输层替换见 [27](./20-architecture/27-mqtt-over-quic-treatise.md)。微服务里 HTTP 与 RPC 慢在哪见 [28](./20-architecture/28-http-rpc-microservice-communication-treatise.md)。Brooks「无银弹」与 AI 偶然 / 本质之难见 [47](./40-paradigm/47-no-silver-bullet-ai-essential-difficulty-philosophy.md)。
 
 ### 6.2 态度
 

@@ -8,7 +8,7 @@
 
 > **这一轮突破的是预测与内容生成的边际成本，不是自动好决策。2026 是交叠点：Token 成为可计量的基础设施单位，智能体成为新应用，统一调用它们的「浏览器」尚未出现。冲击用四层看深度；落地卡在死亡之谷；下一跳是智能体嵌进企业操作系统。通用模型在商品化，护城河在专有数据与主流程。模型公司更像 AI 云，第一阶段赢家未必活到原生应用阶段。**
 
-**50-strategy 系列导读：** 本文写智能如何穿透产业与重构护城河。实体产能如何在地理上迁徙，见 [55](./55-global-manufacturing-migration-chronicle.md)；Token 如何成为计量单位，见 [52](./52-token-economics-treatise.md)。
+**50-strategy 系列导读：** 本文写智能如何穿透产业与重构护城河。预测变便宜之后「难的是决定要什么」，认识论侧见 [47](../40-paradigm/47-no-silver-bullet-ai-essential-difficulty-philosophy.md)。实体产能如何在地理上迁徙，见 [55](./55-global-manufacturing-migration-chronicle.md)；Token 如何成为计量单位，见 [52](./52-token-economics-treatise.md)。
 
 ## 摘要
 
