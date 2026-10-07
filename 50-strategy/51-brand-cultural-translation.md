@@ -4,7 +4,7 @@
 >
 > 全文按品牌三层结构、折扣与溢价、符号—叙事—价值三层译介、中国品牌的认同与路径展开。
 
-**50-strategy 导读：** 品牌所嵌入的地位与品味秩序，见 [58](./58-status-cultural-capital-stratification-treatise.md)。
+**50-strategy 导读：** 产业穿透见 [50](./50-ai-industry-disruption-strategy.md)；Token 计价见 [52](./52-token-economics-treatise.md)。
 
 ## 摘要
 
