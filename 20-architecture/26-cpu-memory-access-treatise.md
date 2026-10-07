@@ -1,20 +1,20 @@
 # CPU 访存：从虚地址到 Cache 与 DRAM
 
-> `int x = array[100];` 在程序员眼里是一行赋值；在机器眼里，是编译成指令、取指译码、数据通路运算，以及地址翻译、多级 Cache 与可能的 DRAM。
+> `int x = array[100];` 在程序员眼里是一行赋值；在机器眼里，是编译成指令、取指译码、数据通路运算，以及地址翻译、多级 Cache 与可能的 DRAM。算术往往很便宜；真正贵的，常常是数据离核心有多远。
 >
-> 组成原理的核心，是抽象计算模型如何被逐层实现为可执行机器指令的物理系统。本文把其中最常卡住的一段——**一次 Load 如何找到数据**——拆成可跟的链路：**语句 / 指令 → Virtual Address → MMU / TLB / Page Table → Physical Address → Cache（按 tag / set / offset 定位）→ Memory Controller → DRAM**。可与本库 [10](../10-chronicle/10-computing-cloud-chronicle.md)（计算如何池化）、[40](../40-paradigm/40-unix-agent-stateless-philosophy.md)（工具边界与可观察）、[22](./22-distributed-consistency-treatise.md)（跨节点之后的另一套「找数据」）对照：本文写单机上一次访存的硬件路径，不是分布式副本协议。
+> 组成原理的核心，是抽象计算模型如何被逐层实现为可执行机器指令的物理系统。本文把其中最常卡住的一段——**一次 Load 如何找到数据**——拆成可跟的链路：**语句 / 指令 → Virtual Address → MMU / TLB / Page Table → Physical Address → Cache（按 tag / set / offset 定位；靠局部性降低平均代价）→ Memory Controller → DRAM**。可与本库 [10](../10-chronicle/10-computing-cloud-chronicle.md)（计算如何池化）、[40](../40-paradigm/40-unix-agent-stateless-philosophy.md)（工具边界与可观察）、[22](./22-distributed-consistency-treatise.md)（跨节点之后的另一套「找数据」）对照：本文写单机上一次访存的硬件路径，不是分布式副本协议。
 
 先给一个直接答案：
 
-> **CPU 不是拿着程序里的地址去 RAM 里「搜索标签」。** 高级语言先变成机器指令；指令在处理器里经取指、译码与数据通路完成运算。访存时，程序给出的多半是**虚拟地址（VA）**；**MMU** 借助 **TLB**（及必要时遍历 **Page Table**）把它译成**物理地址（PA）**；随后在 **Cache** 里用地址切成的 **offset / set index / tag** 定位一行；全未命中才经 **Memory Controller** 访问 **DRAM**，并通常整行填入 Cache。三者各答一问：**TLB**——这一页映到哪；**Cache**——附近是否已有这份数据；**DRAM 子系统**——物理介质上如何选通。访问模式友好时极快，TLB Miss 与 Cache Miss 叠加时极贵——慢的往往不是算术，而是这条链路。
+> **CPU 不是拿着程序里的地址去 RAM 里「搜索标签」。** 高级语言先变成机器指令；指令在处理器里经取指、译码与数据通路完成运算。算术本身往往很便宜，但主存（DRAM）相对核心慢得多——若不加缓冲，大量周期会耗在等数据上。访存时，程序给出的多半是**虚拟地址（VA）**；**MMU** 借助 **TLB**（及必要时遍历 **Page Table**）把它译成**物理地址（PA）**；随后在 **Cache**（靠近核心的小容量高速 SRAM）里用地址切成的 **offset / set index / tag** 定位一行；全未命中才经 **Memory Controller** 访问 **DRAM**，并通常整行填入 Cache。三者各答一问：**TLB**——这一页映到哪；**Cache**——附近是否已有这份数据；**DRAM 子系统**——物理介质上如何选通。Cache 有效，是因为程序常有**时间 / 空间局部性**；访问模式友好时极快，TLB Miss 与 Cache Miss 叠加时极贵——慢的往往不是算术，而是这条链路。
 
 **20-architecture 位置：** [20](./20-enterprise-architecture-treatise.md)–[25](./25-architecture-thinking-cto-treatise.md) 多写企业与平台架构。本文写**机器内部的访存与执行骨架**：一条语句如何落到指令与数据通路，一次 Load 又经过哪些硬件与 OS 交界。术语与关系总图见第 1 节。
 
 ## 摘要
 
-学习组成原理，宜先问「一条程序语句经过哪些硬件机制，才变成电路上的计算」。因果上有两层：**执行骨架**（语句 → 机器指令 → 取指 / 译码 / 数据通路）决定「算什么」；**访存链路**决定「操作数从哪来」。一次典型 Load 走访存链路：生成 VA → MMU 译页号（页内偏移不变）→ 优先查 TLB，Miss 则多级页表遍历（x86-64 常见四级，可选 LA57 五级），必要时 Page Fault 由 OS 处理 → 再查 Cache（常见 64B Cache Line；地址拆成 offset / set index / tag）→ L1 常按页内偏移做虚拟索引并与 TLB 重叠，标签仍用物理地址比对 → L1D / L2 / L3 逐级 Miss 后才到 Memory Controller 与 DRAM，并回填 Cache Line。流水线让多条指令分处不同阶段，其中 **MEM** 阶段正是这条访存链的入口；相关靠转发、暂停与分支预测处理。Cache Miss 与 TLB Miss 是两类不同代价。
+学习组成原理，宜先问「一条程序语句经过哪些硬件机制，才变成电路上的计算」。因果上有两层：**执行骨架**（语句 → 机器指令 → 取指 / 译码 / 数据通路）决定「算什么」；**访存链路**决定「操作数从哪来」。处理器与 DRAM 之间存在长期的**性能差距**（processor–memory gap）：算术与片上 SRAM 很快，主存访问往往贵一到两个数量级；Cache Hierarchy 用小而快的存储保存很可能再用的数据与指令副本，降低平均访存时间（AMAT），而不是把 DRAM 本身变快。一次典型 Load：生成 VA → MMU 译页号（页内偏移不变）→ 优先查 TLB，Miss 则多级页表遍历（x86-64 常见四级，可选 LA57 五级），必要时 Page Fault 由 OS 处理 → 再查 Cache（常见 64B Cache Line；地址拆成 offset / set index / tag）→ L1 常按页内偏移做虚拟索引并与 TLB 重叠，标签仍用物理地址比对 → L1D / L2 / L3 逐级 Miss 后才到 Memory Controller 与 DRAM，并回填 Cache Line。Cache 之所以划算，依赖**时间局部性**与**空间局部性**。流水线让多条指令分处不同阶段，其中 **MEM** 阶段正是这条访存链的入口；相关靠转发、暂停与分支预测处理。Cache Miss 与 TLB Miss 是两类不同代价。
 
-**关键词：** 虚拟地址；MMU；TLB；页表；Page Fault；Cache Line；set / tag / offset；L1D；DRAM；局部性；Working Set；数据通路；流水线
+**关键词：** 虚拟地址；MMU；TLB；页表；Page Fault；Cache；SRAM；DRAM；局部性；Cache Line；set / tag / offset；AMAT；L1D；Working Set；数据通路；流水线
 
 ---
 
@@ -30,9 +30,10 @@
 3. [MMU：虚拟页到物理页](#3-mmu虚拟页到物理页)
 4. [TLB：避免每次都走页表](#4-tlb避免每次都走页表)
 5. [TLB Miss 与页表遍历](#5-tlb-miss-与页表遍历)
-6. [查 Cache：标签要比对物理页](#6-查-cache标签要比对物理页)
+6. [查 Cache：为何需要、标签要比对物理页](#6-查-cache为何需要标签要比对物理页)
     - [6.1 地址如何定位到 Cache](#61-地址如何定位到-cache)
-7. [Cache Line、Hit 与 Miss](#7-cache-linehit-与-miss)
+    - [6.2 局部性：Cache 为何有效](#62-局部性cache-为何有效)
+7. [Cache Line、Hit、Miss 与 AMAT](#7-cache-linehitmiss-与-amat)
 8. [Cache 全 Miss：Memory Controller 与 DRAM](#8-cache-全-missmemory-controller-与-dram)
 9. [串起来：一次 Load 的简化路径](#9-串起来一次-load-的简化路径)
 10. [地址是选通，不是检索](#10-地址是选通不是检索)
@@ -55,7 +56,7 @@
 | 段 | 章节 | 回答的问题 | 核心部件 |
 | -- | ---- | ---------- | -------- |
 | **翻译** | §2–§5 | 这个 VA 对应哪一块物理页？ | MMU、Page Table、TLB |
-| **取数** | §6–§8 | 附近是否已有数据？没有则如何选通 DRAM？ | Cache、Memory Controller、DRAM |
+| **取数** | §6–§8 | 为何有 Cache？附近是否已有数据？没有则如何选通 DRAM？ | Cache、局部性、Memory Controller、DRAM |
 | **合图** | §9–§11 | 一次 Load 如何串起来？为何有时极贵？ | 全链路 |
 | **叠指令** | §12 | 流水线的 MEM 阶段如何接上访存链？ | IF–ID–EX–MEM–WB |
 
@@ -114,8 +115,10 @@ flowchart TB
 | **Cache Line** | Cache 与内存之间常见的传输 / 存储粒度；许多平台上为 **64 bytes**。 | 取数链的填充粒度（§7） |
 | **Offset / Index / Tag** | 用地址定位 Cache 行时的三段：块内字节、所选组、组内比对标签。 | 取数链的定位方式（§6.1） |
 | **L1I / L1D** | 一级指令 Cache / 数据 Cache；Load 数据走 L1D。 | 取数链最近的一级 |
-| **Spatial / Temporal Locality** | 空间局部性（附近地址）、时间局部性（不久会再访问）。 | Cache / TLB 设计所利用的统计规律 |
+| **Spatial / Temporal Locality** | 空间局部性（附近地址）、时间局部性（不久会再访问）。 | Cache / TLB 有效的统计前提（§6.2） |
+| **AMAT** | Average Memory Access Time：Hit Time + Miss Rate × Miss Penalty（可递归到多级）。 | 衡量层级是否「看起来又大又快」（§7） |
 | **Working Set** | 一段时间窗口内实际触达的页 / 数据集合。 | 过大则 TLB 与 Cache 同时承压（§11） |
+| **SRAM / DRAM** | 片上 Cache 常用 SRAM（快、密度低）；主存常用 DRAM（慢、密度高）。 | 解释为何不能「全做成 Cache」（§6） |
 | **PC / IR** | 程序计数器给出下一条指令地址；指令寄存器保存当前指令。 | 执行骨架（§1.3） |
 | **Datapath / Control** | 数据通路搬运与运算；控制器产生读写与运算的时序控制信号。 | 执行骨架；Load 在此生成有效地址 |
 | **ISA** | Instruction Set Architecture：处理器向软件承诺的指令与寻址接口。 | 软件与硬件的契约（§1.4） |
@@ -286,17 +289,38 @@ TLB Miss 之后，MMU（或软硬协同）必须**真正去读 Page Table**。�
 
 ---
 
-## 6. 查 Cache：标签要比对物理页
+## 6. 查 Cache：为何需要、标签要比对物理页
 
-从本节到 §8，谈**取数链**：翻译已经（或即将）给出物理页语义之后，数据从哪一级存储器回来。
+从本节到 §8，谈**取数链**：翻译已经（或即将）给出物理页语义之后，数据从哪一级存储器回来。先回答「为何要有 Cache」，再谈如何用地址定位一行，以及局部性为何使这一层划算。
 
-得到可用的物理页语义之后，下一步通常**不是**直奔 DRAM，而是先问片上 **Cache Hierarchy**。DRAM 的延迟与带宽远逊于 Cache；把热数据留在离核心更近的地方，是性能的基本盘。教学上可先画成「先翻译、再查 Cache」；实现上，L1 的索引往往与 TLB **重叠进行**（见下）。
+### 为何需要 Cache：处理器—主存差距
 
-一个简化的层次可以表示为（Load 数据走 **L1D**；取指走 **L1I**）：
+考虑一段极普通的循环：
+
+```c
+int sum = 0;
+for (int i = 0; i < 1000000; ++i) {
+    sum += array[i];
+}
+```
+
+核心在做：读 `array[i]`、加到 `sum`、递增 `i`、继续循环。相对算术与寄存器操作，**从主存取一个值往往贵得多**。量级上（随微架构、时钟与内存配置而变，宜作数量级而非规格书常数）：现代 x86 服务器上，L1 数据命中常在约 **4 个周期**量级，本地 DRAM 访问则可到约 **百余至数百周期**。[^cache-latency] 乱序执行与存储级并行可以掩盖一部分延迟，但依赖链很长、或 Miss 过密时，核心仍会大量停顿。
+
+文献与课程讲义把这一长期现象称为 **processor–memory performance gap**（亦称 memory wall 的一侧）：处理器算得越来越快，DRAM 延迟的改善相对更慢；若每次 Load 都直奔主存，大量潜在吞吐会浪费在等待上。[^mem-gap] 架构上的回应，是在核心与 DRAM 之间插入**小容量、高速**的存储层——**CPU Cache**——保存「很可能很快再用」的数据与指令副本。
+
+Cache **不会把 DRAM 变快**；它做的是**减少必须去 DRAM 的次数**，从而压低平均访存时间。这才是它要解决的根本问题。
+
+### 为何不全做成「和 Cache 一样快」的主存
+
+若 SRAM 更快，为何不把全部主存都做成 Cache 那么快？因为**速度、容量、成本（含芯片面积与功耗）不可兼得**。片上 Cache 通常用 **SRAM**：访问快、无需像 DRAM 那样周期性刷新，但每 bit 晶体管更多、密度低。主存通常用 **DRAM**：密度高、单位容量成本低，适合提供大地址空间，延迟则高得多。[^sram-dram]
+
+因此现代机器采用 **Memory Hierarchy**（存储层次）：少量极快存储靠近核心，大量较慢存储放在更远。Cornell / MIT / CMU 等课程材料的共同表述是：更快的存储更小、更贵；更大的存储更慢、更便宜——多级 Cache 是在这一权衡上占据多个工作点。[^mem-gap]
+
+一个简化的层次如下（Load 数据走 **L1D**；取指走 **L1I**）：
 
 ```mermaid
 flowchart TB
-  Core[CPU Core]
+  Core[CPU Core / Registers]
   L1I[L1I 指令]
   L1D[L1D 数据]
   L2[L2]
@@ -310,15 +334,24 @@ flowchart TB
   L3 --> DRAM
 ```
 
-L1 通常最小最快；更低层级更大、更慢。末级 Cache 是否包含下级副本（inclusive / non-inclusive）因微架构而异，不影响「先近后远」的读法。[^cache-hier]
+| 层级 | 常见角色 | 相对位置（教学量级） |
+| ---- | -------- | -------------------- |
+| **L1** | 每核最近；常分 L1I / L1D | 最小、最快（命中约数周期） |
+| **L2** | 每核下一层 | 更大、更慢 |
+| **L3** | 常多核共享末级 | 更大、更慢 |
+| **DRAM** | 主存 | 大得多、慢得多 |
+
+容量与延迟的具体数字随型号变化；表中只钉相对关系。末级是否包含下级副本（inclusive / non-inclusive）因微架构而异，不影响「先近后远」的读法。L1/L2/L3 是常见设计模式，不是所有芯片的铁律。[^cache-hier]
+
+得到可用的物理页语义之后，下一步通常**不是**直奔 DRAM，而是先问片上 Hierarchy。教学上可先画成「先翻译、再查 Cache」；实现上，L1 的索引往往与 TLB **重叠进行**（见下）。
 
 实现上，L1 常见 **VIPT**（Virtually Indexed, Physically Tagged：虚拟索引、物理标签）：用虚拟地址里**未经翻译的页内偏移**做组索引，因此可以和 TLB 并行；标签比对仍要物理页号。索引若用到页号，同一物理页的不同虚拟别名会进不同组，所以 L1 的路数与容量受页大小约束。更下级 Cache 更常接近「先有物理地址再查」（PIPT）。[^cache-hier]
 
-**所以 · 边界在哪：** 下一步通常不是 DRAM，而是问 Cache；L1 不必等完整物理地址才开始索引，但命中与否仍由物理标签裁定。
+**所以 · 边界在哪：** Cache 解决的是「平均访存太贵」，不是「让 DRAM 变快」；下一步通常先问 Cache，L1 不必等完整物理地址才开始索引，但命中与否仍由物理标签裁定。
 
 ### 6.1 地址如何定位到 Cache
 
-上一小节回答「先问哪一级」；本小节回答「在这一级里，地址如何落到某一行」。不要先背相联度表，先答三问：要访问什么地址？这个地址如何选中一组并比对标签？未命中时硬件下一步做什么？
+上一小节回答「为何有层级、先问哪一级」；本小节回答「在这一级里，地址如何落到某一行」。不要先背相联度表，先答三问：要访问什么地址？这个地址如何选中一组并比对标签？未命中时硬件下一步做什么？
 
 教学上，一次 Cache 查找把地址切成三段（PIPT 用完整 PA；VIPT 的 **Set Index** 与 **Offset** 可取自 VA 的页内偏移，**Tag** 仍用物理页相关位，见 §6）。下例刻意取 **32 KiB · 8-way · 64 B/line**：组索引 6 bit + 行内偏移 6 bit = 12 bit，恰好落在 4 KiB 页的页内偏移内，因而可与 TLB 并行做 VIPT：[^cache-map]
 
@@ -357,15 +390,30 @@ L1 通常最小最快；更低层级更大、更慢。末级 Cache 是否包含�
 
 未命中时：按替换策略（如 LRU 近似、随机等）选出牺牲行，从下一级 Cache 或 DRAM **整行填充**，再按 offset 取出请求字节。写策略（write-through / write-back）与写分配另论；正文只钉「定位 + 填充行」。
 
-**所以 · 边界在哪：** 定位 = offset 选字节 + index 选组 + tag（及 valid）比对；Miss 则整行回填，不是只取一个变量宽度的字。
+**所以 · 边界在哪：** 定位 = offset 选字节 + index 选组 + tag（及 valid）比对；Miss 则整行回填，不是只取一个变量宽度的字。下一小节说明：为何「整行回填」在统计上划算——局部性。
+
+### 6.2 局部性：Cache 为何有效
+
+若程序完全随机地访问地址空间，小容量 Cache 的命中率会很差，Hierarchy 的收益有限。幸运的是，大量程序表现出 **locality of reference**（引用局部性）。这是 Cache 设计所依赖的统计规律，而非硬件魔法。[^locality]
+
+| 类型 | 含义 | 典型表现 |
+| ---- | ---- | -------- |
+| **时间局部性（Temporal）** | 刚访问过的位置，不久很可能再访问 | 循环中反复读写的 `sum`；反复调用的同一函数指令 |
+| **空间局部性（Spatial）** | 刚访问过的位置，附近地址也很可能很快被访问 | 顺序扫数组；结构体字段连续布局 |
+
+仍用上一节的求和循环：`sum` 被每轮改写——**时间局部性**；`array[i]`、`array[i+1]`、… 在内存中相邻——**空间局部性**。指令侧同理：循环体与 `process()` 一类被反复执行的代码，同样有时间局部性。
+
+Cache 利用前者，把最近用过的行留在近处；利用后者，按 **Cache Line**（块）而非单字节传输——一次 Miss 拉回邻居，后续顺序访问更可能命中。程序员通常不直接操作 Tag / 替换策略，却通过**访问模式与数据布局**间接决定命中率（§11）。
+
+**所以 · 边界在哪：** 局部性是经验规律，不是保证；工作集过大或指针乱跳时，Cache 帮不上大忙。
 
 ---
 
-## 7. Cache Line、Hit 与 Miss
+## 7. Cache Line、Hit、Miss 与 AMAT
 
-§6.1 说明了「如何用地址定位一行」；本节说明这一行**有多大**，以及命中 / 未命中时请求如何在层级间下沉。
+§6.1–§6.2 说明了「如何定位」与「为何整行有用」；本节把**行宽、命中路径与平均代价**钉死。
 
-CPU Cache 通常不会按「每个字节一个独立格子」来组织。它们使用固定大小的数据块，称为 **Cache Line**。许多现代平台上常见 **64 bytes** 一行，具体组织（相联度、组数、写策略）取决于微架构。[^cache-line]
+CPU Cache 通常不会按「每个字节一个独立格子」组织，而以固定大小的 **Cache Line** 为传输与存储粒度。许多现代 x86 平台上常见 **64 bytes** 一行；相联度、组数与写策略取决于微架构。[^cache-line]
 
 假设 CPU 需要访问地址 `0x1008`。Cache 按**对齐的 Cache Line** 装入，不是从 `0x1008` 起再读 64 字节：
 
@@ -380,17 +428,9 @@ CPU Cache 通常不会按「每个字节一个独立格子」来组织。它们�
   行起点 = 地址 − (地址 mod 64)
 ```
 
-需要的数据落在这一行里。这种设计利用了 **Spatial Locality**：若程序访问了一个位置，接下来往往也会访问附近位置。
+若 `int` 为 4 字节、行宽 64 字节，一次为 `array[100]` 填充的行，在对齐允许时可覆盖其后多个相邻元素——具体包含哪些下标取决于地址与行边界，但原理是空间局部性：随后访问 `array[101]`、`array[102]`… 更可能已在 Cache 中，无需每次再付 DRAM 代价。[^cache-line]
 
-```c
-for (int i = 0; i < 1000; i++) {
-    sum += array[i];
-}
-```
-
-连续元素在内存中相邻时，一次行填充可以服务多次迭代——这正是顺序扫描常比随机跳跃更快的结构原因之一。
-
-CPU 在对应 Cache 层级中寻找所需 Cache Line：
+请求在层级间下沉的教学路径：
 
 ```mermaid
 flowchart TD
@@ -404,11 +444,19 @@ flowchart TD
 ```
 
 - **Cache Hit**：在该级找到，延迟相对低。  
-- **Cache Miss**：请求下沉到下一级；各级皆 Miss 则走向主存（§8）。
+- **Cache Miss**：请求下沉到下一级；各级皆 Miss 则走向主存（§8），取得后可按策略回填，供后续访问。
 
-不同 CPU 的 Cache 组织不同，真实硬件还可重叠 Cache 访问与其他内存操作。基本原则不变：**让经常访问的数据尽可能靠近核心。**
+真实处理器会并行查询、推测执行与硬件预取；上图只保基本因果。容量有限时，新行进入须**替换**旧行（LRU 近似、随机等）；写回（write-back）与直写（write-through）、多核 **cache coherence** 等机制大多对程序员透明，却通过伪共享等形式进入墙钟（§11）。[^cache-hier]
 
-**所以 · 边界在哪：** Cache 按「行」与局部性组织；一次未命中常常拉回一整行邻居。
+衡量「Hierarchy 是否让平均访问变便宜」的经典简化模型是 **AMAT**（Average Memory Access Time）：[^amat]
+
+\[
+\mathrm{AMAT} = \text{Hit Time} + \text{Miss Rate} \times \text{Miss Penalty}
+\]
+
+多级时可递归展开，例如把 L1 的 Miss Penalty 写成「L2 的 AMAT」。多级模型更复杂，且乱序下有效惩罚会被重叠掩盖，但思想仍成立：**既要命中时够快，也要未命中别太频、太贵。** Cache 并不消除 DRAM 延迟；它提高的是「多数访问由上层完成」的概率。
+
+**所以 · 边界在哪：** 按行组织利用空间局部性；AMAT 提醒我们——优化命中率与降低 Miss 惩罚，才是层级的目的。
 
 ---
 
@@ -470,16 +518,30 @@ flowchart TD
 
 ## 11. 为何有时访存极贵
 
-算术量相近的两段代码，墙钟时间可以差出一个数量级以上：一个反复命中 L1；另一个局部性差，**Cache Miss** 与 **TLB Miss** 叠加。二者落在不同链上，不可混为一谈：
+§6–§7 说明了 Cache 为何存在、如何按行工作；本节说明：**同一套算术量，墙钟时间可以差出一个数量级以上**——差别常在 Memory Hierarchy，而不在「多写了一句 `if`」。
+
+先分清两条链上的未命中，不可混为一谈：
 
 | 概念 | 落在哪条链 | 含义 |
 | ---- | ---------- | ---- |
 | **TLB Miss** | 翻译链 | 要的虚→实翻译不在 TLB 中（可能触发 walk / Page Fault） |
 | **Cache Miss** | 取数链 | 要的数据不在相关 Cache 中（可能下沉到 DRAM） |
 
-相关旋钮包括：Cache / TLB 局部性、Cache Line、顺序访问、数据布局、Working Set、页大小（含大页）。[^drepper] 工程上常见的拖慢：大图指针追逐、按列扫行主序矩阵、**伪共享**（false sharing：不同核改同一 Cache Line 里无关字段，引发行来回作废）、工作集远超末级 Cache 与 TLB 覆盖——根子多在这条链，而不在多写了一句 `if`。
+同一算法、不同访问模式，Cache 行为可以完全不同。顺序扫描：
 
-**所以 · 边界在哪：** 优化算术前，先问数据离核心有多远、翻译是否总在 TLB 里。
+```c
+for (int i = 0; i < N; ++i) {
+    sum += array[i];
+}
+```
+
+空间局部性强，硬件预取也更易生效，AMAT 往往接近上层 Hit Time。若改为依赖随机下标、或大图上的指针追逐——每次跳跃可能落到另一条 Cache Line 甚至另一页——则 Miss Rate 与 TLB 压力同时上升，算术指令数相近，墙钟却差很远。[^drepper][^locality]
+
+相关旋钮包括：时间 / 空间局部性、Cache Line 对齐与跨行、顺序 vs 跨步访问、数据布局（AoS / SoA）、Working Set 是否装得进末级 Cache 与 TLB、页大小（含大页）。工程上常见的拖慢：大图指针追逐、按列扫行主序矩阵、**伪共享**（false sharing：不同核改同一 Cache Line 里无关字段，引发行来回作废）、工作集远超末级覆盖。Drepper 的经典长文把结论写得很直白：多数程序的瓶颈已是访存，而不是算术峰值。[^drepper]
+
+记住一句反差：**Cache 不会让 DRAM 变快；它让「昂贵访问」发生得更少。** 当程序局部性好时，多数访问由上层完成，CPU 才「感觉」自己连着一块又大又相对快的内存——Miss 仍可能极贵，只是更少发生。
+
+**所以 · 边界在哪：** 优化算术前，先问数据离核心有多远、翻译是否总在 TLB 里、访问模式是否 Cache-friendly。
 
 ---
 
@@ -533,7 +595,7 @@ Load-Use 在时间轴上可收成：
 | **Cache** | 取数 | 附近是否已有这份数据？地址的 offset / index / tag 如何定位？ |
 | **Memory Subsystem** | 取数末站 | 物理位置如何选通？ |
 
-`x = array[100];` 背后，可能叠着编译与取指、地址生成、翻译、TLB、页表 walk、按行组织的多级 Cache，以及 DRAM。访问模式友好时极快，不友好时极慢——慢的往往是这条链路。
+`x = array[100];` 背后，可能叠着编译与取指、地址生成、翻译、TLB、页表 walk、按行组织的多级 Cache，以及 DRAM。Cache 解决的是处理器与主存之间的平均延迟差距——靠局部性把热数据留在近处，而不是把 DRAM 本身加速。访问模式友好时极快，不友好时极慢——慢的往往是这条链路。
 
 ---
 
@@ -545,11 +607,13 @@ Load-Use 在时间轴上可收成：
 4. **最小机器：** PC / IR / 寄存器堆 / ALU / 控制器；对象是数据流与控制信号，不是部件名词表。  
 5. **程序地址多为 VA**；每进程一空间；MMU 译页号、保偏移（常 4 KiB，可有大页）。  
 6. **TLB Hit 免走页表**；Miss 可能多次访存 + 缺页；x86-64 常见四级，LA57 可启五级。  
-7. **先问 Cache，再谈 DRAM**；定位靠 offset / set index / tag；L1 常用 VIPT；Load 走 L1D；传输粒度常为 64B Cache Line。  
-8. **Hit / Miss 逐级下沉**；全 Miss 经 Memory Controller 到 DRAM，并回填行。  
-9. **地址不是搜索标签**；是翻译、查找与选通的输入。  
-10. **Cache Miss ≠ TLB Miss**；局部性、布局与 Working Set 决定墙钟时间。  
-11. **流水线**提高吞吐；Load 的访存链落在 MEM；相关靠转发、暂停与预测处理。
+7. **为何有 Cache：** 处理器—主存差距；SRAM 快而密低、DRAM 慢而密高 → Memory Hierarchy；Cache 减少去 DRAM 的次数，不把 DRAM 变快。  
+8. **局部性是前提：** 时间局部性（再访问）+ 空间局部性（附近）→ 按 Cache Line 填充划算。  
+9. **先问 Cache，再谈 DRAM**；定位靠 offset / set index / tag；L1 常用 VIPT；Load 走 L1D；行宽常 64B；AMAT = Hit Time + Miss Rate × Miss Penalty。  
+10. **Hit / Miss 逐级下沉**；全 Miss 经 Memory Controller 到 DRAM，并回填行。  
+11. **地址不是搜索标签**；是翻译、查找与选通的输入。  
+12. **Cache Miss ≠ TLB Miss**；同一算术、不同访问模式，墙钟可差一个数量级。  
+13. **流水线**提高吞吐；Load 的访存链落在 MEM；相关靠转发、暂停与预测处理。
 
 ---
 
@@ -567,16 +631,26 @@ Load-Use 在时间轴上可收成：
 
 [^cache-hier]: 多级 Cache（L1 / L2 / L3）为现代 CPU 标配；L1 常分指令 / 数据。容量与延迟随型号变化；正文只取「越近越快、越远越大」结构。末级是否 inclusive / non-inclusive（如部分 Xeon 自 Skylake Scalable 起）因微架构而异。L1 的 VIPT 用页内偏移做组索引、物理地址做标签，索引才能与翻译重叠；组索引一旦用到页号，别名就会冲突。
 
-[^cache-line]: 64-byte Cache Line 在 x86 服务器与客户端上极为常见；并非所有架构皆然。Cache 按行对齐填充，利用空间局部性。见 Intel 关于 Cache 组织的公开文档及系统教材。
+[^cache-line]: 64-byte Cache Line 在 x86 服务器与客户端上极为常见；并非所有架构皆然。Cache 按行对齐填充，利用空间局部性。见 Intel 关于 Cache 组织的公开文档、Drepper *What Every Programmer Should Know About Memory*，以及系统教材。
 
 [^cache-map]: 地址切分为 tag / index / offset 为组相联 Cache 的标准模型。行宽决定 offset 位数；set 数决定 index 位数；其余为 tag。例：32 KiB、8-way、64B 行 → 64 sets → 6-bit index、6-bit offset（二者之和 ≤ 12 bit 时，可在 4 KiB 页上做纯 VIPT）。见 Patterson & Hennessy, *Computer Organization and Design* 存储层次章节，以及常见课程讲义中的 Cache 位宽计算。
 
+[^cache-latency]: 延迟数量级（非固定规格）：如 Intel Cascade Lake / AMD EPYC Rome 类服务器测量中，L1D 约 4 周期，本地 DRAM 约二百周期量级（随 DIMM、uncore 与 NUMA 而变）。见 Alappat 等，*Memory Performance of AMD EPYC Rome and Intel Cascade Lake SP Server Processors*（ICPE 2022）等。正文只用数量级说明「L1 与 DRAM 差一到两个数量级」。
+
+[^mem-gap]: Processor–memory performance gap / memory hierarchy 的教学表述：CMU 15-213 *Introduction to Computer Systems*（Memory Hierarchy 讲义）、MIT / Cornell 等组成课程；Hennessy & Patterson, *Computer Architecture: A Quantitative Approach* 与 *Computer Organization and Design* 存储层次章。核心思想：CPU 与 DRAM 延迟差距长期存在 → 用多级缓存利用局部性降低平均访问时间。
+
+[^sram-dram]: SRAM（静态）适合小容量高速 Cache：快、无需刷新、每 bit 成本与面积高。DRAM（动态）适合大容量主存：密度高、需刷新、延迟高。见 Drepper 上文第 1–2 部分；Computation Structures（MIT）等关于 SRAM/DRAM 权衡的讲义。
+
+[^locality]: 时间局部性与空间局部性（locality of reference）：程序倾向于重用最近访问的项，并访问其邻近地址。见 Patterson & Hennessy 存储层次章；CMU 15-213 Memory Hierarchy 讲义；Drepper 对 locality 与 Cache 有效性的讨论。
+
+[^amat]: Average Memory Access Time：\(\mathrm{AMAT} = \text{Hit Time} + \text{Miss Rate} \times \text{Miss Penalty}\)；多级可递归。见 Hennessy & Patterson, *Computer Architecture: A Quantitative Approach*（公式表与 Cache 章）；Berkeley / CS61C 等课程笔记。乱序与非阻塞 Cache 下，「有效」Miss Penalty 可被重叠降低，公式仍作教学度量。
+
 [^dram]: 内存控制器将物理地址映射到 DRAM 的 channel / bank / row / column 等；一次未命中常按 burst 填充 Cache Line。细节见 JEDEC / 控制器文档；正文取教学粒度。
 
-[^drepper]: Ulrich Drepper, *What Every Programmer Should Know About Memory*（2007，后续有修订讨论）。系统程序员理解 Cache、TLB、局部性与布局的经典长文；数值已过时，结构仍可用。
+[^drepper]: Ulrich Drepper, *What Every Programmer Should Know About Memory*（2007；LWN 连载与 PDF）。系统程序员理解 DRAM、Cache、TLB、局部性与布局的经典长文；具体周期数已过时，结构论证仍可用。
 
 [^cod]: David A. Patterson & John L. Hennessy, *Computer Organization and Design: The Hardware/Software Interface*（多版）。数据通路与控制、ISA、组合 / 时序逻辑在处理器中的角色，以该书为通行教学参照；正文取概念骨架，不绑定某一版页码。
 
-[^pipeline]: 经典五级流水线 IF–ID–EX–MEM–WB 及结构 / 数据 / 控制相关，见 Patterson & Hennessy 流水线章节。ALU 结果常可从流水线寄存器转发；Load 的数据在 MEM 末才可用，紧邻的使用指令在经典模型里通常仍须插入一拍气泡后再转发。乱序、重命名、多发射是提高 ILP 的后续机制，语义上仍须遵守 ISA；不取消访存链上的 TLB / Cache 代价。
+[^pipeline]: 经典五级流水线 IF–ID–EX–MEM–WB 及结构 / 数据 / 控制相关，见 Patterson & Hennessy 流水线章节。ALU 结果常可从流水线寄存器转发；Load 的数据在 MEM 末才可用，紧邻的使用指令在经典模型里通常仍须插入一拍气泡后再转发。乱序、重命名、多发射、硬件预取与存储级并行是提高吞吐、掩盖部分访存延迟的后续机制，语义上仍须遵守 ISA；不取消访存链上的 TLB / Cache 代价。
 
 **声明：** 正文是访存路径与组成读法的教学整理，不是某一代 CPU 的周期精确模型，也不替代性能计数器实测。微架构、页大小与 Cache 几何会变；冲突时以处理器手册、内核文档与 profiling 为准。

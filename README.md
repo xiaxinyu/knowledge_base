@@ -168,7 +168,7 @@ knowledge_base/
 | 23 | [Kubernetes Control-Plane Doctrine](./20-architecture/23-kubernetes-control-plane-doctrine.md) | 编排平台是持续收敛的分布式控制计算机 | K8s 控制面、声明式收敛 |
 | 24 | [Calico L3 Dataplane Treatise](./20-architecture/24-calico-l3-dataplane-treatise.md) | 节点即路由器：控制面写表、内核转发；Service 虚地址经 DNAT / conntrack 到达 Endpoint | Calico、Pod 网络、Service |
 | 25 | [Architecture Thinking (CTO) Treatise](./20-architecture/25-architecture-thinking-cto-treatise.md) | 架构师靠决策生存；价值是第一性；五级跳是跨维不是把写代码卷满 | 架构思维、郭东白、价值思维、从程序员到 CTO |
-| 26 | [CPU Memory Access Treatise](./20-architecture/26-cpu-memory-access-treatise.md) | 语句→指令→数据通路；一次 Load：VA→TLB/页表→PA→Cache（tag/set/offset）→DRAM；慢常在链路 | 虚拟地址、MMU、TLB、页表、Cache、DRAM、局部性、流水线 |
+| 26 | [CPU Memory Access Treatise](./20-architecture/26-cpu-memory-access-treatise.md) | 语句→指令→数据通路；一次 Load：VA→TLB/页表→PA→Cache（局部性/AMAT）→DRAM；慢常在链路 | 虚拟地址、MMU、TLB、页表、Cache、SRAM/DRAM、局部性、AMAT、流水线 |
 | 27 | [MQTT over QUIC Treatise](./20-architecture/27-mqtt-over-quic-treatise.md) | MQTT 语义不变，传输换 QUIC；压失联窗口与重连风暴；单 Stream 主流；RFC/草案/产品能力须分开读 | MQTT、QUIC、连接迁移、队头阻塞、0-RTT、弱网、车联网 |
 | 28 | [Microservice Communication Treatise](./20-architecture/28-http-rpc-microservice-communication-treatise.md) | 比的是组合不是四字对立；慢常在 JSON/头/连接模型；gRPC 也是 HTTP/2；通信占比低则不必换栈 | HTTP、RPC、gRPC、REST、JSON、Protobuf、Dubbo、OpenFeign |
 
@@ -227,7 +227,7 @@ knowledge_base/
 | Kubernetes 控制面、声明式、调谐 | 23 |
 | Calico、L3、Service/DNAT | 24 |
 | 架构思维、价值思维、实证思维、从程序员到 CTO、生存法则 | 25 |
-| 虚拟地址、MMU、TLB、页表、Page Fault、Cache Line、L1D、DRAM、局部性、Working Set、数据通路、流水线、tag/set/offset | 26 |
+| 虚拟地址、MMU、TLB、页表、Page Fault、Cache、SRAM、DRAM、局部性、AMAT、Cache Line、L1D、Working Set、数据通路、流水线、tag/set/offset | 26 |
 | MQTT、MQTT over QUIC、Connection ID、连接迁移、0-RTT、Stream、Keep Alive、弱网、车联网、重连风暴 | 27 |
 | HTTP vs RPC、gRPC、REST、JSON、Protobuf、Dubbo、Triple、OpenFeign、微服务通信、序列化 | 28 |
 | COBIT、治理 vs 管理 | 30 |
