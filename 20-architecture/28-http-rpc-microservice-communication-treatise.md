@@ -2,7 +2,7 @@
 
 > 「HTTP 比 RPC 慢」在群里经久不衰；Spring Cloud 里 OpenFeign 却依然到处可见。矛盾不在口号，在**口径**与**瓶颈位置**。
 >
-> 本文按可核对的链展开：**对齐组合 → 公开压测量级 → 慢在哪三环 → 业务账 → 选型**。可与 [21](./21-service-architecture-evolution.md)（微服务选型自由）、[16](../10-chronicle/16-http-protocol-chronicle.md)（HTTP 代际与队头阻塞）、[27](./27-mqtt-over-quic-treatise.md)（传输层替换）对照：此处专写服务间调用里**慢多少、慢在哪、值不值得换**。
+> 本文按可核对的链展开：**对齐组合 → 公开压测量级 → 慢在哪三环 → 业务账 → 选型**。可与 [21](./21-service-architecture-evolution.md)（微服务选型自由）、[16](../10-chronicle/16-http-protocol-chronicle.md)（HTTP 代际与队头阻塞）、[27](./27-mqtt-over-quic-treatise.md)（传输层替换）、[29](./29-kafka-event-streaming-treatise.md)（异步事件日志）对照：此处专写**同步**服务间调用里慢多少、慢在哪、值不值得换。
 
 先给一个直接答案：
 
