@@ -12,9 +12,9 @@
 
 ## 摘要
 
-Kubernetes 应被理解为持续收敛的分布式控制计算机，而不是一次性编排脚本。etcd 为真相源，声明式 API 为协调语言；每个控制器只问「世界应该什么样 / 现在实际上什么样」，不一致就走一步，然后永远再问一遍。调度、自愈、服务发现与滚动发布，都是这同一个调谐循环作用在不同对象上。控制面可以短暂失败，数据面按上次指令尽量保持静态稳定。全文分三篇：上篇划定问题域与 Borg → Omega 谱系；中篇收束控制模型（一份真相、同一循环、静态稳定、平台的平台）；下篇落到分层高可用、控制面入口、CRD / Operator 与能力边界。可与本库 21、22、24 对照：编排原则、一致性取舍与网络写表是同一台控制计算机的不同平面。
+Kubernetes 应被理解为持续收敛的分布式控制计算机，而不是一次性编排脚本。etcd 为真相源，声明式 API 为协调语言；Label / Selector 是松耦合的核心分组原语；每个控制器只问「世界应该什么样 / 现在实际上什么样」，不一致就走一步，然后永远再问一遍。调度、自愈、服务发现与滚动发布，都是这同一个调谐循环作用在不同对象上。控制面可以短暂失败，数据面按上次指令尽量保持静态稳定；API 入口除 L4 高可用外，须以 RBAC 约束「谁能对哪些资源做什么」。全文分三篇：上篇划定问题域与 Borg → Omega 谱系；中篇收束控制模型；下篇落到分层高可用、入口与 RBAC、CRD / Operator 与能力边界。可与本库 21、22、24 对照。
 
-**关键词：** Kubernetes；声明式 API；调谐循环；etcd；静态稳定；CNCF
+**关键词：** Kubernetes；声明式 API；调谐循环；etcd；Label / Selector；RBAC；静态稳定；CNCF
 
 ---
 
@@ -33,6 +33,7 @@ Kubernetes 应被理解为持续收敛的分布式控制计算机，而不是一
 
 4. [前提与核心理念](#4-前提与核心理念)
 5. [一份真相与松耦合协调](#5-一份真相与松耦合协调)
+    - [5.1 真相源](#51-一份共享真相源cp) · [5.2 API 松耦合](#52-唯一协调语言api-松耦合) · [5.3 Label / Selector](#53-label--selector核心分组原语)
 6. [持续收敛与静态稳定](#6-持续收敛与静态稳定)
     - [6.1 持续收敛](#61-持续收敛而非一次成功的剧本) · [6.2 调谐循环](#62-调谐循环驱动一切的同一个循环) · [6.3 静态稳定](#63-静态稳定static-stability)
 7. [控制平面与设计原则](#7-控制平面与设计原则)
@@ -42,6 +43,7 @@ Kubernetes 应被理解为持续收敛的分布式控制计算机，而不是一
 
 8. [分层高可用](#8-分层高可用)
 9. [控制面入口](#9-控制面入口)
+    - [9.1–9.3 入口工程](#91-入口约束) · [9.4 RBAC](#94-接口权限rbac) · [9.5 集群内 UI](#95-web-界面集群内-ui-与权限同构)
 10. [扩展模型：CRD 与 Operator](#10-扩展模型crd-与-operator)
 11. [能力边界与检查清单](#11-能力边界与检查清单)
 
@@ -50,14 +52,14 @@ Kubernetes 应被理解为持续收敛的分布式控制计算机，而不是一
 12. [总结](#12-总结)
 13. [参考文献](#13-参考文献)
 
-全文按「问题域 → 控制模型 → 工程落地」展开。原则先于技巧——否则容易把 YAML、组件名与营销口号当成定律。
+全文按「问题域 → 控制模型 → 工程落地」展开。原则先于技巧——否则容易把 YAML、组件名与营销口号当成定律。读中篇时抓住三条纪律：**一份真相、同一循环、静态稳定**；Label/Selector 是循环如何圈定作用域的寻址语言，RBAC 是入口如何约束主体的门禁。
 
 ```mermaid
 %% K8s 设计全景：问题域约束原则，原则约束落地
 flowchart TB
   Ctx["上篇 · 问题域<br/>时代条件 · 谱系 · 定位"]
-  Prin["中篇 · 控制模型<br/>真相源 · 同一循环 · 静稳 · 平台"]
-  Eng["下篇 · 工程落地<br/>分层 HA · 入口 · Operator"]
+  Prin["中篇 · 控制模型<br/>真相 · 分组 · 循环 · 静稳"]
+  Eng["下篇 · 工程落地<br/>分层 HA · 入口/RBAC · Operator"]
 
   Ctx -->|"明确问题域"| Prin
   Prin -->|"约束工程选择"| Eng
@@ -203,34 +205,31 @@ CRD 由 ThirdPartyResource 重设计而来，1.7 入 beta，1.16（2019）以 `a
 
 ### 3.1 定义
 
-Kubernetes 是可移植、可扩展的**开源平台**，用于管理容器化工作负载与服务，同时支持**声明式配置**与**自动化**。[1]
-
-生产集群由**控制平面**与多台**工作节点**组成；二者均横向复制，以提供容错与高可用。[18]
+官方定义可收束为一句：Kubernetes 是可移植、可扩展的**开源平台**，用于管理容器化工作负载与服务，并支持**声明式配置**与**自动化**。[1] 生产集群由**控制平面**与多台**工作节点**组成；二者均可横向复制，以提供容错与高可用。[18] 上篇回答「为何与从何而来」，本节钉住「它声称管什么、明确不管什么」，以免后文把插件能力误当成核心定律。
 
 ### 3.2 核心能力（节选）
 
 | 能力 | 含义 |
 |------|------|
-| 服务发现与负载均衡 | DNS / VIP；分散流量 |
-| 存储编排 | 自动挂载所选存储 |
+| 服务发现与负载均衡 | DNS / VIP；把流量分散到健康后端 |
+| 存储编排 | 按声明挂载所选存储 |
 | 自动发布与回滚 | 按期望态受控推进；回滚是再次改期望，而非失败即自动 undo |
-| 自动装箱 | 按资源请求摆放容器 |
+| 自动装箱 | 按资源请求在节点间摆放 |
 | 自愈 | 重启、替换、按健康检查摘流 |
 | 水平扩展 | 命令、UI 或指标驱动扩缩 |
-| 可扩展设计 | 不必改上游即可扩展 |
+| 可扩展设计 | 不必改上游即可扩展（CRI/CNI/CSI、CRD） |
 
 ### 3.3 明确边界
 
-- **不是**大而全 PaaS——提供积木，保留用户选择权。[1]
-- **不是**传统编排器——编排是「先 A 再 B 再 C」；Kubernetes 是独立可组合的控制过程，持续把当前态推向期望态。[1]
+它**不是**大而全 PaaS：提供积木，保留用户对网络、存储、发布策略的选择权。[1] 它也**不是**传统意义上的编排器——传统编排常指「先 A 再 B 再 C」的步骤剧本；Kubernetes 是一组可组合的控制过程，持续把当前态推向期望态。[1]
 
 | 类别 | 典型组件 | 边界 |
 |------|----------|------|
 | 网络 / DNS | Calico、Cilium、CoreDNS | 插件实现；kubelet 经 CNI 调用。Calico 合同见 [《Calico 三层数据面》](./24-calico-l3-dataplane-treatise.md) §2.5 |
-| 工作负载入口 | Ingress、**Gateway API**、云 LB、MetalLB | 业务流量，**非**控制面入口。Gateway API 为下一代入口，见 §2.2 |
-| 可观测 / 网格 | Prometheus、Istio | 周边生态 |
+| 工作负载入口 | Ingress、**Gateway API**、云 LB、MetalLB | 业务流量，**非**控制面入口（§9）。Gateway API 见 §2.2 |
+| 可观测 / 网格 | Prometheus、Istio | 周边生态，非控制面内核 |
 
-> **要点**：Kubernetes 管「如何声明与收敛」；生态管「具体实现插件」。核心价值是**同一个调谐循环**（§6.2 / §7.3），而非中心化剧本。
+> **要点**：核心管「如何声明与收敛」；生态管「具体用哪块积木」。价值在**同一个调谐循环**（§6.2 / §7.3），不在中心化剧本。
 
 ---
 
@@ -262,26 +261,44 @@ Kubernetes 的定位是 **Platform for Platform**——官方表述为：提供�
 
 ## 5. 一份真相与松耦合协调
 
-若只用「容器编排」理解 Kubernetes，会错过真正难点。它首先是一台**分布式控制系统**。
+若只用「容器编排」理解 Kubernetes，会错过真正难点：它首先是一台**分布式控制系统**。系统要在故障与并发下仍可协调，至少同时满足三件事——**状态有唯一真相、组件经统一语言对话、对象以可查询方式成组**。本节依次对应 etcd、API，以及 Label / Selector。
 
 ### 5.1 一份共享真相源（CP）
 
-全部对象落在 **etcd**（强一致键值存储）。[18][19]
-
-- 共识：**Raft**；写入须多数派确认（quorum = \(\lfloor n/2\rfloor + 1\)）；[20][21]
-- CAP 语言下偏向 **CP**：多数派不可达时，**宁可停写，也不交出两份互相矛盾的真相**。[19][20]
+全部集群对象落在 **etcd**（强一致键值存储）中。[18][19] 成员间以 **Raft** 达成共识，写入须多数派确认（quorum = \(\lfloor n/2\rfloor + 1\)）。[20][21] 用 CAP 语言表述：多数派不可达时，控制面**宁可停写，也不交出两份互相矛盾的真相**——这是刻意的 CP 偏向，而非运维疏忽。[19][20]
 
 > **纪律一**：关于「集群应该是什么样」的真相，只能有一份。
 
 ### 5.2 唯一协调语言（API 松耦合）
 
-Omega 曾让受信组件直连存储；Kubernetes 改为：**仅 API Server 访问 etcd**，其余一律经 API。[2][12]
+Omega 曾允许受信组件直连共享存储；Kubernetes 改为：**仅 API Server 访问 etcd**，其余组件一律经 API。[2][12] 于是控制逻辑松耦合、状态却强一致共享：组件互不直连，只通过对象的 `spec` / `status` 对话；可独立升级、失败与重启；新控制器只要理解 API，即可加入协调网络。对象结构统一为 `apiVersion` / `kind` / `metadata` / `spec` / `status`，横切策略可忽略具体资源语义；控制面保持透明，无隐藏内部 API。[12][17]
 
-- 组件**互不直连**，只通过 `spec` / `status` 对话；
-- 可独立升级、失败、重启；
-- 新控制器理解 API 即可加入协调网络。
+> **所以 · 边界在哪：** 真相在 etcd，对话在 API——二者缺一，要么脑裂，要么把控制逻辑重新焊死成单体。
 
-模式：**控制逻辑松耦合 + 状态强一致共享**。结构统一（`apiVersion` / `kind` / `metadata` / `spec` / `status`），横切策略可忽略资源语义差异；控制面透明，无隐藏内部 API。[12][17]
+### 5.3 Label / Selector：核心分组原语
+
+松耦合还要求：**作用域不能绑死在对象名字上**。官方将 **Label Selector** 称为核心分组原语（core grouping primitive）：对象携带短键值标签，选择器圈出子集；Deployment、Service、调度策略据此识别「属于自己的那一群」，而不是写死 Pod 名。这与 Borg 时代相对僵硬的 Job 分组形成对照——Burns 等文亦强调 Label 带来的组织灵活性。[2][46]
+
+**Label 与 Annotation 易混，须先分开。** Label 承载识别属性，供筛选、匹配与调度；Annotation 承载非识别元数据（构建号、联系人、工具私有配置等），**不能**用于 Selector。Label 的 key/value 偏短（名称段通常不超过 63 字符等约束）；单对象全部注解合计通常不超过 256 KiB，可容纳 JSON 等较长文本。需要查询与分组的打标签；只需附带说明的放注解。[46][47]
+
+**选择器有等值与集合两层表面。** API 中的 `LabelSelector` 由 `matchLabels` 与 `matchExpressions` 组成，二者及各项之间均为逻辑 **AND**。空选择器匹配全部对象；`null` 选择器不匹配任何对象。[46][48] `matchLabels` 的每一对 `{key: value}` 等价于一条 `operator: In` 且 `values` 仅含该值的表达式；`matchExpressions` 则支持 **`In` / `NotIn` / `Exists` / `DoesNotExist`**（前两者要求 `values` 非空，后两者不填 `values`）。列表过滤的查询字符串（`=` / `in` / `exists` 等）与对象字段中的表达式是同一思想的不同表面。[46]
+
+```yaml
+# 逻辑：app=nginx 且 env∈{dev,test} 且不存在 tier 键
+selector:
+  matchLabels:
+    app: nginx
+  matchExpressions:
+    - key: env
+      operator: In
+      values: ["dev", "test"]
+    - key: tier
+      operator: DoesNotExist
+```
+
+**谁依赖选择器，又有何硬约束。** Deployment / ReplicaSet / StatefulSet 靠 selector 锁定受管 Pod；Service 靠标签发现后端并生成 EndpointSlice（§7.3）；节点侧则用 Node 标签配合 `nodeSelector` 或更丰富的 `nodeAffinity`（常与污点/容忍并用）；运维上亦按环境与职责切片。社区推荐共享前缀 `app.kubernetes.io/*`（如 `name` / `instance` / `component` / `managed-by`），便于工具互操作；无前缀标签则视为用户私有约定。[46][54] 在 `apps/v1` 中，**`.spec.selector` 创建后不可变**，且必须与 `.spec.template.metadata.labels` 匹配，否则 API 拒绝；模板标签与 selector 不一致时，控制器无法认领 Pod——这是清单层的结构性错误。若必须更换选择器，通常只能重建 Deployment（例如以 orphan 策略保留旧 Pod 后再接新控制器）。[42][46]
+
+> **判断：** Label / Selector 是声明式控制面的**寻址语言**——把「谁管谁、谁给谁转发」从名字耦合改为查询耦合。没有它，调谐循环无法在规模下稳定圈定作用域。
 
 ---
 
@@ -317,7 +334,7 @@ for {
 }
 ```
 
-> **要点**：这就是全部诀窍。调度、自愈、服务发现、滚动发布，并不是四套不同的魔法——它们是同一套 watch → diff → act 循环，作用在不同对象上。
+> **要点**：调度、自愈、服务发现、滚动发布并不是四套彼此无关的机制——它们是同一套 watch → diff → act 循环，作用在不同对象上。
 
 ```mermaid
 %% 调谐循环：观察 → 对比 → 行动 → 再观察；永不停止
@@ -436,13 +453,11 @@ flowchart TB
 
 某节点失联，kubelet 不再上报。默认约 50 秒无心跳后，Node 的 `Ready` 变为 `Unknown`，并打上 `node.kubernetes.io/unreachable` 污点；默认再过约 5 分钟，不容忍该污点的 Pod 被驱逐。[44][45]
 
-ReplicaSet 控制器并不「处理节点火灾」。它只是一直盯着自己的对象：期望 3 个，现在只剩 2 个——于是再创建一个。scheduler 给新 Pod 找活着的节点，kubelet 拉起它。
-
-没人被呼叫。计数错了，然后计数对了。这仍是同一个循环。[11][13]
+ReplicaSet 控制器并不「处理节点火灾」。它只盯着自己的对象：期望 3 个，现在只剩 2 个——于是再创建一个；scheduler 为新 Pod 绑定存活节点，kubelet 拉起实例。无需中心值班剧本：偏差被观测到，计数随后被调谐回期望。这仍是同一个循环。[11][13]
 
 #### Pod 如何互相找到：Service 也是循环
 
-Pod 故意短命：每次重建换 IP，不能拿单个 Pod 当身份。[16] Service 是一层很薄的对象：标签选择器 + 虚拟 IP（ClusterIP）。EndpointSlice 控制器持续扫描匹配且已就绪的 Pod，维护端点切片；kube-proxy 在每个节点把发往虚 IP 的包转到活着的 Pod IP。[18][43]
+Pod 故意短命：每次重建换 IP，不能拿单个 Pod 当身份。[16] Service 是一层很薄的对象：**标签选择器**（§5.3）+ 虚拟 IP（ClusterIP）。EndpointSlice 控制器持续扫描匹配且已就绪的 Pod，维护端点切片；kube-proxy 在每个节点把发往虚 IP 的包转到活着的 Pod IP。后端发现靠标签解耦，不绑 Pod 名。[18][43][46]
 
 ClusterIP 是虚拟地址：iptables / nftables 模式下不必对应一块业务网卡；IPVS 模式会把各 Service IP 绑到本机 dummy 接口 `kube-ipvs0`，好让内核把包交给 IPVS。无论哪种，流量都由节点上的代理规则转发，而不是由一块「Service 网卡」终结连接。[43]
 
@@ -521,19 +536,13 @@ flowchart TB
 
 ### 8.4 为何抗造
 
-- 声明期望，失败后再调谐；[11][13]
-- 控制循环永不停止——apply、节点故障、服务发现、滚动发布走的是同一个循环；[11]
-- 多控制器可失败；[11]
-- 探针切开故障域；[14]
-- 控制面 / 数据面分离 + 静态稳定。[10][12]
-
-血统上，继承的是 Borg「规模下故障是常态」的假设，而非某次手工剧本。[2][3]
+抗造不是「组件永不挂」，而是故障被当作稳态输入后系统仍能收敛：声明期望并在失败后继续调谐；[11][13] apply、节点故障、服务发现与滚动发布走同一套循环；[11] 多控制器可独立失败而不拖垮全局；[11] 探针切开进程、摘流与启动等故障域；[14] 控制面与数据面分离并配合静态稳定，使短时失联不等于业务中断。[10][12] 血统上，这继承自 Borg「规模下故障是常态」的工程假设，而非某次手工 Runbook。[2][3]
 
 ---
 
 ## 9. 控制面入口
 
-多实例**不足以**构成入口高可用：所有客户端必须认**同一个稳定入口**。kubeadm 要求：先建 TCP 转发型 LB，设为 `controlPlaneEndpoint`，对 `:6443` 做健康检查，且与 endpoint 一致。[25]
+控制面入口要同时回答两件事：**流量如何稳定抵达 apiserver**，以及**抵达之后谁被允许做什么**。多实例本身不足以构成入口高可用——所有客户端必须认**同一个稳定入口**；kubeadm 要求先建 TCP 转发型负载均衡，设为 `controlPlaneEndpoint`，对 `:6443` 做健康检查，且与 endpoint 一致。[25] 入口工程（§9.1–9.3）解决可达与 TLS；RBAC（§9.4）解决授权；集群内 UI（§9.5）只是同一条链上的图形化客户端。
 
 ### 9.1 入口约束
 
@@ -581,20 +590,40 @@ backend apiservers
 
 > **要点**：云上 = NLB + DNS；裸机 = Keepalived + HAProxy 或 kube-vip；一律 **L4 passthrough**。[25][26]
 
+### 9.4 接口权限：RBAC
+
+入口在网络层稳定之后，必须立刻回答：**谁能对 API 做什么**。几乎一切集群操作都经 apiserver 的 REST 接口；默认授权模型是 **RBAC**（Role-Based Access Control）——在某一作用域内，某一主体能否对某类资源执行某类动词。[30][49]
+
+请求在 apiserver 上按固定顺序处理。**认证**确认身份（证书、OIDC、ServiceAccount Token 等），得到用户名、组与额外属性；**授权**（RBAC / Node / Webhook 等）判断该身份是否被允许执行该动词；**准入控制**在写路径上校验或改写对象内容，且**不拦截**纯 `get` / `list` / `watch`。[50] RBAC 只做授权，不负责「登录」。多授权模块并存时，常见策略是任一模块允许即可通过，全部拒绝则返回 403。内置组 `system:masters` 可绕过常规授权限制，生产上应避免把日常账号塞入该组。[49][50]
+
+接口语义可压缩为「资源 + 动词」。常用动词包括 `get`、`list`、`watch`、`create`、`update`、`patch`、`delete`、`deletecollection`。资源分命名空间级（Pod、Deployment、Service、ConfigMap、Role 等）与集群级（Node、PersistentVolume、ClusterRole 等）。RBAC 用四个对象表达授意：
+
+| 对象 | 作用 | 作用域 |
+|------|------|--------|
+| **Role** | 权限规则（apiGroups / resources / verbs） | 单个 namespace |
+| **ClusterRole** | 同样是规则集合 | 集群范围定义；可绑到全局或某一 ns |
+| **RoleBinding** | 将 Role **或** ClusterRole 授给主体 | 仅在该 Binding 所在 namespace 生效 |
+| **ClusterRoleBinding** | 将 ClusterRole 授给主体 | 集群全局 |
+
+工程上常用 **RoleBinding 引用 ClusterRole**：在集群级维护一份「只读 / 编辑」规则，再按命名空间绑定，避免复制多份 Role。[49] 主体（Subject）有三类——**User**（外部身份，API 不持久化用户对象）、**Group**（如 `system:serviceaccounts:<ns>`）、**ServiceAccount**（供 Pod 调 apiserver；未指定 `serviceAccountName` 时使用该 ns 的 `default`）。[49][51] 生产纪律是为应用配置**专用 SA + 最小权限**，而不是抬高 `default` 或全体 SA 的权限。[49]
+
+> **判断：** 只做 L4 高可用、不做 RBAC，等于把「稳定的特权门」交给所有持证者。权限是入口工程的组成部分，不是附加选修。
+
+### 9.5 Web 界面：集群内 UI 与权限同构
+
+集群内 Web UI（历史上以 **Kubernetes Dashboard** 为代表）把图形操作翻译为对 apiserver 的调用：浏览器 → UI 后端 → apiserver（认证 + RBAC）。集群默认不安装此类组件；权限完全复用 Kubernetes 身份与绑定——Bearer Token 对应主体有什么权限，界面就能看或改什么。UI **不另建权限体系**，只是代理。[52][53]
+
+因此安全边界与 kubectl 同构：应按最小权限签发短期 Token，示例「集群管理员」Token 仅供教学；勿将 UI 裸露公网。Dashboard 适合查看工作负载状态、事件与日志，以及快速编辑清单排错；多集群治理、告警与深度可观测通常另选平台。须注意官方文档已标明 **Dashboard 项目归档、不再积极维护**，新装可考虑 **Headlamp** 等替代——正文保留它，是为了说明「任何走 apiserver 的 UI，权限模型必与控制面同构」这一结构事实。[52]
+
+> **所以 · 边界在哪：** 入口、认证、授权是一条链；UI 不创造权限，Token 与 RBAC 才创造权限。
+
 ---
 
 ## 10. 扩展模型：CRD 与 Operator
 
-若止于内置资源，Kubernetes 已是工作负载编排器（Deployment、Job、Service……），但还不是「平台的平台」。Platform for Platform 靠**同一套收敛模型可被领域复用**：
+若止于内置资源，Kubernetes 已是工作负载编排器，但还不是「平台的平台」。§4.2 的定位要落地，靠的是**同一套收敛模型可被领域复用**：用 **CRD** 让领域对象获得声明式外表（由 TPR 重设计而来，1.16 以 `apiextensions.k8s.io/v1` 达 GA），用 **Operator**（Controller + CRD）把部署、备份、故障转移等专家经验编进持续调谐——CoreOS 于 2016-11 提出该模式，CRD 成熟后成为主路。[15][30][35][36]
 
-| 机制 | 作用 |
-|------|------|
-| **CRD** | 领域对象获得声明式外表。由 TPR 重设计而来，1.7 入 beta，1.16 以 `apiextensions.k8s.io/v1` 达 GA。[30][35] |
-| **Operator** | 运维知识编码为持续调谐（Controller + CRD）。CoreOS 于 2016-11 提出；早期依赖 TPR，CRD 成熟后成为主路。[15][36] |
-
-集群里许多「高级能力」并不是突然写进内核的：有人用 CRD 教集群认识一个新对象，再写一个 controller 去实现它。Deployment 让「三个相同的 Web 副本」保持存活；Operator 让「这个有状态系统以专家期望的方式保持存活」——二者跑的是**同一个调谐循环**，只是「收敛什么」换成了领域知识。[15][36]
-
-> **工程含义**：先统一「如何描述、如何共识、如何在故障下收敛」，再让各领域填写「收敛什么」——「通用软件控制平面」不过是同一控制模型的外推。
+谱系史见 §2.2；此处只收工程含义：Deployment 维持「三个相同 Web 副本」；Operator 维持「该有状态系统按专家期望存活」——二者跑的是**同一个调谐循环**，区别只在「收敛什么」。先统一「如何描述、如何共识、如何在故障下收敛」，再让各领域填写内容——「通用软件控制平面」不过是同一控制模型的外推。[15][36]
 
 ---
 
@@ -619,6 +648,8 @@ backend apiservers
 5. LB 双活或云托管
 6. 控制面与 LB 跨故障域
 7. 监控后端状态与延迟（常受 etcd 牵动）
+8. RBAC 默认开启；应用使用专用 ServiceAccount + 最小 Role/Binding
+9. 集群内 UI（若部署）仅用短期 Token，勿裸露公网；新装注意 Dashboard 已归档停维
 
 ---
 
@@ -627,8 +658,8 @@ backend apiservers
 | 层次 | 命题 | 要点 |
 |------|------|------|
 | **上篇** | 时代与谱系 | 云可编程 × 容器不可变 × 复杂度下沉；Borg/Omega 经验外溢，非 Borg 开源版；CNCF 治理 + 可插拔接口使其成为默认底座[2][6] |
-| **中篇** | 可久约束 | 一份真相 · API 松耦合 · **同一个调谐循环** · 静态稳定 · Platform for Platform[11][12][19] |
-| **下篇** | 工程工艺 | L1–L5 分层 HA；L4 入口；CRD/Operator 外推；边界清晰[13][25] |
+| **中篇** | 可久约束 | 一份真相 · API 松耦合 · **Label/Selector 分组** · **同一个调谐循环** · 静态稳定 · Platform for Platform[11][12][19][46] |
+| **下篇** | 工程工艺 | L1–L5 分层 HA；L4 入口 + **RBAC**；CRD/Operator 外推；边界清晰[13][25][49] |
 
 | 偏废 | 后果 |
 |------|------|
@@ -638,7 +669,7 @@ backend apiservers
 
 > **收束**  
 > Docker 把软件变成标准集装箱；Kubernetes 把「如何调度这些箱子」写成云原生的共同语言。  
-> 接受「故障是常态」的生产假设；守住「一份真相、同一循环、静态稳定」；把原则落成「分层高可用与可扩展控制平面」。  
+> 接受「故障是常态」；守住「一份真相、查询式分组、同一循环、静态稳定」；把原则落成「分层高可用、受控入口与可扩展控制平面」。  
 > 舵手之意，不在无风浪，而在有原则可依、有工艺可操，于故障中仍能指向可用。
 
 ---
@@ -692,3 +723,12 @@ backend apiservers
 | [43] | Kubernetes Documentation, *Service*. https://kubernetes.io/docs/concepts/services-networking/service/ | ClusterIP、EndpointSlice、kube-proxy |
 | [44] | Kubernetes Documentation, *Nodes*. https://kubernetes.io/docs/concepts/architecture/nodes/ | Ready=`Unknown`；默认约 5 分钟后驱逐 |
 | [45] | Kubernetes Documentation, *Taints and Tolerations*. https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ | `unreachable` 污点；默认 `tolerationSeconds=300` |
+| [46] | Kubernetes Documentation, *Labels and Selectors*. https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/ | Label Selector 为核心分组原语；等值 / 集合选择器；`matchLabels` ≡ 单值 `In` |
+| [47] | Kubernetes Documentation, *Annotations*. https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/ | 注解不可用于选择；体量与用途边界（合计约 256 KiB） |
+| [48] | Kubernetes API, *LabelSelector*. https://kubernetes.io/docs/reference/kubernetes-api/definitions/label-selector-v1-meta/ | `matchLabels` 与 `matchExpressions` AND；空 / null 语义 |
+| [49] | Kubernetes Documentation, *Using RBAC Authorization*. https://kubernetes.io/docs/reference/access-authn-authz/rbac/ | Role / ClusterRole / Binding；Subject；RoleBinding 引用 ClusterRole |
+| [50] | Kubernetes Documentation, *Controlling Access to the Kubernetes API*；*Authorization*. https://kubernetes.io/docs/concepts/security/controlling-access/ ；https://kubernetes.io/docs/reference/access-authn-authz/authorization/ | 认证 → 授权 → 准入顺序；准入不挡只读；`system:masters` 警示 |
+| [51] | Kubernetes Documentation, *Service Accounts*. https://kubernetes.io/docs/concepts/security/service-accounts/ | 默认 SA；最小权限绑定 |
+| [52] | Kubernetes Documentation, *Deploy and Access the Kubernetes Dashboard*. https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/ | 非默认安装；Bearer Token；**项目已归档停维**，新装可考虑 Headlamp |
+| [53] | Kubernetes Dashboard（归档说明 / 访问控制）. https://github.com/kubernetes/dashboard ；历史访问控制说明见项目文档 | UI 作 apiserver 代理；权限复用 RBAC |
+| [54] | Kubernetes Documentation, *Recommended Labels*. https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/ | `app.kubernetes.io/*` 共享标签约定；便于工具互操作 |
