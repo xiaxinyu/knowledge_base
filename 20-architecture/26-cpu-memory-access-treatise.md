@@ -2,17 +2,19 @@
 
 > `int x = array[100];` 在程序员眼里是一行赋值；在机器眼里，是编译成指令、取指译码、数据通路运算，以及地址翻译、多级 Cache 与可能的 DRAM。算术往往很便宜；真正贵的，常常是数据离核心有多远。
 >
-> 组成原理的核心，是抽象计算模型如何被逐层实现为可执行机器指令的物理系统。本文把其中最常卡住的一段——**一次 Load 如何找到数据**——拆成可跟的链路：**语句 / 指令 → Virtual Address → MMU / TLB / Page Table → Physical Address → Cache（按 tag / set / offset 定位；靠局部性降低平均代价）→ Memory Controller → DRAM**。可与本库 [10](../10-chronicle/10-computing-cloud-chronicle.md)（计算如何池化）、[40](../40-paradigm/40-unix-agent-stateless-philosophy.md)（工具边界与可观察）、[22](./22-distributed-consistency-treatise.md)（跨节点之后的另一套「找数据」）对照：本文写单机上一次访存的硬件路径，不是分布式副本协议。
+> 组成原理的核心，是抽象计算模型如何被逐层实现为可执行机器指令的物理系统。本文把其中最常卡住的一段——**一次 Load 如何找到数据**——拆成可跟的链路：**语句 / 指令 → Virtual Address → MMU / TLB / Page Table → Physical Address → Cache（按 tag / set / offset 定位；靠局部性降低平均代价）→ Memory Controller → DRAM**。可与本库 [10](../10-chronicle/10-computing-cloud-chronicle.md)（计算如何池化）、[26a](./26a-cpu-instruction-pipeline-treatise.md)（指令如何叠进流水线）、[22](./22-distributed-consistency-treatise.md)（跨节点之后的另一套「找数据」）对照：本文写单机上一次访存的硬件路径，不是分布式副本协议。
 
 先给一个直接答案：
 
 > **CPU 不是拿着程序里的地址去 RAM 里「搜索标签」。** 高级语言先变成机器指令；指令在处理器里经取指、译码与数据通路完成运算。算术本身往往很便宜，但主存（DRAM）相对核心慢得多——若不加缓冲，大量周期会耗在等数据上。访存时，程序给出的多半是**虚拟地址（VA）**；**MMU** 借助 **TLB**（及必要时遍历 **Page Table**）把它译成**物理地址（PA）**；随后在 **Cache**（靠近核心的小容量高速 SRAM）里用地址切成的 **offset / set index / tag** 定位一行；全未命中才经 **Memory Controller** 访问 **DRAM**，并通常整行填入 Cache。三者各答一问：**TLB**——这一页映到哪；**Cache**——附近是否已有这份数据；**DRAM 子系统**——物理介质上如何选通。Cache 有效，是因为程序常有**时间 / 空间局部性**；访问模式友好时极快，TLB Miss 与 Cache Miss 叠加时极贵——慢的往往不是算术，而是这条链路。
 
-**20-architecture 位置：** [20](./20-enterprise-architecture-treatise.md)–[25](./25-architecture-thinking-cto-treatise.md) 多写企业与平台架构。本文写**机器内部的访存与执行骨架**：一条语句如何落到指令与数据通路，一次 Load 又经过哪些硬件与 OS 交界。术语与关系总图见第 1 节。
+**20-architecture 位置：** [20](./20-enterprise-architecture-treatise.md)–[25](./25-architecture-thinking-cto-treatise.md) 多写企业与平台架构；[26a](./26a-cpu-instruction-pipeline-treatise.md) 写指令级重叠。本文写**机器内部的访存与执行骨架**：一条语句如何落到指令与数据通路，一次 Load 又经过哪些硬件与 OS 交界。术语与关系总图见第 1 节。
 
 ## 摘要
 
-学习组成原理，宜先问「一条程序语句经过哪些硬件机制，才变成电路上的计算」。因果上有两层：**执行骨架**（语句 → 机器指令 → 取指 / 译码 / 数据通路）决定「算什么」；**访存链路**决定「操作数从哪来」。处理器与 DRAM 之间存在长期的**性能差距**（processor–memory gap）：算术与片上 SRAM 很快，主存访问往往贵一到两个数量级；Cache Hierarchy 用小而快的存储保存很可能再用的数据与指令副本，降低平均访存时间（AMAT），而不是把 DRAM 本身变快。一次典型 Load：生成 VA → MMU 译页号（页内偏移不变）→ 优先查 TLB，Miss 则多级页表遍历（x86-64 常见四级，可选 LA57 五级），必要时 Page Fault 由 OS 处理 → 再查 Cache（常见 64B Cache Line；地址拆成 offset / set index / tag）→ L1 常按页内偏移做虚拟索引并与 TLB 重叠，标签仍用物理地址比对 → L1D / L2 / L3 逐级 Miss 后才到 Memory Controller 与 DRAM，并回填 Cache Line。Cache 之所以划算，依赖**时间局部性**与**空间局部性**。流水线让多条指令分处不同阶段，其中 **MEM** 阶段正是这条访存链的入口；相关靠转发、暂停与分支预测处理。Cache Miss 与 TLB Miss 是两类不同代价。
+学习组成原理，宜先问：一条程序语句经过哪些硬件机制，才变成电路上的计算。因果上有两层——**执行骨架**（语句 → 机器指令 → 取指 / 译码 / 数据通路）决定「算什么」；**访存链路**决定「操作数从哪来」。处理器与 DRAM 之间存在长期的 **processor–memory performance gap**：算术与片上 SRAM 很快，主存访问往往贵一到两个数量级。Cache Hierarchy 用小而快的存储保存很可能再用的数据与指令副本，从而降低平均访存时间（AMAT），而不是把 DRAM 介质本身变快。
+
+一次典型 Load 的路径可概括为：生成 VA → MMU 译页号（页内偏移不变）→ 优先查 TLB，Miss 则多级页表遍历（x86-64 常见四级，可选 LA57 五级），必要时由 OS 处理 Page Fault → 再查 Cache（常见 64 B Cache Line；地址拆成 offset / set index / tag）→ L1 常以页内偏移做虚拟索引并与 TLB 重叠启动，标签仍用物理地址比对 → L1D / L2 / L3 逐级 Miss 后才经 Memory Controller 访问 DRAM，并整行回填。Cache 是否划算，依赖**时间局部性**与**空间局部性**。流水线把该链嵌在 **MEM** 阶段；TLB Miss 与 Cache Miss 是两类不同代价。全文按「读法骨架 → 翻译链 → 取数链 → 合图与代价 → 流水线接口」展开。
 
 **关键词：** 虚拟地址；MMU；TLB；页表；Page Fault；Cache；SRAM；DRAM；局部性；Cache Line；set / tag / offset；AMAT；L1D；Working Set；数据通路；流水线
 
@@ -21,15 +23,24 @@
 ## 目录
 
 - [摘要](#摘要)
+
+**上篇 · 读法骨架**
+
 1. [读法与术语](#1-读法与术语)
     - [1.1 术语与从属关系](#11-术语与从属关系)
     - [1.2 边界](#12-边界)
     - [1.3 从「程序如何执行」建立最小机器](#13-从程序如何执行建立最小机器)
     - [1.4 指令：连接软件与硬件](#14-指令连接软件与硬件)
+
+**中篇 · 翻译链**
+
 2. [程序给出的通常是虚拟地址](#2-程序给出的通常是虚拟地址)
 3. [MMU：虚拟页到物理页](#3-mmu虚拟页到物理页)
 4. [TLB：避免每次都走页表](#4-tlb避免每次都走页表)
 5. [TLB Miss 与页表遍历](#5-tlb-miss-与页表遍历)
+
+**下篇 · 取数链与合图**
+
 6. [查 Cache：为何需要、如何定位](#6-查-cache为何需要如何定位)
     - [6.1 处理器—主存差距与存储层次](#61-处理器主存差距与存储层次)
     - [6.2 地址如何定位到 Cache](#62-地址如何定位到-cache)
@@ -44,6 +55,14 @@
 14. [本章要点](#14-本章要点)
 15. [参考文献](#15-参考文献)
 
+读法提示：先分清「翻译页映射」与「取数据副本」两条链，再把二者合到一次 Load；流水线细节见 [26a](./26a-cpu-instruction-pipeline-treatise.md)。
+
+```mermaid
+flowchart LR
+  Read["上篇 · 读法骨架"] --> Xlat["中篇 · 翻译链"]
+  Xlat --> Fetch["下篇 · 取数 · 合图"]
+```
+
 ---
 
 ## 1. 读法与术语
@@ -52,7 +71,7 @@
 
 > **语句 → 机器指令 → 取指 / 译码 / 数据通路 → 多级存储提供指令与数据。**
 
-其中「多级存储提供数据」又可拆成两段，后文按此顺序展开：
+「多级存储提供数据」又可拆成翻译与取数两段；后文按「骨架 → 翻译 → 取数 → 合图 → 流水线接口」展开：
 
 | 段 | 章节 | 回答的问题 | 核心部件 |
 | -- | ---- | ---------- | -------- |
@@ -61,7 +80,7 @@
 | **合图** | §9–§11 | 一次 Load 如何串起来？为何有时极贵？ | 全链路 |
 | **叠指令** | §12 | 流水线的 MEM 阶段如何接上访存链？ | IF–ID–EX–MEM–WB |
 
-一次典型数据 Load 的四问如下；后文流程图是教学简图，真实微架构会重叠、推测与乱序。
+一次典型数据 Load，可先记四问（后文流程图为教学简图；真实微架构会重叠、推测与乱序）：
 
 | 环节 | 回答的问题 |
 | ---- | ---------- |
@@ -70,7 +89,7 @@
 | CPU Cache（L1 / L2 / L3） | 附近是否已有这份数据？如何用地址定位到行？ |
 | Memory Controller + DRAM | 物理介质上如何选中并读出？ |
 
-关系总图（实线为因果顺序；虚线表示 L1 **VIPT** 下索引可与 TLB 并行）：
+关系总图如下。实线为因果顺序；虚线表示 L1 **VIPT** 下索引可与 TLB 并行：
 
 ```mermaid
 flowchart TB
@@ -95,10 +114,7 @@ flowchart TB
   VA -.->|VIPT: 页内偏移做 set index| C
 ```
 
-读图时只须记住两句：
-
-1. **Page Table 是翻译的权威来源；TLB 是它的缓存；MMU 是做翻译的硬件。**  
-2. **TLB 缓存的是「页怎么映」；Cache 缓存的是「字节附近的数据」——两套缓存，职责不同，常可并行启动。**
+读图时抓住两句即可：**Page Table 是翻译的权威来源，TLB 是它的缓存，MMU 是做翻译的硬件**；同时，**TLB 缓存的是「页怎么映」，Cache 缓存的是「字节附近的数据」**——两套缓存职责不同，常可并行启动。
 
 ### 1.1 术语与从属关系
 
@@ -135,7 +151,7 @@ flowchart TB
 
 ### 1.3 从「程序如何执行」建立最小机器
 
-最有效的入口通常不是先背逻辑门清单，而是先建立一个**最小计算机模型**。假设要执行一条寄存器加法（教学写法 `add rd, rs1, rs2`，含义 `rd ← rs1 + rs2`），至少要完成：取指、译码、读操作数、运算、写回。问题就从「CPU 有哪些部件」变成「这些动作分别由什么硬件完成」。[^cod]
+进入翻译与 Cache 之前，需要一个能跟得住的**最小计算机模型**——不是先背逻辑门清单，而是问：一条寄存器加法（教学写法 `add rd, rs1, rs2`，含义 `rd ← rs1 + rs2`）至少要完成取指、译码、读操作数、运算、写回；这些动作分别由什么硬件承担。[^cod]
 
 | 部件 | 在这条加法里做什么 |
 | ---- | ------------------ |
@@ -146,9 +162,7 @@ flowchart TB
 | **控制器** | 决定各部件何时读、何时写、ALU 做哪一种运算 |
 | **存储系统** | 提供指令；若操作数在内存，还要提供数据（后文主线） |
 
-组成原理的基本对象因此不是一张部件清单，而是：**数据在部件之间如何流动，以及控制信号如何决定这种流动。**
-
-进一步可以把任何机器指令画成「执行过程图」。例如 `add r1, r2, r3`（`r1 ← r2 + r3`）：
+组成原理的基本对象因此不是一张部件清单，而是：**数据在部件之间如何流动，以及控制信号如何决定这种流动。** 任意机器指令都可落成「执行过程图」。以 `add r1, r2, r3`（`r1 ← r2 + r3`）为例：
 
 ```mermaid
 flowchart LR
@@ -163,17 +177,17 @@ flowchart LR
   CTRL -.-> WB
 ```
 
-追问「谁选择 ALU 的输入」「谁产生加法控制信号」「结果在哪个边沿写入」，就会自然进入数据通路、多路选择器、时序逻辑——概念被放进真实执行过程，比单独背「ALU 是算术逻辑单元」更稳。
+追问「谁选择 ALU 的输入」「谁产生加法控制信号」「结果在哪个边沿写入」，就会自然进入数据通路、多路选择器与时序逻辑——概念被嵌进真实执行过程，比单独背名词更稳。
 
-寄存器是能保存状态的时序电路；ALU 多为组合逻辑（加法器、逻辑单元与选择电路）；多路选择器决定哪一路进入下一阶段。组合逻辑的输出主要由当前输入决定；时序逻辑有状态，须在时钟控制下更新。**计算与保存要分开：** ALU 可以立刻算出结果，若没有寄存器在边沿锁存，下一阶段就无法可靠使用它。CPU 因而可理解为一个受时钟驱动的状态转换系统。[^cod]
+硬件分工上：寄存器是保存状态的时序电路；ALU 多为组合逻辑（加法器、逻辑单元与选择电路）；多路选择器决定哪一路进入下一阶段。组合逻辑的输出主要由当前输入决定；时序逻辑有状态，须在时钟控制下更新。**计算与保存要分开：** ALU 可以立刻算出结果，若没有寄存器在边沿锁存，下一阶段就无法可靠使用它。CPU 因而可理解为一个受时钟驱动的状态转换系统。[^cod]
 
 若加法的操作数不在寄存器而在内存，数据通路会在「读操作数」处插入一次 Load——也就是后文 §2–§9 的整条访存链。**执行骨架决定何时要访存；翻译链与取数链决定访存如何完成。**
 
 ### 1.4 指令：连接软件与硬件
 
-**指令集体系结构（ISA）** 是处理器向软件提供的计算接口：规定能做哪些基本操作、操作数在哪、数据如何表示、内存如何访问。高级语言里的 `a = b + c` 不会直接变成电路动作，而是经编译器变成若干机器指令——加载、加法、存储等。学习组成时，宜同时看高级语言、汇编与机器指令三层。[^cod]
+**指令集体系结构（ISA）** 是处理器向软件承诺的计算接口：规定能做哪些基本操作、操作数在哪、数据如何表示、内存如何访问。高级语言里的 `a = b + c` 不会直接变成电路动作，而是经编译器变成若干机器指令（加载、加法、存储等）。学习组成时，宜同时看高级语言、汇编与机器指令三层。[^cod]
 
-值得反复做的练习：写一小段 C，对照其汇编，再追一条汇编在 CPU 内经过哪些阶段。循环为何需要比较与条件转移？函数调用为何要保存返回地址与部分寄存器？数组访问为何常表现为「基址 + 偏移」？这些问题会把抽象程序收成地址计算、寄存器操作、条件判断与内存访问——后文的 VA、TLB 与 Cache，正是这条链在存储侧的展开。
+一个有效练习是：写一小段 C，对照其汇编，再追一条汇编在 CPU 内经过哪些阶段。循环为何需要比较与条件转移？函数调用为何要保存返回地址与部分寄存器？数组访问为何常表现为「基址 + 偏移」？这些问题把抽象程序收成地址计算、寄存器操作、条件判断与内存访问——后文的 VA、TLB 与 Cache，正是这条链在存储侧的展开。
 
 **所以 · 边界在哪：** 先会跟一条指令的数据流，再进虚实翻译；存储与 CPU 同等关键，§2 起专解「地址如何变成数据」。
 
@@ -181,7 +195,7 @@ flowchart LR
 
 ## 2. 程序给出的通常是虚拟地址
 
-从本节到 §5，只谈**翻译链**：把程序员手里的地址变成硬件能用来选通物理介质的地址。
+从本节到 §5，只谈**翻译链**：把程序员手里的地址，变成硬件能用来选通物理介质的地址。
 
 程序使用的地址通常是 **Virtual Address（VA）**，而不是物理 RAM 地址。执行 `int value = array[100];` 时，编译器生成含地址计算的机器指令；CPU 最终可能访问类似：
 
@@ -189,9 +203,9 @@ flowchart LR
 VA 示例：0x7F1234567890
 ```
 
-该地址属于当前进程的 **Virtual Address Space**。每进程通常自有一套虚拟空间：隔离进程，并允许 OS 独立地把虚拟页映到物理页。[^va]
+该地址属于当前进程的 **Virtual Address Space**。每进程通常自有一套虚拟空间：既隔离进程，也允许 OS 独立地把虚拟页映到物理页。[^va]
 
-CPU 首先要回答：**这个 VA 对应哪一块物理内存？** ——这就是 **Address Translation**，由下一节的 MMU 完成。
+于是 CPU 首先要回答：**这个 VA 对应哪一块物理内存？** 这就是 **Address Translation**，由下一节的 MMU 完成。
 
 **所以 · 边界在哪：** 程序员手里的指针，默认不是 DRAM 上的门牌号。
 
@@ -199,9 +213,9 @@ CPU 首先要回答：**这个 VA 对应哪一块物理内存？** ——这就�
 
 ## 3. MMU：虚拟页到物理页
 
-**MMU（Memory Management Unit）** 是做翻译的硬件；它读的权威映射是 OS 维护的 **Page Table**（本身也在内存里）。二者关系：OS 写表，MMU 查表（通常先经 TLB，见 §4）。
+**MMU（Memory Management Unit）** 是做翻译的硬件；它读的权威映射是 OS 维护的 **Page Table**（页表本身也在内存里）。关系可以记为：OS 写表，MMU 查表（通常先经 TLB，见 §4）。
 
-一个虚拟地址（以常见 **4 KiB** 页为例）分成：高位的虚拟页号（VPN）与低 **12** 位的页内偏移（Page Offset）。
+以常见 **4 KiB** 页为例，一个虚拟地址分成高位的虚拟页号（VPN）与低 **12** 位的页内偏移（Page Offset）：
 
 ```text
 Virtual Address（概念模型，页大小 = 4 KiB）
@@ -211,7 +225,7 @@ Virtual Address（概念模型，页大小 = 4 KiB）
 └─────────────────────────────────┴────────────────────┘
 ```
 
-内存按固定大小的 **Page** 划分。**4 KiB** 是一种常见页大小；现代处理器与 OS 也支持更大的页，以减少页表项数量、提高 TLB 覆盖率（代价是内部碎片与管理复杂度）。[^page-size]
+内存按固定大小的 **Page** 划分。**4 KiB** 是长期常见的默认页大小；现代处理器与 OS 也支持更大的页，以减少页表项数量、提高 TLB 覆盖率——代价是内部碎片与管理复杂度上升。[^page-size]
 
 翻译只改页号，**Page Offset 原样拼回**：
 
@@ -228,7 +242,7 @@ Virtual Address（概念模型，页大小 = 4 KiB）
   PA = 拼接(PPN, Offset)
 ```
 
-因此，硬件转换的是虚拟页号（VPN → PPN），偏移不变，再拼出物理地址。[^mmu]
+因此，硬件转换的是虚拟页号（VPN → PPN）；偏移不变，再拼出物理地址。[^mmu]
 
 **所以 · 边界在哪：** 翻译的粒度是页，不是「每个字节一张地图」。
 
@@ -236,9 +250,9 @@ Virtual Address（概念模型，页大小 = 4 KiB）
 
 ## 4. TLB：避免每次都走页表
 
-上一节的问题立刻暴露：**Page Table 本身也在内存中**。若每次翻译都直读 RAM，一次数据访问可能先要多次访存，才能知道数据到底在哪。
+上一节立刻暴露一个代价：**Page Table 本身也在内存中**。若每次翻译都直读 RAM，一次数据访问可能先要多次访存，才能知道数据到底在哪。
 
-现代 CPU 用 **Translation Lookaside Buffer（TLB）** 解决这个问题。TLB 是**翻译缓存**：保存最近用过的虚→实页映射。它与后文的数据 Cache 同属「缓存」家族，但缓存的对象不同——一个是页翻译，一个是数据本身。
+现代 CPU 用 **Translation Lookaside Buffer（TLB）** 解决这一问题。TLB 是**翻译缓存**：保存最近用过的虚→实页映射。它与后文的数据 Cache 同属「缓存」家族，但对象不同——一个是页翻译，一个是数据本身。
 
 ```mermaid
 flowchart TD
@@ -253,7 +267,7 @@ flowchart TD
 - 翻译已在 TLB 中 → **TLB Hit**：可避免当场遍历页表。  
 - 翻译不在 TLB 中 → **TLB Miss**：需要 **Page-Table Walk**（及可能的缺页处理）。
 
-现代处理器还可缓存页表项或 walk 的中间结果，进一步加速。若页表项表明该页当前不在物理内存中（或权限不允许），处理器会触发 **Page Fault**；操作系统处理异常——可能从存储调入该页、更新映射，然后让指令重试；也可能向进程投递信号或终止进程。[^tlb]
+现代处理器还可缓存页表项或 walk 的中间结果，以进一步加速。若页表项表明该页当前不在物理内存中（或权限不允许），处理器会触发 **Page Fault**；操作系统处理异常——可能从存储调入该页、更新映射后让指令重试，也可能向进程投递信号或终止进程。[^tlb]
 
 **所以 · 边界在哪：** TLB 缓存的是「页怎么映」，Cache 缓存的是「字节附近的数据」；没有 TLB，分页在性能上几乎不可用。
 
@@ -261,7 +275,7 @@ flowchart TD
 
 ## 5. TLB Miss 与页表遍历
 
-TLB Miss 之后，MMU（或软硬协同）必须**真正去读 Page Table**。现代系统通常使用**多级页表**，以免一张扁平表过大。
+TLB Miss 之后，MMU（或软硬协同）必须**真正去读 Page Table**。现代系统通常使用**多级页表**，以免一张扁平表占用过大的连续物理空间。
 
 以 **x86-64 四级分页、4 KiB 页** 为例：规范可用线性地址约 **48 bit**（高位须为规范符号扩展）；MMU 用各 9 bit 索引四级表，最低 **12 bit** 为页内偏移：[^la57]
 
@@ -280,11 +294,11 @@ TLB Miss 之后，MMU（或软硬协同）必须**真正去读 Page Table**。�
                                                     PA = 拼接(PPN, Offset)
 ```
 
-走法：`CR3` 指向 PML4；用 `VA[47:39]`、`VA[38:30]`、`VA[29:21]`、`VA[20:12]` 依次索引，最后用 `VA[11:0]` 作为页内偏移。支持 **LA57** 时再加一层 PML5，线性地址扩到约 **57 bit**；须由系统软件置位，不是所有机器默认开启。[^la57]
+走法：`CR3` 指向 PML4；用 `VA[47:39]`、`VA[38:30]`、`VA[29:21]`、`VA[20:12]` 依次索引，最后用 `VA[11:0]` 作为页内偏移。支持 **LA57**（CR4.LA57）时再加一层 PML5，线性地址扩到约 **57 bit**；须由系统软件在进入长模式前（或等价路径）置位，并非所有机器默认开启。Intel **Ice Lake** 一代起出现于产品，其后部分 AMD 服务器等亦支持同类扩展。[^la57]
 
-这些页表结构本身也在内存中，故一次 TLB Miss 可能在 walk 期间触发**多次**访存（中间层命中页表缓存时可减少次数）——walk 时的访存，同样可能经过后文的 Cache。OS 还可用大页、透明大页等扩大单次翻译的覆盖（权衡碎片与延迟）。[^drepper]
+这些页表结构本身也在内存中，故一次 TLB Miss 可能在 walk 期间触发**多次**访存（中间层命中页表缓存时可减少次数）；walk 时的访存同样可能经过后文的 Cache。OS 还可用大页、透明大页等扩大单次翻译的覆盖——权衡的是内部碎片与管理延迟。[^drepper]
 
-至此，翻译链结束：得到可用的 PA（或进入 Page Fault）。下一节进入**取数链**——用这个地址（或 VIPT 下可先用的页内偏移）去问 Cache。
+至此翻译链结束：得到可用的 PA，或进入 Page Fault。下一节进入**取数链**——用这个地址（或 VIPT 下可先用的页内偏移）去问 Cache。
 
 **所以 · 边界在哪：** Miss 的代价不是「多查一次表」四个字，而是可能拖出一串依赖访存。
 
@@ -305,9 +319,9 @@ for (int i = 0; i < 1000000; ++i) {
 }
 ```
 
-核心在做：读 `array[i]`、加到 `sum`、递增 `i`、继续循环。相对算术与寄存器操作，**从主存取一个值往往贵得多**。量级上（随微架构、时钟与内存配置而变，宜作数量级而非规格书常数）：现代 x86 服务器测量中，L1 数据命中常在约 **4 个周期**，本地 DRAM 访问则可到约 **二百周期**量级。[^cache-latency] 乱序执行与存储级并行可以掩盖一部分延迟，但依赖链很长或 Miss 过密时，核心仍会大量停顿。
+核心在做：读 `array[i]`、加到 `sum`、递增 `i`、继续循环。相对算术与寄存器操作，**从主存取一个值往往贵得多**。量级上（随微架构、时钟与内存配置而变，宜作数量级而非规格书常数）：现代 x86 服务器测量中，L1 数据命中常在约 **4 个周期**，本地 DRAM 访问则可到约 **200–220 周期**量级。[^cache-latency] 乱序执行与存储级并行可以掩盖一部分延迟，但依赖链很长或 Miss 过密时，核心仍会大量停顿。
 
-文献与课程讲义称这一长期现象为 **processor–memory performance gap**（memory wall 的一侧）：处理器算得越来越快，DRAM 延迟的改善相对更慢；若每次 Load 都直奔主存，大量潜在吞吐会浪费在等待上。[^mem-gap] 架构回应是在核心与 DRAM 之间插入**小容量、高速**的 **CPU Cache**，保存很可能很快再用的数据与指令副本。
+文献与课程讲义称这一长期现象为 **processor–memory performance gap**（memory wall 的一侧）：处理器算力提升更快，DRAM 延迟改善相对更慢；若每次 Load 都直奔主存，大量潜在吞吐会浪费在等待上。[^mem-gap] 架构回应是在核心与 DRAM 之间插入**小容量、高速**的 **CPU Cache**，保存很可能很快再用的数据与指令副本。
 
 Cache **不会把 DRAM 变快**；它**减少必须去 DRAM 的次数**，从而压低平均访存时间——这才是它要解决的问题。
 
@@ -340,15 +354,15 @@ flowchart TB
 
 具体容量与延迟随型号变化；表中只钉相对关系。末级是否 inclusive / non-inclusive 因微架构而异。L1/L2/L3 是常见设计模式，不是所有芯片的铁律。[^cache-hier]
 
-因此，得到可用的物理页语义之后，下一步通常**不是**直奔 DRAM，而是先问片上 Hierarchy。教学上可画成「先翻译、再查 Cache」；实现上，L1 的索引往往与 TLB **重叠进行**。L1 常见 **VIPT**（Virtually Indexed, Physically Tagged）：用虚拟地址里**未经翻译的页内偏移**做组索引，因而可与 TLB 并行；标签比对仍要物理页号。索引若用到页号，同一物理页的不同虚拟别名会进不同组，故 L1 的路数与容量受页大小约束。更下级 Cache 更常接近「先有物理地址再查」（PIPT）。[^cache-hier]
+因此，得到可用的物理页语义之后，下一步通常**不是**直奔 DRAM，而是先问片上 Hierarchy。教学上可画成「先翻译、再查 Cache」；实现上，L1 的索引往往与 TLB **重叠进行**。许多高性能核的 L1 采用 **VIPT**（Virtually Indexed, Physically Tagged）：用虚拟地址里**未经翻译的页内偏移**做组索引，因而可与 TLB 并行；标签比对仍要物理页号。为避免同义别名（同一物理页的不同 VA 落入不同 set），组索引位须落在页内偏移之内——对 4 KiB 页与 64 B 行，这意味着 index 位数与 offset 位数之和不超过 12；容量要再增大，往往靠提高相联度（如 32 KiB 配 8-way）而不是再吃页号位。更下级 Cache 更常接近「先有物理地址再查」（PIPT）。[^cache-hier]
 
 **所以 · 边界在哪：** Cache 解决的是平均访存代价，不是 DRAM 介质本身的速度；下一步通常先问 Cache，L1 可与翻译重叠启动索引，命中与否仍由物理标签裁定。
 
 ### 6.2 地址如何定位到 Cache
 
-§6.1 回答「为何有层级、先问哪一级」；本小节回答「在这一级里，地址如何落到某一行」。先答三问：要访问什么地址？如何选中一组并比对标签？未命中时硬件下一步做什么？
+§6.1 回答「为何有层级、先问哪一级」；本小节回答「在这一级里，地址如何落到某一行」。先钉三问：要访问什么地址？如何选中一组并比对标签？未命中时硬件下一步做什么？
 
-教学上，一次 Cache 查找把地址切成三段（PIPT 用完整 PA；VIPT 的 **Set Index** 与 **Offset** 可取自 VA 的页内偏移，**Tag** 仍用物理页相关位）。下例刻意取 **32 KiB · 8-way · 64 B/line**：组索引 6 bit + 行内偏移 6 bit = 12 bit，恰好落在 4 KiB 页的页内偏移内，因而可与 TLB 并行做 VIPT：[^cache-map]
+教学上，一次 Cache 查找把地址切成三段（PIPT 用完整 PA；VIPT 的 **Set Index** 与 **Offset** 可取自 VA 的页内偏移，**Tag** 仍用物理页相关位）。下例刻意取 **32 KiB · 8-way · 64 B/line**：组索引 6 bit + 行内偏移 6 bit = 12 bit，恰好落在 4 KiB 页的页内偏移内，因而可与 TLB 并行做无别名的 VIPT：[^cache-map]
 
 ```text
 例：32 KiB 数据阵列 · 8-way · 64 B/line · 假设 48-bit PA
@@ -396,7 +410,7 @@ flowchart TB
 | **时间局部性（Temporal）** | 刚访问过的位置，不久很可能再访问 | 循环中反复读写的 `sum`；反复执行的同一段指令 |
 | **空间局部性（Spatial）** | 刚访问过的位置，附近地址也很可能很快被访问 | 顺序扫数组；结构体字段连续布局 |
 
-仍用 §6.1 的求和循环：`sum` 被每轮改写——**时间局部性**；`array[i]`、`array[i+1]`、… 在内存中相邻——**空间局部性**。指令侧同理：循环体被反复取指，同样有时间局部性。
+仍用 §6.1 的求和循环：`sum` 被每轮改写，体现**时间局部性**；`array[i]`、`array[i+1]`、… 在内存中相邻，体现**空间局部性**。指令侧同理：循环体被反复取指，同样有时间局部性。
 
 Cache 利用前者，把最近用过的行留在近处；利用后者，按 **Cache Line**（块）而非单字节传输——一次 Miss 拉回邻居，后续顺序访问更可能命中。程序员通常不直接操作 Tag / 替换策略，却通过**访问模式与数据布局**间接决定命中率（§11）。
 
@@ -423,7 +437,7 @@ CPU Cache 通常不会按「每个字节一个独立格子」组织，而以固�
   行起点 = 地址 − (地址 mod 64)
 ```
 
-若 `int` 为 4 字节、行宽 64 字节，一次为 `array[100]` 填充的行，在对齐允许时可覆盖其后多个相邻元素——具体包含哪些下标取决于地址与行边界，但原理是空间局部性：随后访问 `array[101]`、`array[102]`… 更可能已在 Cache 中，无需每次再付 DRAM 代价。[^cache-line]
+若 `int` 为 4 字节、行宽 64 字节，一次为 `array[100]` 填充的行，在对齐允许时可覆盖其后多个相邻元素——具体包含哪些下标取决于地址与行边界，但原理仍是空间局部性：随后访问 `array[101]`、`array[102]`… 更可能已在 Cache 中，无需每次再付 DRAM 代价。[^cache-line]
 
 请求在层级间下沉的教学路径：
 
@@ -441,7 +455,7 @@ flowchart TD
 - **Cache Hit**：在该级找到，延迟相对低。  
 - **Cache Miss**：请求下沉到下一级；各级皆 Miss 则走向主存（§8），取得后可按策略回填，供后续访问。
 
-真实处理器会并行查询、推测执行与硬件预取；上图只保基本因果。容量有限时，新行进入须**替换**旧行（LRU 近似、随机等）；写回（write-back）与直写（write-through）、多核 **cache coherence** 等机制大多对程序员透明，却通过伪共享等形式进入墙钟（§11）。[^cache-hier]
+真实处理器会并行查询、推测执行与硬件预取；上图只保基本因果。容量有限时，新行进入须**替换**旧行（LRU 近似、随机等）；写回（write-back）与直写（write-through）、多核 **cache coherence** 等机制大多对程序员透明，却可通过伪共享等形式进入墙钟（§11）。[^cache-hier]
 
 衡量「Hierarchy 是否让平均访问变便宜」的经典简化模型是 **AMAT**（Average Memory Access Time）：[^amat]
 
@@ -478,7 +492,7 @@ flowchart LR
 
 ## 9. 串起来：一次 Load 的简化路径
 
-前面分述了翻译（§2–§5）与取数（§6–§8）。执行 `x = array[100];` 时，教学用路径可收成一张图（实线为因果顺序；虚线表示 L1 **VIPT** 下索引可与 TLB 并行）：
+前面分述了翻译（§2–§5）与取数（§6–§8）。执行 `x = array[100];` 时，教学用路径可收成一张图。实线为因果顺序；虚线表示 L1 **VIPT** 下索引可与 TLB 并行：
 
 ```mermaid
 flowchart TD
@@ -497,7 +511,7 @@ flowchart TD
   MEM --> DATA
 ```
 
-真实处理器会重叠、推测、乱序、预取，并并发多个请求。本图只保**基本原理**。§10–§11 钉心智与代价；§12 说明流水线如何把这条链嵌进 MEM 阶段。
+真实处理器会重叠、推测、乱序、预取，并并发多个请求；本图只保**基本原理**。§10–§11 钉心智与代价；§12 说明流水线如何把这条链嵌进 MEM 阶段。
 
 **所以 · 边界在哪：** 能跟上这张简图，就够读懂多数「访存为何变慢」的讨论。
 
@@ -505,7 +519,7 @@ flowchart TD
 
 ## 10. 地址是选通，不是检索
 
-把 §2–§9 收成一句反常识的话：常见误读是「CPU 喊一个地址，RAM 全文检索后返回找到了」。地址不是检索标签，而是硬件 **Addressing Mechanism** 的输入——经 TLB / 页表得到 PA，再经 Cache 的 index / tag 查找，或由 Memory Controller 选通 DRAM 的 channel / bank / row / column。[^drepper][^dram]
+把 §2–§9 收成一句反常识的话：常见误读是「CPU 喊一个地址，RAM 全文检索后返回『找到了』」。地址不是检索标签，而是硬件 **Addressing Mechanism** 的输入——经 TLB / 页表得到 PA，再经 Cache 的 index / tag 查找，或由 Memory Controller 选通 DRAM 的 channel / bank / row / column。[^drepper][^dram]
 
 用仓库类比：门牌号不是货名；硬件按号打开对应的行与列。TLB 回答「这个页号映到哪一扇门」；Cache 回答「附近货架上是否已有副本」；DRAM 子系统回答「介质上如何打开那一格」。三者都是**选通 / 查找**，不是按内容搜索。
 
@@ -532,9 +546,9 @@ for (int i = 0; i < N; ++i) {
 }
 ```
 
-空间局部性强，硬件预取也更易生效，AMAT 往往接近上层 Hit Time。若改为依赖随机下标、或大图上的指针追逐——每次跳跃可能落到另一条 Cache Line 甚至另一页——则 Miss Rate 与 TLB 压力同时上升，算术指令数相近，墙钟却差很远。[^drepper][^locality]
+空间局部性强，硬件预取也更易生效，AMAT 往往接近上层 Hit Time。若改为依赖随机下标、或大图上的指针追逐——每次跳跃可能落到另一条 Cache Line 甚至另一页——则 Miss Rate 与 TLB 压力同时上升：算术指令数相近，墙钟却差很远。[^drepper][^locality]
 
-相关旋钮包括：时间 / 空间局部性、Cache Line 对齐与跨行、顺序与跨步访问、数据布局（AoS / SoA）、Working Set 是否装得进末级 Cache 与 TLB、页大小（含大页）。工程上常见的拖慢因素：大图指针追逐、按列扫行主序矩阵、**伪共享**（false sharing：不同核改同一 Cache Line 里无关字段，引发行来回作废）、工作集远超末级覆盖。Drepper 的经典结论是：对多数程序而言，瓶颈往往在访存子系统，而不是算术峰值。[^drepper]
+相关旋钮包括：时间 / 空间局部性、Cache Line 对齐与跨行、顺序与跨步访问、数据布局（AoS / SoA）、Working Set 是否装得进末级 Cache 与 TLB、页大小（含大页）。工程上常见的拖慢因素有：大图指针追逐、按列扫行主序矩阵、**伪共享**（false sharing：不同核改同一 Cache Line 里无关字段，引发行来回作废）、工作集远超末级覆盖。Drepper 的经典结论是：对多数程序而言，瓶颈往往在访存子系统，而不是算术峰值。[^drepper]
 
 再钉一句反差：**Cache 不会让 DRAM 变快；它让昂贵访问发生得更少。** 当程序局部性好时，多数访问由上层完成，系统在效果上接近「容量像主存、延迟像近端 Cache」——Miss 仍可能极贵，只是更少发生。
 
@@ -544,7 +558,7 @@ for (int i = 0; i < N; ++i) {
 
 ## 12. 流水线：多条指令同时在路上
 
-§1.3 跟的是**单条**指令的数据流；§9 跟的是**一次 Load** 的访存链。流水线回答第三问：多条指令如何叠在一起，而访存链落在哪一阶段。
+§1.3 跟的是**单条**指令的数据流；§9 跟的是**一次 Load** 的访存链。流水线回答第三问：多条指令如何叠在一起，而访存链落在哪一阶段。专论吞吐、冒险与乱序见 [26a](./26a-cpu-instruction-pipeline-treatise.md)；本节只钉与访存的接口。
 
 经典教学模型把 RISC 执行拆成五级：
 
@@ -578,7 +592,7 @@ Load-Use 在时间轴上可收成：
 
 乱序执行、寄存器重命名与多发射，仍沿着同一逻辑：提高指令级并行，同时保持 ISA 要求的程序语义。它们不取消本文的访存链——Load 依然要过 TLB 与 Cache；只是多条访存可以重叠、重排。[^pipeline]
 
-**所以 · 边界在哪：** 流水线提高的是吞吐；相关与访存停顿决定你能否吃到峰值。
+**所以 · 边界在哪：** 流水线提高的是吞吐；相关与访存停顿决定你能否吃到峰值。细节展开见 [26a](./26a-cpu-instruction-pipeline-treatise.md)。
 
 ---
 
@@ -592,7 +606,7 @@ Load-Use 在时间轴上可收成：
 | **Cache** | 取数 | 附近是否已有这份数据？如何用 offset / index / tag 定位？局部性是否支撑命中？ |
 | **Memory Subsystem** | 取数末站 | 物理位置如何选通？ |
 
-`x = array[100];` 背后，可能叠着编译与取指、地址生成、翻译、TLB、页表 walk、按行组织的多级 Cache，以及 DRAM。Cache 解决的是处理器与主存之间的平均延迟差距——靠局部性把热数据留在近处，而不是把 DRAM 本身加速。访问模式友好时极快，不友好时极慢——慢的往往是这条链路。
+`x = array[100];` 背后，可能叠着编译与取指、地址生成、翻译、TLB、页表 walk、按行组织的多级 Cache，以及 DRAM。Cache 解决的是处理器与主存之间的平均延迟差距——靠局部性把热数据留在近处，而不是把 DRAM 本身加速。访问模式友好时极快，不友好时极慢；慢的往往是这条链路。
 
 ---
 
@@ -624,23 +638,23 @@ Load-Use 在时间轴上可收成：
 
 [^tlb]: TLB 作为地址翻译缓存；Miss 触发 page-table walk 或陷阱。多级 TLB、在 walk 时缓存中间页表项，是现代微架构的常见优化。厂商说明见 Intel 软件开发者手册中关于 paging / TLB 的章节。
 
-[^la57]: Intel 5-level paging（CR4.LA57）：在 IA-32e 模式下将线性地址宽度扩至 57 bit；**Ice Lake** 一代起出现于 Intel 产品，其后部分 AMD 服务器等亦支持同类扩展。未置位时仍用四级分页（约 48 bit 规范地址）。见 Intel 白皮书 *5-Level Paging and 5-Level EPT* 及后续 SDM。
+[^la57]: Intel, *5-Level Paging and 5-Level EPT*（白皮书）：CR4.LA57 在 IA-32e 模式下将线性地址宽度扩至 57 bit；未置位时仍用四级分页（约 48-bit 规范地址）。**Ice Lake** 一代起出现于 Intel 产品；其后部分 AMD 服务器等亦支持同类扩展。亦见 Intel SDM 关于 5-level paging 的章节。
 
-[^cache-hier]: 多级 Cache（L1 / L2 / L3）为现代 CPU 标配；L1 常分指令 / 数据。容量与延迟随型号变化；正文只取「越近越快、越远越大」结构。末级是否 inclusive / non-inclusive（如部分 Xeon 自 Skylake Scalable 起）因微架构而异。L1 的 VIPT 用页内偏移做组索引、物理地址做标签，索引才能与翻译重叠；组索引一旦用到页号，别名就会冲突。
+[^cache-hier]: 多级 Cache（L1 / L2 / L3）为现代 CPU 标配；L1 常分指令 / 数据。容量与延迟随型号变化；正文只取「越近越快、越远越大」结构。末级是否 inclusive / non-inclusive（如部分 Xeon 自 Skylake Scalable 起）因微架构而异。L1 的 VIPT 用页内偏移做组索引、物理地址做标签，索引才能与翻译重叠；组索引一旦用到页号，同义别名就会冲突（见 VESPA 等对 VIPT 约束的讨论，arXiv:1701.03499）。
 
 [^cache-line]: 64-byte Cache Line 在 x86 服务器与客户端上极为常见；并非所有架构皆然。Cache 按行对齐填充，利用空间局部性。见 Intel 关于 Cache 组织的公开文档、Drepper *What Every Programmer Should Know About Memory*，以及系统教材。
 
-[^cache-map]: 地址切分为 tag / index / offset 为组相联 Cache 的标准模型。行宽决定 offset 位数；set 数决定 index 位数；其余为 tag。例：32 KiB、8-way、64B 行 → 64 sets → 6-bit index、6-bit offset（二者之和 ≤ 12 bit 时，可在 4 KiB 页上做纯 VIPT）。见 Patterson & Hennessy, *Computer Organization and Design* 存储层次章节，以及常见课程讲义中的 Cache 位宽计算。
+[^cache-map]: 地址切分为 tag / index / offset 为组相联 Cache 的标准模型。行宽决定 offset 位数；set 数决定 index 位数；其余为 tag。例：32 KiB、8-way、64 B 行 → 64 sets → 6-bit index、6-bit offset（二者之和 ≤ 12 bit 时，可在 4 KiB 页上做无别名 VIPT）。见 Patterson & Hennessy, *Computer Organization and Design* 存储层次章节。
 
-[^cache-latency]: 延迟数量级（非固定规格）：Velten, Schöne, Ilsche, Hackenberg, *Memory Performance of AMD EPYC Rome and Intel Cascade Lake SP Server Processors*, ICPE 2022（DOI: 10.1145/3489525.3511689；亦见 arXiv:2204.03290）报告两类架构上 L1D 约 4 周期、本地 DRAM 约二百周期量级（随 DIMM、uncore 与 NUMA 而变）。正文只用数量级说明「L1 与 DRAM 差一到两个数量级」。
+[^cache-latency]: 延迟数量级（非固定规格）：Markus Velten, Robert Schöne, Thomas Ilsche, Daniel Hackenberg, *Memory Performance of AMD EPYC Rome and Intel Cascade Lake SP Server Processors*, ICPE 2022（DOI: [10.1145/3489525.3511689](https://doi.org/10.1145/3489525.3511689)；arXiv:[2204.03290](https://arxiv.org/abs/2204.03290)）。两类架构上 L1D 约 4 周期；本地 DRAM 约 200 周期（Cascade Lake）与约 220 周期（Rome），随 DIMM、uncore 与 NUMA 而变。正文只用数量级说明「L1 与 DRAM 差一到两个数量级」。
 
-[^mem-gap]: Processor–memory performance gap / memory hierarchy 的教学表述：CMU 15-213 *Introduction to Computer Systems*（Memory Hierarchy 讲义）、MIT / Cornell 等组成课程；Hennessy & Patterson, *Computer Architecture: A Quantitative Approach* 与 *Computer Organization and Design* 存储层次章。核心思想：CPU 与 DRAM 延迟差距长期存在 → 用多级缓存利用局部性降低平均访问时间。
+[^mem-gap]: Processor–memory performance gap / memory hierarchy 的教学表述：CMU 15-213 *Introduction to Computer Systems*（Memory Hierarchy 讲义）；Hennessy & Patterson, *Computer Architecture: A Quantitative Approach* 与 *Computer Organization and Design* 存储层次章。核心思想：CPU 与 DRAM 延迟差距长期存在 → 用多级缓存利用局部性降低平均访问时间。
 
-[^sram-dram]: SRAM（静态）适合小容量高速 Cache：快、无需刷新、每 bit 成本与面积高。DRAM（动态）适合大容量主存：密度高、需刷新、延迟高。见 Drepper 上文第 1–2 部分；Computation Structures（MIT）等关于 SRAM/DRAM 权衡的讲义。
+[^sram-dram]: SRAM（静态）适合小容量高速 Cache：快、无需刷新、每 bit 成本与面积高。DRAM（动态）适合大容量主存：密度高、需刷新、延迟高。见 Drepper 上文第 1–2 部分；MIT Computation Structures 等关于 SRAM/DRAM 权衡的讲义。
 
 [^locality]: 时间局部性与空间局部性（locality of reference）：程序倾向于重用最近访问的项，并访问其邻近地址。见 Patterson & Hennessy 存储层次章；CMU 15-213 Memory Hierarchy 讲义；Drepper 对 locality 与 Cache 有效性的讨论。
 
-[^amat]: Average Memory Access Time：\(\mathrm{AMAT} = \text{Hit Time} + \text{Miss Rate} \times \text{Miss Penalty}\)；多级可递归。见 Hennessy & Patterson, *Computer Architecture: A Quantitative Approach*（公式表与 Cache 章）；Berkeley / CS61C 等课程笔记。乱序与非阻塞 Cache 下，「有效」Miss Penalty 可被重叠降低，公式仍作教学度量。
+[^amat]: Average Memory Access Time：\(\mathrm{AMAT} = \text{Hit Time} + \text{Miss Rate} \times \text{Miss Penalty}\)；多级可递归。见 Hennessy & Patterson, *Computer Architecture: A Quantitative Approach*（公式表与 Cache 章）；Berkeley CS61C 等课程笔记。乱序与非阻塞 Cache 下，「有效」Miss Penalty 可被重叠降低，公式仍作教学度量。
 
 [^dram]: 内存控制器将物理地址映射到 DRAM 的 channel / bank / row / column 等；一次未命中常按 burst 填充 Cache Line。细节见 JEDEC / 控制器文档；正文取教学粒度。
 
@@ -648,6 +662,6 @@ Load-Use 在时间轴上可收成：
 
 [^cod]: David A. Patterson & John L. Hennessy, *Computer Organization and Design: The Hardware/Software Interface*（多版）。数据通路与控制、ISA、组合 / 时序逻辑在处理器中的角色，以该书为通行教学参照；正文取概念骨架，不绑定某一版页码。
 
-[^pipeline]: 经典五级流水线 IF–ID–EX–MEM–WB 及结构 / 数据 / 控制相关，见 Patterson & Hennessy 流水线章节。ALU 结果常可从流水线寄存器转发；Load 的数据在 MEM 末才可用，紧邻的使用指令在经典模型里通常仍须插入一拍气泡后再转发。乱序、重命名、多发射、硬件预取与存储级并行是提高吞吐、掩盖部分访存延迟的后续机制，语义上仍须遵守 ISA；不取消访存链上的 TLB / Cache 代价。
+[^pipeline]: 经典五级流水线 IF–ID–EX–MEM–WB 及结构 / 数据 / 控制相关，见 Patterson & Hennessy 流水线章节；吞吐与延迟之辨亦见 MIT 6.004。ALU 结果常可从流水线寄存器转发；Load 的数据在 MEM 末才可用，紧邻的使用指令在经典模型里通常仍须插入一拍气泡后再转发。乱序、重命名、多发射、硬件预取与存储级并行是提高吞吐、掩盖部分访存延迟的后续机制，语义上仍须遵守 ISA；不取消访存链上的 TLB / Cache 代价。专论见本库 [26a](./26a-cpu-instruction-pipeline-treatise.md)。
 
 **声明：** 正文是访存路径与组成读法的教学整理，不是某一代 CPU 的周期精确模型，也不替代性能计数器实测。微架构、页大小与 Cache 几何会变；冲突时以处理器手册、内核文档与 profiling 为准。

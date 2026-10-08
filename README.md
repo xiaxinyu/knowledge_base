@@ -170,6 +170,7 @@ knowledge_base/
 | 24a | [Cilium eBPF Dataplane Treatise](./20-architecture/24a-cilium-ebpf-dataplane-treatise.md) | eBPF 换底座：身份策略、替代 kube-proxy、Hubble；iptables 规模痛在结构 | Cilium、eBPF、kube-proxy replacement、Hubble、Gateway API |
 | 25 | [Architecture Thinking (CTO) Treatise](./20-architecture/25-architecture-thinking-cto-treatise.md) | 架构师靠决策生存；价值是第一性；五级跳是跨维不是把写代码卷满 | 架构思维、郭东白、价值思维、从程序员到 CTO |
 | 26 | [CPU Memory Access Treatise](./20-architecture/26-cpu-memory-access-treatise.md) | 语句→指令→数据通路；一次 Load：VA→TLB/页表→PA→Cache（局部性/AMAT）→DRAM；慢常在链路 | 虚拟地址、MMU、TLB、页表、Cache、SRAM/DRAM、局部性、AMAT、流水线 |
+| 26a | [CPU Instruction Pipeline Treatise](./20-architecture/26a-cpu-instruction-pipeline-treatise.md) | 流水线抬吞吐非缩单指令延迟；冒险→转发/预测；乱序执行、按序退休、超标量 | 流水线、吞吐/延迟、冒险、转发、分支预测、推测执行、乱序、退休、超标量、ILP |
 | 27 | [MQTT over QUIC Treatise](./20-architecture/27-mqtt-over-quic-treatise.md) | MQTT 语义不变，传输换 QUIC；压失联窗口与重连风暴；单 Stream 主流；RFC/草案/产品能力须分开读 | MQTT、QUIC、连接迁移、队头阻塞、0-RTT、弱网、车联网 |
 | 28 | [Microservice Communication Treatise](./20-architecture/28-http-rpc-microservice-communication-treatise.md) | 比的是组合不是四字对立；慢常在 JSON/头/连接模型；gRPC 也是 HTTP/2；通信占比低则不必换栈 | HTTP、RPC、gRPC、REST、JSON、Protobuf、Dubbo、OpenFeign |
 | 29 | [Kafka Event Streaming Treatise](./20-architecture/29-kafka-event-streaming-treatise.md) | 分布式事件日志：解耦、削峰、多订阅管道；分区内有序；不是数据库/同步 RPC | Kafka、Topic、Partition、Offset、Consumer Group、削峰、至少一次 |
@@ -231,6 +232,7 @@ knowledge_base/
 | Calico、L3、Service/DNAT | 24 |
 | 架构思维、价值思维、实证思维、从程序员到 CTO、生存法则 | 25 |
 | 虚拟地址、MMU、TLB、页表、Page Fault、Cache、SRAM、DRAM、局部性、AMAT、Cache Line、L1D、Working Set、数据通路、流水线、tag/set/offset | 26 |
+| 指令流水线、吞吐 vs 延迟、冒险、转发、分支预测、推测执行、乱序执行、退休、超标量、ILP | 26a |
 | MQTT、MQTT over QUIC、Connection ID、连接迁移、0-RTT、Stream、Keep Alive、弱网、车联网、重连风暴 | 27 |
 | HTTP vs RPC、gRPC、REST、JSON、Protobuf、Dubbo、Triple、OpenFeign、微服务通信、序列化 | 28 |
 | Kafka、事件流、提交日志、Topic、Partition、Offset、Consumer Group、削峰、异步解耦、至少一次 | 29 |
@@ -300,8 +302,9 @@ knowledge_base/
 18. **24** 数据面如何写表转发（Calico）  
 19. **24a** eBPF 换底座（Cilium）  
 20. **26** 一次 Load 如何从虚地址走到 DRAM  
-21. **27** MQTT 如何接到 QUIC（弱网传输；史见 16）  
-22. **40** 回到无状态与可组合  
+21. **26a** 指令如何叠进流水线：吞吐、冒险、乱序与按序退休（接 26）  
+22. **27** MQTT 如何接到 QUIC（弱网传输；史见 16）  
+23. **40** 回到无状态与可组合  
 
 #### IT 治理 / CIO / 审计
 
@@ -460,6 +463,7 @@ AI 如何改变工程组织、如何承接被放大的速度。
 | **明道** | 企业架构把战略译成可执行安排并持续约束该建什么；教学用四大域，实践常见六层；不是照搬某一框架 | [20](./20-architecture/20-enterprise-architecture-treatise.md) |
 | **明道** | 写代码是架构师的必要能力，不是 CTO 的充分条件；价值思维是第一性 | [25](./20-architecture/25-architecture-thinking-cto-treatise.md) |
 | **明道** | 一次 Load：虚地址经 TLB/页表到物理地址，再经 Cache（局部性 / AMAT）才可能到 DRAM；慢常在链路 | [26](./20-architecture/26-cpu-memory-access-treatise.md) |
+| **明道** | 流水线抬吞吐而非把单指令延迟÷N；冒险→转发/预测；乱序执行、按序退休、超标量 | [26a](./20-architecture/26a-cpu-instruction-pipeline-treatise.md) |
 | **明道** | MQTT 语义可不变；弱网下换的是传输——QUIC 压失联窗口与重连风暴，单 Stream 尚未等于业务无阻塞 | [27](./20-architecture/27-mqtt-over-quic-treatise.md) |
 | **明道** | 「HTTP vs RPC」比的是组合；慢常在序列化与连接模型；gRPC 也是 HTTP/2；多数业务通信不是瓶颈 | [28](./20-architecture/28-http-rpc-microservice-communication-treatise.md) |
 | **明道** | Kafka 是可回放的分布式事件日志：解耦、削峰、多订阅；不是数据库，也不是同步 RPC | [29](./20-architecture/29-kafka-event-streaming-treatise.md) |
@@ -476,7 +480,7 @@ AI 如何改变工程组织、如何承接被放大的速度。
 | **优术** | 实物向消费端、美元回流美国是近四十年分工主轴的教学像；升级是金字塔上跃迁，去美元缓慢、替代未成型 | [57](./50-strategy/57-dollar-system-division-of-labor-treatise.md) / [13](./10-chronicle/13-world-hegemony-transfer-chronicle.md) |
 | **优术** | 特许贸易公司可渐进吸收税收与武力；Diwani 后成本外化；内部难自刹，约束来自外部主权 | [58](./50-strategy/58-east-india-company-corporate-colonialism-treatise.md) |
 
-运维侧可核对的价值，是压缩 MTTR 中可并行、可检索、可证据化的时间段，而不是承诺无人值守自愈——见 [42](./40-paradigm/42-agentic-sre-operations-playbook.md)、[44](./40-paradigm/44-agentic-ops-frontier-treatise.md)。编排平台是持续收敛的控制计算机；节点即路由器，或 eBPF 换数据面底座——见 [23](./20-architecture/23-kubernetes-control-plane-doctrine.md)、[24](./20-architecture/24-calico-l3-dataplane-treatise.md)、[24a](./20-architecture/24a-cilium-ebpf-dataplane-treatise.md)。单机一次 Load 的虚实翻译与 Cache 链路见 [26](./20-architecture/26-cpu-memory-access-treatise.md)。资本配置可带走的是三问，选人三则合验于烂摊子——见 [53](./50-strategy/53-li-ka-shing-capital-allocation-treatise.md)、[54](./50-strategy/54-ning-gaoning-talent-selection-treatise.md)。特许公司如何渐进吸收主权职能见 [58](./50-strategy/58-east-india-company-corporate-colonialism-treatise.md)。品牌走出去，目标是少打折扣、多造溢价——见 [51](./50-strategy/51-brand-cultural-translation.md)。智能体编年见 [12](./10-chronicle/12-artificial-intelligence-chronicle.md)。AI 数学骨架（表示 / 计算 / 度量）见 [48](./40-paradigm/48-ai-mathematical-foundations-treatise.md)。互联网编年见 [14](./10-chronicle/14-internet-history-chronicle.md)。浏览器代管与沙盒规矩见 [15](./10-chronicle/15-browser-custody-chronicle.md)。HTTP 从 0.9 到 QUIC 见 [16](./10-chronicle/16-http-protocol-chronicle.md)。MQTT over QUIC 与弱网传输层替换见 [27](./20-architecture/27-mqtt-over-quic-treatise.md)。微服务里 HTTP 与 RPC 慢在哪见 [28](./20-architecture/28-http-rpc-microservice-communication-treatise.md)。Kafka 事件日志与解耦 / 削峰见 [29](./20-architecture/29-kafka-event-streaming-treatise.md)。Brooks「无银弹」与 AI 偶然 / 本质之难见 [47](./40-paradigm/47-no-silver-bullet-ai-essential-difficulty-philosophy.md)。
+运维侧可核对的价值，是压缩 MTTR 中可并行、可检索、可证据化的时间段，而不是承诺无人值守自愈——见 [42](./40-paradigm/42-agentic-sre-operations-playbook.md)、[44](./40-paradigm/44-agentic-ops-frontier-treatise.md)。编排平台是持续收敛的控制计算机；节点即路由器，或 eBPF 换数据面底座——见 [23](./20-architecture/23-kubernetes-control-plane-doctrine.md)、[24](./20-architecture/24-calico-l3-dataplane-treatise.md)、[24a](./20-architecture/24a-cilium-ebpf-dataplane-treatise.md)。单机一次 Load 的虚实翻译与 Cache 链路见 [26](./20-architecture/26-cpu-memory-access-treatise.md)；指令流水线、冒险与乱序见 [26a](./20-architecture/26a-cpu-instruction-pipeline-treatise.md)。资本配置可带走的是三问，选人三则合验于烂摊子——见 [53](./50-strategy/53-li-ka-shing-capital-allocation-treatise.md)、[54](./50-strategy/54-ning-gaoning-talent-selection-treatise.md)。特许公司如何渐进吸收主权职能见 [58](./50-strategy/58-east-india-company-corporate-colonialism-treatise.md)。品牌走出去，目标是少打折扣、多造溢价——见 [51](./50-strategy/51-brand-cultural-translation.md)。智能体编年见 [12](./10-chronicle/12-artificial-intelligence-chronicle.md)。AI 数学骨架（表示 / 计算 / 度量）见 [48](./40-paradigm/48-ai-mathematical-foundations-treatise.md)。互联网编年见 [14](./10-chronicle/14-internet-history-chronicle.md)。浏览器代管与沙盒规矩见 [15](./10-chronicle/15-browser-custody-chronicle.md)。HTTP 从 0.9 到 QUIC 见 [16](./10-chronicle/16-http-protocol-chronicle.md)。MQTT over QUIC 与弱网传输层替换见 [27](./20-architecture/27-mqtt-over-quic-treatise.md)。微服务里 HTTP 与 RPC 慢在哪见 [28](./20-architecture/28-http-rpc-microservice-communication-treatise.md)。Kafka 事件日志与解耦 / 削峰见 [29](./20-architecture/29-kafka-event-streaming-treatise.md)。Brooks「无银弹」与 AI 偶然 / 本质之难见 [47](./40-paradigm/47-no-silver-bullet-ai-essential-difficulty-philosophy.md)。
 
 ### 6.2 态度
 
