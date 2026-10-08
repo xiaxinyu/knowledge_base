@@ -7,7 +7,7 @@
 > **Calico 是分布式路由控制面 + Linux 内核数据面：**  
 > 控制面（Felix、BIRD、confd，以及默认的 kube-proxy）只负责把状态写进内核；数据面是路由表（FIB）、veth、iptables/eBPF——**真正转发数据包的是内核**。控制面短暂异常时，已写入的表项通常仍可继续转发，直至被改写或删除。[1][2][10][13]
 
-可与本库 [《Kubernetes 控制面原则》](./23-kubernetes-control-plane-doctrine.md) 对照：彼处是编排控制面如何收敛；此处是网络控制面如何写表、数据面如何查表。两文合看，编排与网络同属一台「分布式控制计算机」的两个平面。
+可与本库 [《Kubernetes 控制面原则》](./23-kubernetes-control-plane-doctrine.md) 对照：彼处是编排控制面如何收敛；此处是网络控制面如何写表、数据面如何查表。eBPF 换底座、身份策略与 kube-proxy replacement 见 [《Cilium eBPF 数据面》](./24a-cilium-ebpf-dataplane-treatise.md)。合看时，编排与网络同属一台「分布式控制计算机」的不同平面。
 
 全文统一用下列节点与地址，便于对照：
 
