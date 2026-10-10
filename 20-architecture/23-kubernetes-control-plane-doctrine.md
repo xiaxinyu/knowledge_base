@@ -12,9 +12,9 @@
 
 ## 摘要
 
-Kubernetes 应被理解为持续收敛的分布式控制计算机，而不是一次性编排脚本。etcd 为真相源，声明式 API 为协调语言；Label / Selector 是松耦合的核心分组原语；每个控制器只问「世界应该什么样 / 现在实际上什么样」，不一致就走一步，然后永远再问一遍。调度、自愈、服务发现与滚动发布，都是这同一个调谐循环作用在不同对象上。控制面可以短暂失败，数据面按上次指令尽量保持静态稳定；API 入口除 L4 高可用外，须以 RBAC 约束「谁能对哪些资源做什么」。全文分三篇：上篇划定问题域与 Borg → Omega 谱系；中篇收束控制模型；下篇落到分层高可用、入口与 RBAC、CRD / Operator 与能力边界。可与本库 21、22、24 对照。
+Kubernetes 应被理解为持续收敛的分布式控制计算机，而不是一次性编排脚本。etcd 充当真相源，声明式 API 充当协调语言；Label / Selector 则是松耦合的核心分组原语——**一旦被 Selector 或策略读取，便签成公共契约**，因而只宜承载有限、稳定、可分组的维度，非识别信息应放入 Annotation；讨论高基数时，还须分清对象层治理成本与指标映射层的时间序列膨胀。每个控制器只反复追问「世界应该什么样 / 现在实际上什么样」，发现偏差就走一步，然后再问——调度、自愈、服务发现与滚动发布，都是这同一个调谐循环作用在不同对象上。控制面可以短暂失败，数据面则尽量按上次指令保持静态稳定；API 入口除 L4 高可用外，还须以 RBAC 约束「谁能对哪些资源做什么」。全文分三篇：上篇划定问题域与 Borg → Omega 谱系；中篇收束控制模型；下篇落到分层高可用、入口与 RBAC、CRD / Operator 与能力边界。可与本库 21、22、24 对照。
 
-**关键词：** Kubernetes；声明式 API；调谐循环；etcd；Label / Selector；RBAC；静态稳定；CNCF
+**关键词：** Kubernetes；声明式 API；调谐循环；etcd；Label / Selector；Annotation；公共契约；推荐标签；基数；RBAC；静态稳定；CNCF
 
 ---
 
@@ -34,6 +34,7 @@ Kubernetes 应被理解为持续收敛的分布式控制计算机，而不是一
 4. [前提与核心理念](#4-前提与核心理念)
 5. [一份真相与松耦合协调](#5-一份真相与松耦合协调)
     - [5.1 真相源](#51-一份共享真相源cp) · [5.2 API 松耦合](#52-唯一协调语言api-松耦合) · [5.3 Label / Selector](#53-label--selector核心分组原语)
+      - [5.3.1 语法与谁在读](#531-选择器语法与谁在读) · [5.3.2 公共契约](#532-标签一旦被读取即成公共契约) · [5.3.3 Label / Annotation](#533-label-还是-annotation) · [5.3.4 危险标签与基数](#534-危险标签与两层基数风险) · [5.3.5 推荐标签与审计](#535-推荐标签与上线前审计)
 6. [持续收敛与静态稳定](#6-持续收敛与静态稳定)
     - [6.1 持续收敛](#61-持续收敛而非一次成功的剧本) · [6.2 调谐循环](#62-调谐循环驱动一切的同一个循环) · [6.3 静态稳定](#63-静态稳定static-stability)
 7. [控制平面与设计原则](#7-控制平面与设计原则)
@@ -52,7 +53,7 @@ Kubernetes 应被理解为持续收敛的分布式控制计算机，而不是一
 12. [总结](#12-总结)
 13. [参考文献](#13-参考文献)
 
-全文按「问题域 → 控制模型 → 工程落地」展开。原则先于技巧——否则容易把 YAML、组件名与营销口号当成定律。读中篇时抓住三条纪律：**一份真相、同一循环、静态稳定**；Label/Selector 是循环如何圈定作用域的寻址语言，RBAC 是入口如何约束主体的门禁。
+全文按「问题域 → 控制模型 → 工程落地」展开。原则先于技巧——否则容易把 YAML、组件名与营销口号当成定律。读中篇时抓住三条纪律：**一份真相、同一循环、静态稳定**；Label/Selector 是循环如何圈定作用域的寻址语言——**一旦被 Selector / 策略读取，便签成公共契约**；RBAC 是入口如何约束主体的门禁。
 
 ```mermaid
 %% K8s 设计全景：问题域约束原则，原则约束落地
@@ -144,7 +145,7 @@ Brian Grant 指出：Kubernetes「更像开源的 Omega，而非开源的 Borg�
 | **Pod** | 最小调度单元：可容纳一个或多个紧密协作容器 |
 | **Node** | 一台工作机器（物理或虚拟） |
 | **Service** | 变化的一组 Pod 前面的稳定访问点 |
-| **Label / Selector** | 给对象打标签再按标签过滤 |
+| **Label / Selector** | 给对象打标签再按标签过滤；被读取后即成公共契约 |
 | **声明式 API** | 声明期望副本数，由系统收敛，而非手工 SSH |
 
 人们后来习以为常的 Deployment、DaemonSet、StatefulSet、Ingress、成熟 RBAC，都是 1.0 之后长出来的。1.0 更像「可用的最小闭环」：证明编排可以成为平台。
@@ -273,15 +274,17 @@ Kubernetes 的定位是 **Platform for Platform**——官方表述为：提供�
 
 Omega 曾允许受信组件直连共享存储；Kubernetes 改为：**仅 API Server 访问 etcd**，其余组件一律经 API。[2][12] 于是控制逻辑松耦合、状态却强一致共享：组件互不直连，只通过对象的 `spec` / `status` 对话；可独立升级、失败与重启；新控制器只要理解 API，即可加入协调网络。对象结构统一为 `apiVersion` / `kind` / `metadata` / `spec` / `status`，横切策略可忽略具体资源语义；控制面保持透明，无隐藏内部 API。[12][17]
 
-> **所以 · 边界在哪：** 真相在 etcd，对话在 API——二者缺一，要么脑裂，要么把控制逻辑重新焊死成单体。
+> **所以 · 边界在哪：** 真相在 etcd，对话在 API——二者缺一，要么脑裂，要么把控制逻辑重新焊死成单体。有了统一语言之后，还须回答：控制器如何在规模下圈定「属于自己的那一群」——这便是下一节 Label / Selector。
 
 ### 5.3 Label / Selector：核心分组原语
 
-松耦合还要求：**作用域不能绑死在对象名字上**。官方将 **Label Selector** 称为核心分组原语（core grouping primitive）：对象携带短键值标签，选择器圈出子集；Deployment、Service、调度策略据此识别「属于自己的那一群」，而不是写死 Pod 名。这与 Borg 时代相对僵硬的 Job 分组形成对照——Burns 等文亦强调 Label 带来的组织灵活性。[2][46]
+松耦合进一步要求：**作用域不能绑死在对象名字上**。官方将 **Label Selector** 称为核心分组原语（core grouping primitive）：对象携带短键值标签，选择器圈出子集；Deployment、Service、调度与策略据此识别「属于自己的那一群」，而不是写死 Pod 名。这与 Borg 时代相对僵硬的 Job 分组形成对照——Burns 等文亦强调 Label 带来的组织灵活性。[2][46]
 
-**Label 与 Annotation 易混，须先分开。** Label 承载识别属性，供筛选、匹配与调度；Annotation 承载非识别元数据（构建号、联系人、工具私有配置等），**不能**用于 Selector。Label 的 key/value 偏短（名称段通常不超过 63 字符等约束）；单对象全部注解合计通常不超过 256 KiB，可容纳 JSON 等较长文本。需要查询与分组的打标签；只需附带说明的放注解。[46][47]
+机制（语法与消费者）解决「怎么选」；治理则还要回答更现实的问题——**什么信息值得成为 Label，什么信息不应该**。判断标准不是「以后也许用得上」，而是「谁会稳定地依赖它」。
 
-**选择器有等值与集合两层表面。** API 中的 `LabelSelector` 由 `matchLabels` 与 `matchExpressions` 组成，二者及各项之间均为逻辑 **AND**。空选择器匹配全部对象；`null` 选择器不匹配任何对象。[46][48] `matchLabels` 的每一对 `{key: value}` 等价于一条 `operator: In` 且 `values` 仅含该值的表达式；`matchExpressions` 则支持 **`In` / `NotIn` / `Exists` / `DoesNotExist`**（前两者要求 `values` 非空，后两者不填 `values`）。列表过滤的查询字符串（`=` / `in` / `exists` 等）与对象字段中的表达式是同一思想的不同表面。[46]
+#### 5.3.1 选择器语法与谁在读
+
+选择器有等值与集合两层表面。API 中的 `LabelSelector` 由 `matchLabels` 与 `matchExpressions` 组成，二者及各项之间均为逻辑 **AND**（无逻辑 OR）。就 `metav1.LabelSelector` 而言：空选择器匹配全部对象，`null` 选择器不匹配任何对象——具体 API 字段若另有约定，以该类型文档为准。[46][48] `matchLabels` 的每一对 `{key: value}` 等价于一条 `operator: In` 且 `values` 仅含该值的表达式；`matchExpressions` 支持 **`In` / `NotIn` / `Exists` / `DoesNotExist`**（前两者要求 `values` 非空，后两者不填 `values`）。列表过滤的查询字符串（`=` / `in` / `exists` 等）与对象字段中的表达式，是同一思想的不同表面。[46]
 
 ```yaml
 # 逻辑：app=nginx 且 env∈{dev,test} 且不存在 tier 键
@@ -296,15 +299,96 @@ selector:
       operator: DoesNotExist
 ```
 
-**谁依赖选择器，又有何硬约束。** Deployment / ReplicaSet / StatefulSet 靠 selector 锁定受管 Pod；Service 靠标签发现后端并生成 EndpointSlice（§7.3）；节点侧则用 Node 标签配合 `nodeSelector` 或更丰富的 `nodeAffinity`（常与污点/容忍并用）；运维上亦按环境与职责切片。社区推荐共享前缀 `app.kubernetes.io/*`（如 `name` / `instance` / `component` / `managed-by`），便于工具互操作；无前缀标签则视为用户私有约定。[46][54] 在 `apps/v1` 中，**`.spec.selector` 创建后不可变**，且必须与 `.spec.template.metadata.labels` 匹配，否则 API 拒绝；模板标签与 selector 不一致时，控制器无法认领 Pod——这是清单层的结构性错误。若必须更换选择器，通常只能重建 Deployment（例如以 orphan 策略保留旧 Pod 后再接新控制器）。[42][46]
+这些选择器并非抽象语法游戏。Deployment / ReplicaSet / StatefulSet 靠 selector 锁定受管 Pod；Service 靠标签发现后端并生成 EndpointSlice（§7.3）；NetworkPolicy、部分调度规则（`nodeSelector` / `nodeAffinity`，常与污点/容忍并用）以及 GitOps / 内部平台，亦按标签切片。在 `apps/v1` 中，**`.spec.selector` 创建后不可变**，且必须与 `.spec.template.metadata.labels` 匹配，否则 API 拒绝；模板标签与 selector 不一致时，控制器无法认领 Pod——这是清单层的结构性错误。若必须更换选择器，通常只能重建 Deployment（例如以 orphan 策略保留旧 Pod 后再接新控制器）。[42][46]
 
-> **判断：** Label / Selector 是声明式控制面的**寻址语言**——把「谁管谁、谁给谁转发」从名字耦合改为查询耦合。没有它，调谐循环无法在规模下稳定圈定作用域。
+#### 5.3.2 标签一旦被读取，即成公共契约
+
+正因为消费者众多，同一张标签往往同时服务多个目的：Service 选后端，Deployment 管 Pod，NetworkPolicy 划通信边界，调度规则决定落点，平台脚本也可能据此分组。于是修改 `environment=prod` 不再只是「改了一个字段」——它可能同时改变流量、策略与调度结果。
+
+新增标签之前，宜先写出它的**消费者**：哪个 Selector、策略、脚本或平台会读取？若答案是「暂时没有，只是怕以后用到」，它大概率不该成为 Label。官方动机表述指向同一纪律：Label 用于把组织维度**松耦合地映射**到系统对象，并支持高效查询与监视；非识别信息应记入 Annotation。[46][47]
+
+一套好标签，只回答**有限、稳定、可分组**的问题：
+
+| 维度 | 示例键 | 为何适合做 Label |
+|------|--------|------------------|
+| 应用身份 | `app.kubernetes.io/name=checkout` | 值域有限，工具与平台可复用 |
+| 部署实例 | `app.kubernetes.io/instance=checkout-prod` | 同应用多实例可区分 |
+| 组成角色 | `app.kubernetes.io/component=api` | 架构切片稳定 |
+| 环境边界 | `platform.example.com/environment=prod` | 策略与路由常依赖 |
+
+```yaml
+metadata:
+  labels:
+    app.kubernetes.io/name: checkout
+    app.kubernetes.io/instance: checkout-prod
+    app.kubernetes.io/component: api
+    platform.example.com/environment: prod
+    platform.example.com/team: payments
+```
+
+#### 5.3.3 Label 还是 Annotation？
+
+二者同属对象元数据，分工却不同。[46][47]
+
+| | **Label** | **Annotation** |
+|--|-----------|----------------|
+| 用途 | 识别属性；供 Selector 查询与分组 | 非识别元数据：构建信息、说明、工具配置、追溯 |
+| 可否被 Selector 选中 | 可以 | **不可以** |
+| 体量 / 字符集 | key/value 偏短（见 §5.3.5） | 值可含空白、JSON 等；单对象全部注解合计通常 ≤ **256 KiB** |
+
+Annotation 并不等于「只给人看」。控制器、Webhook、Ingress Controller 与 Service Mesh 都可能读取它；真正的分界是：它**不是可选择的身份维度**。Git SHA 亦非绝对不能放 Label——若发布系统确实需要按构建版本选择 Pod，它可以成为 Label；若只用于审计追溯，放 Annotation 更合适。[47]
+
+```yaml
+metadata:
+  labels:
+    app.kubernetes.io/name: checkout
+    platform.example.com/environment: prod
+  annotations:
+    build.example.com/git-sha: "a1b2c3d"
+    change.example.com/summary: "修复结算超时"
+```
+
+#### 5.3.4 危险标签与两层基数风险
+
+三类危险标签应主动回避：
+
+1. **无人读取**——没有任何 Selector、策略或工具使用，只会增加认知成本。  
+2. **频繁变化**——如负责人姓名；团队一调整就批量改标，若消费者依赖它，变更风险会持续放大。  
+3. **值几乎唯一**——请求 ID、精确时间戳、随机流水号等，难以形成有意义的分组。
+
+讨论高基数时，还须分清两层。在 Kubernetes 对象层，高基数 Label 会抬高治理、审计与查询成本；但它不会凭空让 Prometheus 产生海量时间序列。真正的监控风险出现在采集链路把 Kubernetes Label **映射为指标标签**之时——例如 kube-state-metrics 的 `--metric-labels-allowlist`，或 Prometheus relabeling。kube-state-metrics 自 v2 起逐步收紧该路径：现行默认下 `kube_*_labels` 类指标**本身也不暴露**，须经 allowlist 显式放开；对某一资源使用 `*` 放开全部标签，会有严重性能影响。[55] 一旦映射打开，几乎唯一的对象标签就可能被复制进大量指标，时间序列才会快速增长。因此不要只问「能不能贴」，还要问「它会不会被带进别的系统」。[55][56]
+
+#### 5.3.5 推荐标签与上线前审计
+
+`app.kubernetes.io/*` 是**共同词典，不是强制套餐**：它便于 Helm Chart、GitOps、监控配置与内部平台复用，但官方明确——推荐标签**并非**任何核心工具的硬性要求，也不意味着「每个字段都填满，工具就会零配置识别」。[54] 实践上可分成两层：通用应用语义使用 `app.kubernetes.io/*`（`name` / `instance` / `version` / `component` / `part-of` / `managed-by`）；企业特有维度使用自己控制的 DNS 前缀，例如 `platform.example.com/team`。无前缀的键视为用户私有约定；`kubernetes.io/` 与 `k8s.io/` 前缀保留给核心组件。[46][54]
+
+语法约束（大小写敏感）：key 的名称段最长 **63** 字符，可选 DNS 前缀最长 **253** 字符；value 最长 **63** 字符，也可为空。[46]
+
+```bash
+# 查看全部标签
+kubectl get pods --show-labels
+# 把指定标签展示为独立列
+kubectl get pods -L app.kubernetes.io/name,platform.example.com/environment
+```
+
+上线前可用六个问题做一次审计：
+
+| 问题 | 问什么 |
+|------|--------|
+| **用途** | 谁会读取它？ |
+| **稳定性** | 值会频繁变化吗？ |
+| **基数** | 可能产生多少种值？会不会被映射进指标？ |
+| **所有权** | 哪个团队负责维护？ |
+| **兼容性** | 修改后会影响哪些消费者？（含不可变的 `.spec.selector`） |
+| **类型** | 应放 Label 还是 Annotation？ |
+
+> **判断：** Label / Selector 是声明式控制面的**寻址语言**——把「谁管谁、谁给谁转发」从名字耦合改为查询耦合。价值不在于记录了多少，而在于系统能否稳定地依赖它；没有稳定消费者的标签，不应进入公共契约。
 
 ---
 
 ## 6. 持续收敛与静态稳定
 
-中篇的枢纽在这里。你在清单里写下工作负载的期望态——「这个镜像在负载均衡后面跑 3 个副本」——然后 Kubernetes 运行一组控制器，持续把集群的实际状态推向期望状态。后面所有组件、自愈与 Operator，都是这个循环的实例。[11][12][40]
+中篇的枢纽在这里。§5 解决了「真相在哪、如何对话、如何成组」；本节回答控制面如何运转——你在清单里写下工作负载的期望态（例如「这个镜像在负载均衡后面跑 3 个副本」），Kubernetes 便以一组控制器持续把实际状态推向期望状态。后面所有组件、自愈与 Operator，都是这个循环的实例。[11][12][40]
 
 ### 6.1 持续收敛，而非一次成功的剧本
 
@@ -319,12 +403,12 @@ selector:
 
 ### 6.2 调谐循环：驱动一切的同一个循环
 
-控制器是一个「只关心一件事」的小程序。它监视集群中某类对象——Deployment、Node、PersistentVolumeClaim、Job……每当对象变化（也会周期性 resync），它只问自己两件事：[11]
+控制器是一个「只关心一件事」的小程序：监视某类对象（Deployment、Node、PersistentVolumeClaim、Job……），在对象变化或周期性 resync 时反复追问两件事——[11]
 
 1. **这个对象的世界应该是什么样？**（`spec`）
 2. **它现在实际上是什么样？**（观测到的集群状态 / `status`）
 
-两个答案不一致，它就采取行动缩小差距，然后重新评估。一次调谐不必只改一处，但目标是**逼近**期望，而不是一次走完全部剧本。[11] Kubernetes 把许多这样的循环编进 `kube-controller-manager`（逻辑上各是独立控制器，为部署方便打成一个进程）：一个维持正确数量的 Pod，一个处理存储卷的挂载与卸除，一个维护 EndpointSlice，一个清理已完成的 Job。[11][18]
+两个答案不一致，就采取行动缩小差距，然后重新评估。一次调谐不必只改一处，但目标是**逼近**期望，而不是一次走完全部剧本。[11] Kubernetes 把许多这样的循环编进 `kube-controller-manager`（逻辑上各自独立，部署上打成一个进程）：一个维持正确数量的 Pod，一个处理卷的挂载与卸除，一个维护 EndpointSlice，一个清理已完成的 Job。[11][18]
 
 ```text
 for {
@@ -375,7 +459,7 @@ flowchart LR
 
 ## 7. 控制平面与设计原则
 
-原则需要具体组件承载。
+原则需要落到具体组件上——否则「真相 / 循环 / 静稳」仍停留在口号。
 
 ### 7.1 组件与高可用形态
 
@@ -650,6 +734,7 @@ backend apiservers
 7. 监控后端状态与延迟（常受 etcd 牵动）
 8. RBAC 默认开启；应用使用专用 ServiceAccount + 最小 Role/Binding
 9. 集群内 UI（若部署）仅用短期 Token，勿裸露公网；新装注意 Dashboard 已归档停维
+10. Label 上线前完成 §5.3.5 六问审计；勿把无消费者 / 高基数键写进公共契约；指标侧用 kube-state-metrics allowlist 显式放开
 
 ---
 
@@ -658,7 +743,7 @@ backend apiservers
 | 层次 | 命题 | 要点 |
 |------|------|------|
 | **上篇** | 时代与谱系 | 云可编程 × 容器不可变 × 复杂度下沉；Borg/Omega 经验外溢，非 Borg 开源版；CNCF 治理 + 可插拔接口使其成为默认底座[2][6] |
-| **中篇** | 可久约束 | 一份真相 · API 松耦合 · **Label/Selector 分组** · **同一个调谐循环** · 静态稳定 · Platform for Platform[11][12][19][46] |
+| **中篇** | 可久约束 | 一份真相 · API 松耦合 · **Label/Selector 分组（公共契约）** · **同一个调谐循环** · 静态稳定 · Platform for Platform[11][12][19][46][54] |
 | **下篇** | 工程工艺 | L1–L5 分层 HA；L4 入口 + **RBAC**；CRD/Operator 外推；边界清晰[13][25][49] |
 
 | 偏废 | 后果 |
@@ -669,7 +754,7 @@ backend apiservers
 
 > **收束**  
 > Docker 把软件变成标准集装箱；Kubernetes 把「如何调度这些箱子」写成云原生的共同语言。  
-> 接受「故障是常态」；守住「一份真相、查询式分组、同一循环、静态稳定」；把原则落成「分层高可用、受控入口与可扩展控制平面」。  
+> 接受「故障是常态」；守住「一份真相、查询式分组（公共契约）、同一循环、静态稳定」；把原则落成「分层高可用、受控入口与可扩展控制平面」。  
 > 舵手之意，不在无风浪，而在有原则可依、有工艺可操，于故障中仍能指向可用。
 
 ---
@@ -723,12 +808,14 @@ backend apiservers
 | [43] | Kubernetes Documentation, *Service*. https://kubernetes.io/docs/concepts/services-networking/service/ | ClusterIP、EndpointSlice、kube-proxy |
 | [44] | Kubernetes Documentation, *Nodes*. https://kubernetes.io/docs/concepts/architecture/nodes/ | Ready=`Unknown`；默认约 5 分钟后驱逐 |
 | [45] | Kubernetes Documentation, *Taints and Tolerations*. https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ | `unreachable` 污点；默认 `tolerationSeconds=300` |
-| [46] | Kubernetes Documentation, *Labels and Selectors*. https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/ | Label Selector 为核心分组原语；等值 / 集合选择器；`matchLabels` ≡ 单值 `In` |
-| [47] | Kubernetes Documentation, *Annotations*. https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/ | 注解不可用于选择；体量与用途边界（合计约 256 KiB） |
-| [48] | Kubernetes API, *LabelSelector*. https://kubernetes.io/docs/reference/kubernetes-api/definitions/label-selector-v1-meta/ | `matchLabels` 与 `matchExpressions` AND；空 / null 语义 |
+| [46] | Kubernetes Documentation, *Labels and Selectors*. https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/ | 核心分组原语；等值 / 集合选择器；key 名称段 ≤63、前缀 ≤253、value ≤63；非识别信息用 Annotation |
+| [47] | Kubernetes Documentation, *Annotations*. https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/ | 不可用于 Selector；值可结构化；单对象全部注解合计通常 ≤ 256 KiB |
+| [48] | Kubernetes API, *LabelSelector*. https://kubernetes.io/docs/reference/kubernetes-api/definitions/label-selector-v1-meta/ | `matchLabels` 与 `matchExpressions` AND；空匹配全部、null 匹配无（就该类型而言） |
 | [49] | Kubernetes Documentation, *Using RBAC Authorization*. https://kubernetes.io/docs/reference/access-authn-authz/rbac/ | Role / ClusterRole / Binding；Subject；RoleBinding 引用 ClusterRole |
 | [50] | Kubernetes Documentation, *Controlling Access to the Kubernetes API*；*Authorization*. https://kubernetes.io/docs/concepts/security/controlling-access/ ；https://kubernetes.io/docs/reference/access-authn-authz/authorization/ | 认证 → 授权 → 准入顺序；准入不挡只读；`system:masters` 警示 |
 | [51] | Kubernetes Documentation, *Service Accounts*. https://kubernetes.io/docs/concepts/security/service-accounts/ | 默认 SA；最小权限绑定 |
 | [52] | Kubernetes Documentation, *Deploy and Access the Kubernetes Dashboard*. https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/ | 非默认安装；Bearer Token；**项目已归档停维**，新装可考虑 Headlamp |
 | [53] | Kubernetes Dashboard（归档说明 / 访问控制）. https://github.com/kubernetes/dashboard ；历史访问控制说明见项目文档 | UI 作 apiserver 代理；权限复用 RBAC |
-| [54] | Kubernetes Documentation, *Recommended Labels*. https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/ | `app.kubernetes.io/*` 共享标签约定；便于工具互操作 |
+| [54] | Kubernetes Documentation, *Recommended Labels*. https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/ | `app.kubernetes.io/*` 为推荐而非强制；`name` / `instance` / `version` / `component` / `part-of` / `managed-by` |
+| [55] | Kubernetes Blog, *kube-state-metrics goes v2.0* (2021-04-13). https://kubernetes.io/blog/2021/04/13/kube-state-metrics-v-2-0/ ；v2.10.0 release notes（默认不再暴露 label/annotation metrics）. https://github.com/kubernetes/kube-state-metrics/releases/tag/v2.10.0 ；cli：`--metric-labels-allowlist` | v2 起收紧 Label→指标映射；现行默认下 `kube_*_labels` 须 allowlist 才暴露；`*` 有严重性能影响 |
+| [56] | Grafana Labs / CNCF 等关于 Prometheus 高基数的实践综述（如 Grafana Blog *How to manage high cardinality metrics in Prometheus and Kubernetes*）. https://grafana.com/blog/how-to-manage-high-cardinality-metrics-in-prometheus-and-kubernetes/ | 无界标签值（user/session/request id）会笛卡尔式放大时间序列；与 K8s 对象层基数是两层问题 |
