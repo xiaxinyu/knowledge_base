@@ -8,13 +8,13 @@
 > 以 etcd 为真相源，以声明式 API 为协调语言，以 Label / Selector 做查询式分组，以可失败的控制循环持续逼近期望态；控制面短暂失联时，数据面尽量按上次指令继续服务。  
 > 调度、自愈、服务发现、滚动发布，并不是四套魔法——**驱动这一切的，是同一个调谐循环。**[1][11][12][18][46]
 
-全文可与本库 [《服务架构演进》](./21-service-architecture-evolution.md)（复杂度如何转移）、[《分布式一致性》](./22-distributed-consistency-treatise.md)（CAP / Raft）、[《Calico 三层数据面》](./24-calico-l3-dataplane-treatise.md)（网络控制面如何写表；kubelet 经 CNI 调用插件）对照阅读。更长的容器与云原生时间线见 [《计算与云编年》](../10-chronicle/10-computing-cloud-chronicle.md) §8。关键史实与论断尽量对齐一手文献，文末附参考文献。
+全文可与本库 [《服务架构演进》](./21-service-architecture-evolution.md)（复杂度如何转移）、[《分布式一致性》](./22-distributed-consistency-treatise.md)（CAP / Raft）、[《Calico 三层数据面》](./24-calico-l3-dataplane-treatise.md) / [《Cilium》](./24a-cilium-ebpf-dataplane-treatise.md)（CNI 如何兑现网络合同）、[《TCP/IP 协议栈》](../10-chronicle/16a-tcp-ip-illustrated-treatise.md)（跨网转发与地址空间）对照阅读。更长的容器与云原生时间线见 [《计算与云编年》](../10-chronicle/10-computing-cloud-chronicle.md) §8。关键史实与论断尽量对齐一手文献，文末附参考文献。
 
 ## 摘要
 
-Kubernetes 应被理解为持续收敛的分布式控制计算机，而不是一次性编排脚本。etcd 充当真相源，声明式 API 充当协调语言；Label / Selector 则是松耦合的核心分组原语——先问「需要被 Selector 选中吗」以区分 Label 与 Annotation，再承认**一旦被读取即成公共契约**，因而只宜承载有限、稳定、可分组的维度；讨论高基数时，还须分清对象层治理成本与指标映射层的时间序列膨胀。每个控制器只反复追问「世界应该什么样 / 现在实际上什么样」，发现偏差就走一步，然后再问——调度、自愈、服务发现与滚动发布，都是这同一个调谐循环作用在不同对象上。控制面可以短暂失败，数据面则尽量按上次指令保持静态稳定；API 入口除 L4 高可用外，还须以 RBAC 约束「谁能对哪些资源做什么」。全文分三篇：上篇划定问题域与 Borg → Omega 谱系；中篇收束控制模型；下篇落到分层高可用、入口与 RBAC、CRD / Operator 与能力边界。可与本库 21、22、24 对照。
+Kubernetes 应被理解为持续收敛的分布式控制计算机，而不是一次性编排脚本。etcd 充当真相源，声明式 API 充当协调语言；Label / Selector 则是松耦合的核心分组原语——先问「需要被 Selector 选中吗」以区分 Label 与 Annotation，再承认**一旦被读取即成公共契约**，因而只宜承载有限、稳定、可分组的维度；讨论高基数时，还须分清对象层治理成本与指标映射层的时间序列膨胀。每个控制器只反复追问「世界应该什么样 / 现在实际上什么样」，发现偏差就走一步，然后再问——调度、自愈、服务发现与滚动发布，都是这同一个调谐循环作用在不同对象上。控制面可以短暂失败，数据面则尽量按上次指令保持静态稳定；API 入口除 L4 高可用外，还须以 RBAC 约束「谁能对哪些资源做什么」。网络侧，核心只规定**扁平可达的 Pod IP 合同**与 **Service / ClusterIP** 稳定入口；Pod / Service / Node 三类地址空间须事先划分且互不重叠，节点级子网常由 Node IPAM 从 cluster CIDR 切出，再由 CNI 兑现到接口——细节实现留给插件（Calico / Cilium 等）。全文分三篇：上篇划定问题域与 Borg → Omega 谱系；中篇收束控制模型（含网络合同与地址划分）；下篇落到分层高可用、入口与 RBAC、CRD / Operator 与能力边界。可与本库 21、22、24 / 24a、16a 对照。
 
-**关键词：** Kubernetes；声明式 API；调谐循环；etcd；Label / Selector；Annotation；公共契约；推荐标签；基数；RBAC；静态稳定；CNCF
+**关键词：** Kubernetes；声明式 API；调谐循环；etcd；Label / Selector；CNI；Pod CIDR；Service CIDR；Node IPAM；ClusterIP；NetworkPolicy；RBAC；静态稳定；CNCF
 
 ---
 
@@ -39,6 +39,8 @@ Kubernetes 应被理解为持续收敛的分布式控制计算机，而不是一
     - [6.1 持续收敛](#61-持续收敛而非一次成功的剧本) · [6.2 调谐循环](#62-调谐循环驱动一切的同一个循环) · [6.3 静态稳定](#63-静态稳定static-stability)
 7. [控制平面与设计原则](#7-控制平面与设计原则)
     - [7.1 组件](#71-组件与高可用形态) · [7.2 设计原则](#72-设计原则精要) · [7.3 同一循环](#73-同一循环从-apply-到自愈)
+    - [7.4 网络模型与地址空间](#74-网络模型与地址空间划分)
+      - [7.4.1 网络合同](#741-网络模型合同) · [7.4.2 三类 CIDR](#742-三类地址空间须事先划分) · [7.4.3 节点子网](#743-节点级子网划分与-ipam) · [7.4.4 CNI 与策略](#744-cni-兑现与-networkpolicy)
 
 **下篇 · 工程落地**
 
@@ -53,7 +55,7 @@ Kubernetes 应被理解为持续收敛的分布式控制计算机，而不是一
 12. [总结](#12-总结)
 13. [参考文献](#13-参考文献)
 
-全文按「问题域 → 控制模型 → 工程落地」展开。原则先于技巧——否则容易把 YAML、组件名与营销口号当成定律。读中篇时抓住三条纪律：**一份真相、同一循环、静态稳定**；Label/Selector 是循环如何圈定作用域的寻址语言——先分清「能否被选中」（Label vs Annotation），再承认**被选中即成公共契约**；RBAC 是入口如何约束主体的门禁。
+全文按「问题域 → 控制模型 → 工程落地」展开。原则先于技巧——否则容易把 YAML、组件名与营销口号当成定律。读中篇时抓住三条纪律：**一份真相、同一循环、静态稳定**；Label/Selector 是循环如何圈定作用域的寻址语言；§7.4 则补上循环之外的另一条基础设施合同——**Pod 如何在扁平地址空间里可达、三类 CIDR 如何划分**；RBAC 是入口如何约束主体的门禁。
 
 ```mermaid
 %% K8s 设计全景：问题域约束原则，原则约束落地
@@ -226,7 +228,7 @@ CRD 由 ThirdPartyResource 重设计而来，1.7 入 beta，1.16（2019）以 `a
 
 | 类别 | 典型组件 | 边界 |
 |------|----------|------|
-| 网络 / DNS | Calico、Cilium、CoreDNS | 插件实现；kubelet 经 CNI 调用。Calico 合同见 [《Calico 三层数据面》](./24-calico-l3-dataplane-treatise.md) §2.5 |
+| 网络 / DNS | Calico、Cilium、CoreDNS | 核心定网络合同与 CIDR 账本（§7.4）；插件兑现。见 [24](./24-calico-l3-dataplane-treatise.md) / [24a](./24a-cilium-ebpf-dataplane-treatise.md) |
 | 工作负载入口 | Ingress、**Gateway API**、云 LB、MetalLB | 业务流量，**非**控制面入口（§9）。Gateway API 见 §2.2 |
 | 可观测 / 网格 | Prometheus、Istio | 周边生态，非控制面内核 |
 
@@ -568,7 +570,7 @@ ReplicaSet 控制器并不「处理节点火灾」。它只盯着自己的对象
 
 Pod 故意短命：每次重建换 IP，不能拿单个 Pod 当身份。[16] Service 是一层很薄的对象：**标签选择器**（§5.3）+ 虚拟 IP（ClusterIP）。EndpointSlice 控制器持续扫描匹配且已就绪的 Pod，维护端点切片；kube-proxy 在每个节点把发往虚 IP 的包转到活着的 Pod IP。后端发现靠标签解耦，不绑 Pod 名。[18][43][46]
 
-ClusterIP 是虚拟地址：iptables / nftables 模式下不必对应一块业务网卡；IPVS 模式会把各 Service IP 绑到本机 dummy 接口 `kube-ipvs0`，好让内核把包交给 IPVS。无论哪种，流量都由节点上的代理规则转发，而不是由一块「Service 网卡」终结连接。[43]
+ClusterIP 是虚拟地址：iptables / nftables 模式下不必对应一块业务网卡；IPVS 模式会把各 Service IP 绑到本机 dummy 接口 `kube-ipvs0`，好让内核把包交给 IPVS。无论哪种，流量都由节点上的代理规则转发，而不是由一块「Service 网卡」终结连接。[43] 这些机制成立的前提，是集群已具备扁平可达的 Pod 网络，以及互不重叠的地址划分——见 §7.4。
 
 新 Pod 的就绪探针通过之前，不会进入端点列表——坏版本因此接不到流量。[14][43]
 
@@ -579,6 +581,68 @@ ClusterIP 是虚拟地址：iptables / nftables 模式下不必对应一块业�
 新 Pod 未就绪就不进 Service。若新版本一直不就绪，滚动会按 `maxUnavailable` 卡住，流量仍打在旧副本上——控制器**停住扩新，并不会自动 undo**；`kubectl rollout undo` 把期望态改回上一版，循环再走一遍。[42]
 
 > **判断**：Operator、服务网格、GitOps 同步器，都是这套循环的变体：把期望写给 apiserver，让控制器去调谐，让 kubelet 在节点上兑现。[15][36]
+
+### 7.4 网络模型与地址空间划分
+
+调度解决「谁跑在哪台机器」；网络必须再回答「跑起来之后，别人如何按 IP 找到它」。核心控制面**不实现**完整网络栈，但规定一套必须兑现的合同，并把实现交给 CNI 插件——这与 CRI / CSI 同属「平台的平台」（§3.3 / §4.2）。[29][57][58] 数据面如何写表，见本库 [24](./24-calico-l3-dataplane-treatise.md) / [24a](./24a-cilium-ebpf-dataplane-treatise.md)；IP 跨网转发一般原理见 [16a](../10-chronicle/16a-tcp-ip-illustrated-treatise.md)。
+
+#### 7.4.1 网络模型合同
+
+官方网络模型可收束为几条硬约束（barring 有意的 NetworkPolicy 分段）：[57]
+
+| 约束 | 含义 |
+|------|------|
+| **每 Pod 唯一集群 IP** | 每个地址族上，Pod 在集群范围内有唯一 IP；同 Pod 内容器共享网络命名空间，可用 `localhost` 互通 |
+| **Pod↔Pod 直接可达** | 任意节点上的 Pod 可与其他 Pod 通信，**无需 NAT**（也不依赖应用层代理） |
+| **身份一致** | Pod 看见自己的 IP，与其他主体看见的是同一地址——避免「内网一套、外看一套」的歧义 |
+| **节点 / 主机网络可达** | 节点代理与（在模型要求下的）主机网络主体，亦应能在无 NAT 前提下与 Pod 通信 |
+
+Service API 在此之上提供**稳定入口**：后端 Pod 集合随标签与就绪状态变化，客户端仍可使用长期存活的 ClusterIP 或 DNS 名；Gateway / Ingress（或云上的 `LoadBalancer`）再把集群外流量接到 Service。[43][57][38]
+
+> **所以 · 边界在哪：** Kubernetes 保证的是「扁平可达 + 稳定虚入口」的合同，不是某一种叠加网络或某一种 BGP 拓扑。换 CNI，换的是兑现方式，不是改写上述合同。
+
+#### 7.4.2 三类地址空间须事先划分
+
+集群要同时为 Pod、Service、Node 分配地址；官方要求这三类范围**互不重叠**，并分别由不同组件负责：网络插件（经 CNI）为 Pod 分配；kube-apiserver 为 Service（ClusterIP）分配；kubelet 或 cloud-controller-manager 为 Node 分配。[58] 工程上常见的三分法是：
+
+| 空间 | 典型配置入口 | 用途 |
+|------|--------------|------|
+| **Pod CIDR**（cluster CIDR） | `--cluster-cidr` / CNI 自身 IPAM | 真实工作负载地址；跨节点路由或封装的终点 |
+| **Service CIDR** | apiserver `--service-cluster-ip-range` | ClusterIP 虚地址池；**不是**某块业务网卡上的主机地址 |
+| **Node 地址** | 基础设施 / CCM | 节点互通、控制面与 kubelet 通道 |
+
+重叠的后果不是「慢一点」，而是路由歧义、Service 与 Pod 争抢同一前缀、排查时无法区分虚地址与真终点。ClusterIP 的动态分配另有防碰撞策略：控制面把 Service 范围按公式切成上下带，动态分配优先用上带，静态指定多用下带，以降低与保留地址冲突的概率。[59]
+
+双栈集群还须分别规划 IPv4 / IPv6 族，并保证各对象 `status` 中登记的地址族与模型一致——Kubernetes 只认对象上声明的地址，不认网卡上「多出来」却未登记的 IP。[58]
+
+#### 7.4.3 节点级子网划分与 IPAM
+
+「子网划分」在 Kubernetes 里通常指：**把整段 Pod CIDR 切成每节点一小段，再在节点内给 Pod 发地址**。
+
+当启用控制器侧 Node IPAM（`--allocate-node-cidrs=true`）时，`kube-controller-manager` 从 `--cluster-cidr` 按 `--node-cidr-mask-size`（常见如 `/24`）切块，写入 `Node.spec.podCIDR` / `podCIDRs`；并会把与 Service CIDR 重叠的区间从可分配池中滤掉。[58][60] 例如 `10.244.0.0/16` 配掩码 24，理论上下可支撑约 256 个节点、每节点约 256 个 Pod 地址（含网络 / 广播等开销后的可用主机数更少）——规划时必须按峰值 Pod 密度与节点规模反算，而不是沿用数据中心「一个大二层」的直觉。
+
+CNI 插件随后在该节点的 podCIDR（或插件自管的 IPAM，如部分云厂商 VPC CNI）内为每个沙箱分配地址、创建 veth、下发路由或封装。部分插件**不**依赖 Node IPAM，而自行向云 API 申请弹性网卡 / 辅助 IP；此时 `--cluster-cidr` 与 `podCIDR` 字段的语义以该插件文档为准，但「Pod / Service / Node 不重叠」的纪律不变。[58][57]
+
+单段 cluster CIDR 不够用、或不同节点组需要不同块大小时，社区以 **ClusterCIDR**（KEP-2593）等机制支持多段、可选择器绑定的 Pod 地址池——属于规模与多租户规划能力，不是改网络模型本身。[61]
+
+```text
+  cluster CIDR（如 10.244.0.0/16）
+        │  Node IPAM 按 mask 切分
+        ▼
+  Node A: 10.244.1.0/24    Node B: 10.244.2.0/24
+        │ CNI IPAM                 │
+        ▼                          ▼
+     Pod IPs                    Pod IPs
+  ── 与此并行 ──  Service CIDR（如 10.96.0.0/12）→ ClusterIP
+```
+
+#### 7.4.4 CNI 兑现与 NetworkPolicy
+
+**CNI（Container Networking Interface）** 规定运行时如何调用插件完成沙箱入网 / 出网（ADD / DEL / CHECK 等），是 kubelet ↔ 网络实现之间的二进制合同；Kubernetes 要求使用兼容的 CNI 插件来实现上述网络模型。[62][57] kubelet 读节点 `/etc/cni/net.d/` 配置并调用插件——控制面对象（Pod）被调度后，**网络兑现发生在节点循环里**，与 §7.1 的分工一致。
+
+**NetworkPolicy**（`networking.k8s.io/v1`）在模型之上叠加**意图级微隔离**：按标签选择 Ingress / Egress 允许集。策略对象由 apiserver 存真，由支持策略的 CNI / 代理在数据面执行；不支持策略的插件会让策略「写了却无效」——这是选型问题，不是 API 失效。[30][57] 默认（无策略命中时）行为取决于插件实现，不能假定「安装了 NetworkPolicy CRD 就等于默认拒绝」。
+
+> **要点**：网络是控制循环的**兑现层**——Service / EndpointSlice / kube-proxy 解决稳定虚入口；CNI 解决真实 Pod IP 与可达性；CIDR 规划是二者共用的地址账本。账本划错，循环再正确也救不回路由黑洞。
 
 ---
 
@@ -745,6 +809,7 @@ backend apiservers
 | etcd / 控制面 | quorum 内不脑裂；L4 LB 稳定入口 | quorum 丢失停写；不替代备份；LB 单点仍拖垮入口 |
 | 工作负载自愈 | 替换实例、维持副本 | 修不好错误配置、业务 bug、容量不足[13] |
 | 静态稳定 | 控制面短失联时维持存量服务 | 无控制面时无限期扩缩 / 调度 / 发布 |
+| 网络合同（§7.4） | 扁平 Pod IP + Service 虚入口的模型；CIDR 账本由控制面/IPAM 划定 | 不自带某一种 CNI；CIDR 重叠 / 耗尽；策略插件不支持时 NetworkPolicy「写了无效」 |
 
 > **公式**：高可用 ≈ 正确的一致性边界 × 分层冗余 × 正确的期望声明 × 合理的容量与探针。
 
@@ -760,6 +825,7 @@ backend apiservers
 8. RBAC 默认开启；应用使用专用 ServiceAccount + 最小 Role/Binding
 9. 集群内 UI（若部署）仅用短期 Token，勿裸露公网；新装注意 Dashboard 已归档停维
 10. Label 上线前完成 §5.3.5 六问审计；勿把无消费者 / 高基数键写进公共契约；指标侧用 kube-state-metrics allowlist 显式放开
+11. Pod / Service / Node 三类 CIDR 事先划定且互不重叠；按节点规模与 Pod 密度核算 `--cluster-cidr` 与 `--node-cidr-mask-size`；CNI 须兑现扁平可达合同，NetworkPolicy 须选支持策略的插件
 
 ---
 
@@ -768,7 +834,7 @@ backend apiservers
 | 层次 | 命题 | 要点 |
 |------|------|------|
 | **上篇** | 时代与谱系 | 云可编程 × 容器不可变 × 复杂度下沉；Borg/Omega 经验外溢，非 Borg 开源版；CNCF 治理 + 可插拔接口使其成为默认底座[2][6] |
-| **中篇** | 可久约束 | 一份真相 · API 松耦合 · **Label/Selector 分组（公共契约）** · **同一个调谐循环** · 静态稳定 · Platform for Platform[11][12][19][46][54] |
+| **中篇** | 可久约束 | 一份真相 · API 松耦合 · **Label/Selector 分组（公共契约）** · **同一个调谐循环** · 静态稳定 · **网络合同与 CIDR 账本** · Platform for Platform[11][12][19][46][54][57] |
 | **下篇** | 工程工艺 | L1–L5 分层 HA；L4 入口 + **RBAC**；CRD/Operator 外推；边界清晰[13][25][49] |
 
 | 偏废 | 后果 |
@@ -779,7 +845,7 @@ backend apiservers
 
 > **收束**  
 > Docker 把软件变成标准集装箱；Kubernetes 把「如何调度这些箱子」写成云原生的共同语言。  
-> 接受「故障是常态」；守住「一份真相、查询式分组（公共契约）、同一循环、静态稳定」；把原则落成「分层高可用、受控入口与可扩展控制平面」。  
+> 接受「故障是常态」；守住「一份真相、查询式分组（公共契约）、同一循环、静态稳定」；把扁平网络合同与互不重叠的地址账本交给 CNI 兑现；把原则落成「分层高可用、受控入口与可扩展控制平面」。  
 > 舵手之意，不在无风浪，而在有原则可依、有工艺可操，于故障中仍能指向可用。
 
 ---
@@ -844,3 +910,9 @@ backend apiservers
 | [54] | Kubernetes Documentation, *Recommended Labels*. https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/ | `app.kubernetes.io/*` 为推荐而非强制；`name` / `instance` / `version` / `component` / `part-of` / `managed-by` |
 | [55] | Kubernetes Blog, *kube-state-metrics goes v2.0* (2021-04-13). https://kubernetes.io/blog/2021/04/13/kube-state-metrics-v-2-0/ ；v2.10.0 release notes（默认不再暴露 label/annotation metrics）. https://github.com/kubernetes/kube-state-metrics/releases/tag/v2.10.0 ；cli：`--metric-labels-allowlist` | v2 起收紧 Label→指标映射；现行默认下 `kube_*_labels` 须 allowlist 才暴露；`*` 有严重性能影响 |
 | [56] | Grafana Labs / CNCF 等关于 Prometheus 高基数的实践综述（如 Grafana Blog *How to manage high cardinality metrics in Prometheus and Kubernetes*）. https://grafana.com/blog/how-to-manage-high-cardinality-metrics-in-prometheus-and-kubernetes/ | 无界标签值（user/session/request id）会笛卡尔式放大时间序列；与 K8s 对象层基数是两层问题 |
+| [57] | Kubernetes Documentation, *Services, Load Balancing, and Networking*；*Cluster Networking*. https://kubernetes.io/docs/concepts/services-networking/ ；https://kubernetes.io/docs/concepts/cluster-administration/networking/ | 网络模型：每 Pod 唯一 IP、Pod↔Pod 无 NAT；CNI 兑现；Service / NetworkPolicy |
+| [58] | Kubernetes Documentation, *Cluster Networking*（地址分配段落）. https://kubernetes.io/docs/concepts/cluster-administration/networking/ | Pod / Service / Node 地址来源；三类范围勿重叠；双栈注意事项 |
+| [59] | Kubernetes Documentation, *Service ClusterIP allocation*. https://kubernetes.io/docs/concepts/services-networking/cluster-ip-allocation/ | ClusterIP 动态/静态分配；上下带策略降低碰撞 |
+| [60] | Kubernetes `nodeipam`（`pkg/controller/nodeipam`）. https://github.com/kubernetes/kubernetes/tree/master/pkg/controller/nodeipam | `--allocate-node-cidrs` / `--cluster-cidr` / `--node-cidr-mask-size`；滤除 Service 重叠区间 |
+| [61] | Kubernetes KEP-2593, *Multiple Cluster CIDRs*；`kubernetes-sigs/node-ipam-controller`. https://www.kubernetes.dev/resources/keps/2593/ ；https://github.com/kubernetes-sigs/node-ipam-controller | 多段 / 不连续 Pod CIDR；按节点选择器与 perNodeHostBits 划分 |
+| [62] | CNI Specification（containernetworking/cni）. https://www.cni.dev/docs/spec/ ；https://github.com/containernetworking/cni/blob/main/SPEC.md | 运行时↔插件合同（ADD/DEL/CHECK 等）；Kubernetes 经此调用网络插件 |
