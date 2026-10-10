@@ -1,18 +1,18 @@
-# Kubernetes 控制面原则：声明式 API、控制循环与分层自愈
+# Kubernetes 控制面原则：声明式协调、分组契约与控制循环
 
 > Kubernetes 之名源于希腊语，意为「舵手 / 飞行员」。Google 于 2014 年开源该项目，将十余年 Borg / Omega 生产经验凝练为可对外使用的容器编排平台。社区简称 **K8s**；七边形 logo 致敬内部代号 Project Seven of Nine。[1][6][27]
 
 先记住总纲：
 
 > **Kubernetes 不是一次性编排脚本，而是一台「分布式控制计算机」：**  
-> 以 etcd 为真相源，以声明式 API 为协调语言，以可失败的控制循环持续逼近期望态；控制面短暂失联时，数据面尽量按上次指令继续服务。  
-> 调度、自愈、服务发现、滚动发布，并不是四套魔法——**驱动这一切的，是同一个调谐循环。**[1][11][12][18]
+> 以 etcd 为真相源，以声明式 API 为协调语言，以 Label / Selector 做查询式分组，以可失败的控制循环持续逼近期望态；控制面短暂失联时，数据面尽量按上次指令继续服务。  
+> 调度、自愈、服务发现、滚动发布，并不是四套魔法——**驱动这一切的，是同一个调谐循环。**[1][11][12][18][46]
 
 全文可与本库 [《服务架构演进》](./21-service-architecture-evolution.md)（复杂度如何转移）、[《分布式一致性》](./22-distributed-consistency-treatise.md)（CAP / Raft）、[《Calico 三层数据面》](./24-calico-l3-dataplane-treatise.md)（网络控制面如何写表；kubelet 经 CNI 调用插件）对照阅读。更长的容器与云原生时间线见 [《计算与云编年》](../10-chronicle/10-computing-cloud-chronicle.md) §8。关键史实与论断尽量对齐一手文献，文末附参考文献。
 
 ## 摘要
 
-Kubernetes 应被理解为持续收敛的分布式控制计算机，而不是一次性编排脚本。etcd 充当真相源，声明式 API 充当协调语言；Label / Selector 则是松耦合的核心分组原语——**一旦被 Selector 或策略读取，便签成公共契约**，因而只宜承载有限、稳定、可分组的维度，非识别信息应放入 Annotation；讨论高基数时，还须分清对象层治理成本与指标映射层的时间序列膨胀。每个控制器只反复追问「世界应该什么样 / 现在实际上什么样」，发现偏差就走一步，然后再问——调度、自愈、服务发现与滚动发布，都是这同一个调谐循环作用在不同对象上。控制面可以短暂失败，数据面则尽量按上次指令保持静态稳定；API 入口除 L4 高可用外，还须以 RBAC 约束「谁能对哪些资源做什么」。全文分三篇：上篇划定问题域与 Borg → Omega 谱系；中篇收束控制模型；下篇落到分层高可用、入口与 RBAC、CRD / Operator 与能力边界。可与本库 21、22、24 对照。
+Kubernetes 应被理解为持续收敛的分布式控制计算机，而不是一次性编排脚本。etcd 充当真相源，声明式 API 充当协调语言；Label / Selector 则是松耦合的核心分组原语——先问「需要被 Selector 选中吗」以区分 Label 与 Annotation，再承认**一旦被读取即成公共契约**，因而只宜承载有限、稳定、可分组的维度；讨论高基数时，还须分清对象层治理成本与指标映射层的时间序列膨胀。每个控制器只反复追问「世界应该什么样 / 现在实际上什么样」，发现偏差就走一步，然后再问——调度、自愈、服务发现与滚动发布，都是这同一个调谐循环作用在不同对象上。控制面可以短暂失败，数据面则尽量按上次指令保持静态稳定；API 入口除 L4 高可用外，还须以 RBAC 约束「谁能对哪些资源做什么」。全文分三篇：上篇划定问题域与 Borg → Omega 谱系；中篇收束控制模型；下篇落到分层高可用、入口与 RBAC、CRD / Operator 与能力边界。可与本库 21、22、24 对照。
 
 **关键词：** Kubernetes；声明式 API；调谐循环；etcd；Label / Selector；Annotation；公共契约；推荐标签；基数；RBAC；静态稳定；CNCF
 
@@ -34,7 +34,7 @@ Kubernetes 应被理解为持续收敛的分布式控制计算机，而不是一
 4. [前提与核心理念](#4-前提与核心理念)
 5. [一份真相与松耦合协调](#5-一份真相与松耦合协调)
     - [5.1 真相源](#51-一份共享真相源cp) · [5.2 API 松耦合](#52-唯一协调语言api-松耦合) · [5.3 Label / Selector](#53-label--selector核心分组原语)
-      - [5.3.1 语法与谁在读](#531-选择器语法与谁在读) · [5.3.2 公共契约](#532-标签一旦被读取即成公共契约) · [5.3.3 Label / Annotation](#533-label-还是-annotation) · [5.3.4 危险标签与基数](#534-危险标签与两层基数风险) · [5.3.5 推荐标签与审计](#535-推荐标签与上线前审计)
+      - [5.3.1 怎么选](#531-选择器语法与谁在读) · [5.3.2 Label 还是 Annotation](#532-label-还是-annotation先问需要被选中吗) · [5.3.3 公共契约](#533-标签一旦被读取即成公共契约) · [5.3.4 危险标签与基数](#534-危险标签与两层基数风险) · [5.3.5 推荐标签与审计](#535-推荐标签与上线前审计)
 6. [持续收敛与静态稳定](#6-持续收敛与静态稳定)
     - [6.1 持续收敛](#61-持续收敛而非一次成功的剧本) · [6.2 调谐循环](#62-调谐循环驱动一切的同一个循环) · [6.3 静态稳定](#63-静态稳定static-stability)
 7. [控制平面与设计原则](#7-控制平面与设计原则)
@@ -53,7 +53,7 @@ Kubernetes 应被理解为持续收敛的分布式控制计算机，而不是一
 12. [总结](#12-总结)
 13. [参考文献](#13-参考文献)
 
-全文按「问题域 → 控制模型 → 工程落地」展开。原则先于技巧——否则容易把 YAML、组件名与营销口号当成定律。读中篇时抓住三条纪律：**一份真相、同一循环、静态稳定**；Label/Selector 是循环如何圈定作用域的寻址语言——**一旦被 Selector / 策略读取，便签成公共契约**；RBAC 是入口如何约束主体的门禁。
+全文按「问题域 → 控制模型 → 工程落地」展开。原则先于技巧——否则容易把 YAML、组件名与营销口号当成定律。读中篇时抓住三条纪律：**一份真相、同一循环、静态稳定**；Label/Selector 是循环如何圈定作用域的寻址语言——先分清「能否被选中」（Label vs Annotation），再承认**被选中即成公共契约**；RBAC 是入口如何约束主体的门禁。
 
 ```mermaid
 %% K8s 设计全景：问题域约束原则，原则约束落地
@@ -280,11 +280,16 @@ Omega 曾允许受信组件直连共享存储；Kubernetes 改为：**仅 API Se
 
 松耦合进一步要求：**作用域不能绑死在对象名字上**。官方将 **Label Selector** 称为核心分组原语（core grouping primitive）：对象携带短键值标签，选择器圈出子集；Deployment、Service、调度与策略据此识别「属于自己的那一群」，而不是写死 Pod 名。这与 Borg 时代相对僵硬的 Job 分组形成对照——Burns 等文亦强调 Label 带来的组织灵活性。[2][46]
 
-机制（语法与消费者）解决「怎么选」；治理则还要回答更现实的问题——**什么信息值得成为 Label，什么信息不应该**。判断标准不是「以后也许用得上」，而是「谁会稳定地依赖它」。
+读本节时抓住一条因果链，勿把后文当成彼此无关的名词表：
+
+```text
+怎么选（Selector）→ 什么进「可被选中」的身份（Label vs Annotation）
+                 → 一旦被读，便签成公共契约 → 危险键 / 基数 → 词典与审计
+```
 
 #### 5.3.1 选择器语法与谁在读
 
-选择器有等值与集合两层表面。API 中的 `LabelSelector` 由 `matchLabels` 与 `matchExpressions` 组成，二者及各项之间均为逻辑 **AND**（无逻辑 OR）。就 `metav1.LabelSelector` 而言：空选择器匹配全部对象，`null` 选择器不匹配任何对象——具体 API 字段若另有约定，以该类型文档为准。[46][48] `matchLabels` 的每一对 `{key: value}` 等价于一条 `operator: In` 且 `values` 仅含该值的表达式；`matchExpressions` 支持 **`In` / `NotIn` / `Exists` / `DoesNotExist`**（前两者要求 `values` 非空，后两者不填 `values`）。列表过滤的查询字符串（`=` / `in` / `exists` 等）与对象字段中的表达式，是同一思想的不同表面。[46]
+先回答「怎么选」。选择器有等值与集合两层表面：API 中的 `LabelSelector` 由 `matchLabels` 与 `matchExpressions` 组成，二者及各项之间均为逻辑 **AND**（无逻辑 OR）。就 `metav1.LabelSelector` 而言，空选择器匹配全部对象，`null` 选择器不匹配任何对象——具体 API 字段若另有约定，以该类型文档为准。[46][48] `matchLabels` 的每一对 `{key: value}` 等价于一条 `operator: In` 且 `values` 仅含该值的表达式；`matchExpressions` 支持 **`In` / `NotIn` / `Exists` / `DoesNotExist`**（前两者要求 `values` 非空，后两者不填 `values`）。列表过滤的查询字符串（`=` / `in` / `exists` 等）与对象字段中的表达式，是同一思想的不同表面。[46]
 
 ```yaml
 # 逻辑：app=nginx 且 env∈{dev,test} 且不存在 tier 键
@@ -299,15 +304,57 @@ selector:
       operator: DoesNotExist
 ```
 
-这些选择器并非抽象语法游戏。Deployment / ReplicaSet / StatefulSet 靠 selector 锁定受管 Pod；Service 靠标签发现后端并生成 EndpointSlice（§7.3）；NetworkPolicy、部分调度规则（`nodeSelector` / `nodeAffinity`，常与污点/容忍并用）以及 GitOps / 内部平台，亦按标签切片。在 `apps/v1` 中，**`.spec.selector` 创建后不可变**，且必须与 `.spec.template.metadata.labels` 匹配，否则 API 拒绝；模板标签与 selector 不一致时，控制器无法认领 Pod——这是清单层的结构性错误。若必须更换选择器，通常只能重建 Deployment（例如以 orphan 策略保留旧 Pod 后再接新控制器）。[42][46]
+这些选择器并非抽象语法游戏，而是控制面里真实的「读者」：Deployment / ReplicaSet / StatefulSet 靠 selector 锁定受管 Pod；Service 靠标签发现后端并生成 EndpointSlice（§7.3）；NetworkPolicy、部分调度规则（`nodeSelector` / `nodeAffinity`，常与污点/容忍并用）以及 GitOps / 内部平台，亦按标签切片。在 `apps/v1` 中，**`.spec.selector` 创建后不可变**，且必须与 `.spec.template.metadata.labels` 匹配，否则 API 拒绝；模板标签与 selector 不一致时，控制器无法认领 Pod——这是清单层的结构性错误。若必须更换选择器，通常只能重建 Deployment（例如以 orphan 策略保留旧 Pod 后再接新控制器）。[42][46]
 
-#### 5.3.2 标签一旦被读取，即成公共契约
+知道「谁在读」之后，下一个问题才变得具体：**某条元数据，要不要放进这些读者能够查询的身份空间？**
 
-正因为消费者众多，同一张标签往往同时服务多个目的：Service 选后端，Deployment 管 Pod，NetworkPolicy 划通信边界，调度规则决定落点，平台脚本也可能据此分组。于是修改 `environment=prod` 不再只是「改了一个字段」——它可能同时改变流量、策略与调度结果。
+#### 5.3.2 Label 还是 Annotation？先问「需要被选中吗」
 
-新增标签之前，宜先写出它的**消费者**：哪个 Selector、策略、脚本或平台会读取？若答案是「暂时没有，只是怕以后用到」，它大概率不该成为 Label。官方动机表述指向同一纪律：Label 用于把组织维度**松耦合地映射**到系统对象，并支持高效查询与监视；非识别信息应记入 Annotation。[46][47]
+Label 与 Annotation 都挂在对象的 `metadata` 上，容易被当成两种「备注」。官方分界却很硬：Label 用于表达**识别属性（identifying attributes）**，供组织、查询与选中子集；**非识别信息应记入 Annotation**——Annotation 可以很大、可结构化，但**不能**用来 identify / select 对象。[46][47]
 
-一套好标签，只回答**有限、稳定、可分组**的问题：
+因此，选型时只先问一句：
+
+> **需要被 Selector（或等价查询）选中吗？**  
+> 需要 → 放 **Label**（进入可被选中的身份空间）；  
+> 不需要 → 放 **Annotation**（附带说明、构建信息、工具私有配置）。
+
+| | **Label** | **Annotation** |
+|--|-----------|----------------|
+| 官方定位 | 识别属性；可查询、可分组 | 任意非识别元数据 |
+| 能否被 Label Selector 选中 | **能** | **不能** |
+| 体量 / 字符集 | key/value 偏短（见 §5.3.5） | 值可含空白、JSON 等；单对象全部注解合计通常 ≤ **256 KiB** |
+| 典型内容 | 应用名、实例、环境、组件角色 | Git SHA、变更说明、镜像仓库地址、控制器私有状态 |
+
+这里有一个常见误解：**Annotation ≠「只给人看」**。控制器、Webhook、Ingress Controller、Service Mesh 都可以读取 Annotation；区别只在于——读 Annotation 是「取附加数据」，不能把它写进 Selector 去圈选对象。[47] 反过来，Git SHA 也并非绝对不能做 Label：若发布系统确实要按构建版本**选择** Pod，它可以进 Label；若只用于审计追溯，放 Annotation 更合适。
+
+```yaml
+# 同一对象上并存：能被选中的进 labels；只需附带的进 annotations
+metadata:
+  labels:
+    app.kubernetes.io/name: checkout          # Service / Deployment 可能按它选
+    platform.example.com/environment: prod    # NetworkPolicy / 平台策略可能按它选
+  annotations:
+    build.example.com/git-sha: "a1b2c3d"      # 工具可读，但不能写进 Selector
+    change.example.com/summary: "修复结算超时"
+```
+
+```mermaid
+flowchart TD
+  Q{"这条信息需要被<br/>Selector 选中吗？"}
+  Q -->|需要| L["写入 Label<br/>进入可查询身份"]
+  Q -->|不需要| A["写入 Annotation<br/>附带非识别元数据"]
+  L --> C["若确有消费者读取<br/>→ 视为公共契约（§5.3.3）"]
+```
+
+把信息放进 Label，只是打开了「可被选中」的大门；下一小节说明：门一旦被真实消费者推开，标签就不再是私人备注。
+
+#### 5.3.3 标签一旦被读取，即成公共契约
+
+§5.3.1 列出的读者——Service、Deployment、NetworkPolicy、调度规则、平台脚本——可以同时依赖**同一张** Label。于是 `environment=prod` 的修改，往往不再是「改了一个字段」，而可能同时改变流量落点、策略边界与调度结果。
+
+这便是公共契约的含义：**Label 的价值不取决于你贴了多少，而取决于是否有系统稳定地依赖它。** 新增之前，先写出消费者——哪个 Selector、策略、脚本或平台会读？若答案是「暂时没有，只是怕以后用到」，它大概率不该成为 Label，而应留在 Annotation，或干脆不写。[46][47]
+
+进入 Label 空间的键，宜只回答**有限、稳定、可分组**的问题：
 
 | 维度 | 示例键 | 为何适合做 Label |
 |------|--------|------------------|
@@ -326,31 +373,9 @@ metadata:
     platform.example.com/team: payments
 ```
 
-#### 5.3.3 Label 还是 Annotation？
-
-二者同属对象元数据，分工却不同。[46][47]
-
-| | **Label** | **Annotation** |
-|--|-----------|----------------|
-| 用途 | 识别属性；供 Selector 查询与分组 | 非识别元数据：构建信息、说明、工具配置、追溯 |
-| 可否被 Selector 选中 | 可以 | **不可以** |
-| 体量 / 字符集 | key/value 偏短（见 §5.3.5） | 值可含空白、JSON 等；单对象全部注解合计通常 ≤ **256 KiB** |
-
-Annotation 并不等于「只给人看」。控制器、Webhook、Ingress Controller 与 Service Mesh 都可能读取它；真正的分界是：它**不是可选择的身份维度**。Git SHA 亦非绝对不能放 Label——若发布系统确实需要按构建版本选择 Pod，它可以成为 Label；若只用于审计追溯，放 Annotation 更合适。[47]
-
-```yaml
-metadata:
-  labels:
-    app.kubernetes.io/name: checkout
-    platform.example.com/environment: prod
-  annotations:
-    build.example.com/git-sha: "a1b2c3d"
-    change.example.com/summary: "修复结算超时"
-```
-
 #### 5.3.4 危险标签与两层基数风险
 
-三类危险标签应主动回避：
+把不该进身份空间的东西硬塞进 Label，常见有三类后果：
 
 1. **无人读取**——没有任何 Selector、策略或工具使用，只会增加认知成本。  
 2. **频繁变化**——如负责人姓名；团队一调整就批量改标，若消费者依赖它，变更风险会持续放大。  
@@ -371,18 +396,18 @@ kubectl get pods --show-labels
 kubectl get pods -L app.kubernetes.io/name,platform.example.com/environment
 ```
 
-上线前可用六个问题做一次审计：
+上线前可用六个问题做一次审计——前三问对应「谁读 / 稳不稳 / 会不会爆」，后三问对应「谁维护 / 改了伤谁 / 该不该进 Label」：
 
 | 问题 | 问什么 |
 |------|--------|
-| **用途** | 谁会读取它？ |
+| **用途** | 谁会读取它？（接 §5.3.1） |
 | **稳定性** | 值会频繁变化吗？ |
 | **基数** | 可能产生多少种值？会不会被映射进指标？ |
 | **所有权** | 哪个团队负责维护？ |
 | **兼容性** | 修改后会影响哪些消费者？（含不可变的 `.spec.selector`） |
-| **类型** | 应放 Label 还是 Annotation？ |
+| **类型** | 应放 Label 还是 Annotation？（接 §5.3.2） |
 
-> **判断：** Label / Selector 是声明式控制面的**寻址语言**——把「谁管谁、谁给谁转发」从名字耦合改为查询耦合。价值不在于记录了多少，而在于系统能否稳定地依赖它；没有稳定消费者的标签，不应进入公共契约。
+> **判断：** Label / Selector 是声明式控制面的**寻址语言**——把「谁管谁、谁给谁转发」从名字耦合改为查询耦合。先分清「能否被选中」，再承认「被选中即成契约」；没有稳定消费者的键，不应进入 Label 空间。
 
 ---
 

@@ -165,7 +165,7 @@ knowledge_base/
 | 20 | [Enterprise Architecture Treatise](./20-architecture/20-enterprise-architecture-treatise.md) | 战略译成可执行安排；教学四大域、实践六层；实践不是照搬某一框架 | EA、四大域、六层域、CSVLOD |
 | 21 | [Service Architecture Evolution](./20-architecture/21-service-architecture-evolution.md) | 复杂度不会消失，只会代际转移 | 单体→微服务→无服务 |
 | 22 | [Distributed Consistency Treatise](./20-architecture/22-distributed-consistency-treatise.md) | 跨节点之后，强一致与持续可用如何取舍 | CAP、共识、一致性 |
-| 23 | [Kubernetes Control-Plane Doctrine](./20-architecture/23-kubernetes-control-plane-doctrine.md) | 编排平台是持续收敛的分布式控制计算机 | K8s 控制面、声明式收敛 |
+| 23 | [Kubernetes Control-Plane Doctrine](./20-architecture/23-kubernetes-control-plane-doctrine.md) | 声明式协调 + 查询式分组契约 + 同一控制循环 | K8s 控制面、Label 契约、声明式收敛 |
 | 24 | [Calico L3 Dataplane Treatise](./20-architecture/24-calico-l3-dataplane-treatise.md) | 节点即路由器：控制面写表、内核转发；Service 虚地址经 DNAT / conntrack 到达 Endpoint | Calico、Pod 网络、Service |
 | 24a | [Cilium eBPF Dataplane Treatise](./20-architecture/24a-cilium-ebpf-dataplane-treatise.md) | eBPF 换底座：身份策略、替代 kube-proxy、Hubble；iptables 规模痛在结构 | Cilium、eBPF、kube-proxy replacement、Hubble、Gateway API |
 | 25 | [Architecture Thinking (CTO) Treatise](./20-architecture/25-architecture-thinking-cto-treatise.md) | 架构师靠决策生存；价值是第一性；五级跳是跨维不是把写代码卷满 | 架构思维、郭东白、价值思维、从程序员到 CTO |
@@ -228,7 +228,7 @@ knowledge_base/
 | 服务架构代际、复杂度转移 | 21 |
 | 服务代际 ↔ 服务间通信选型 | 21 / 28 |
 | CAP、共识、强一致 vs 可用 | 22 |
-| Kubernetes 控制面、声明式、调谐 | 23 |
+| Kubernetes 控制面、声明式、调谐、Label / Annotation、分组契约 | 23 |
 | Calico、L3、Service/DNAT | 24 |
 | 架构思维、价值思维、实证思维、从程序员到 CTO、生存法则 | 25 |
 | 虚拟地址、MMU、TLB、页表、Page Fault、Cache、SRAM、DRAM、局部性、AMAT、Cache Line、L1D、Working Set、数据通路、流水线、tag/set/offset | 26 |
@@ -298,7 +298,7 @@ knowledge_base/
 14. **43** 熵与复杂度如何转移（一般原理）  
 15. **46** 系统思维：要素、连接、目标与反馈  
 16. **22** 跨节点一致性取舍  
-17. **23** 编排控制面原则  
+17. **23** 编排控制面：声明式协调、分组契约与控制循环  
 18. **24** 数据面如何写表转发（Calico）  
 19. **24a** eBPF 换底座（Cilium）  
 20. **26** 一次 Load 如何从虚地址走到 DRAM  
