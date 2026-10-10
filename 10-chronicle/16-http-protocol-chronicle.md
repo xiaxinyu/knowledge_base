@@ -2,7 +2,7 @@
 
 > HTTP 的名字三十余年几乎未变，变的是**一次连接里如何并发、丢包堵到哪一层、以及路上能否被窃听**。语义层大体连续；承载与并发模型则代际替换。
 >
-> 本文是 HTTP 从实验单行协议走到 HTTP/3 的编年。可与本库 [14](./14-internet-history-chronicle.md)（协议即权力）、[15](./15-browser-custody-chronicle.md)（浏览器如何代管）、[40](../40-paradigm/40-unix-agent-stateless-philosophy.md)（无状态与可组合）、[11](./11-information-theory-chronicle.md)（可靠传输与冗余）、[27](../20-architecture/27-mqtt-over-quic-treatise.md)（MQTT 接到同一条 QUIC 运输）对照。
+> 本文是 HTTP 从实验单行协议走到 HTTP/3 的编年。可与本库 [14](./14-internet-history-chronicle.md)（协议即权力）、[15](./15-browser-custody-chronicle.md)（浏览器如何代管）、[16a](./16a-tcp-ip-illustrated-treatise.md)（TCP/IP 栈分工与队头阻塞的传输层根）、[40](../40-paradigm/40-unix-agent-stateless-philosophy.md)（无状态与可组合）、[11](./11-information-theory-chronicle.md)（可靠传输与冗余）、[27](../20-architecture/27-mqtt-over-quic-treatise.md)（MQTT 接到同一条 QUIC 运输）对照。
 
 先给一个直接答案：
 

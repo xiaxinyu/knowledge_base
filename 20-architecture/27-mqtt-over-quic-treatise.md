@@ -2,7 +2,7 @@
 
 > 一辆车驶入隧道：5G → 4G → 无信号 → 再回 5G。物理上「有没有网」，与业务上「MQTT 还连着吗」，常常不是同一件事。MQTT 的主题、QoS、会话语义可以不变；要换的是底下那一层传输。
 >
-> 本文按一条因果链展开：**弱网为何与 TCP 错配 → TCP 上的三重结构代价 → QUIC 如何对症 → MQTT 如何映到 Stream → 落地与选型边界**。可与 [16](../10-chronicle/16-http-protocol-chronicle.md)（HTTP/3 接到 QUIC）、[14](../10-chronicle/14-internet-history-chronicle.md)（协议即架构）、[21](./21-service-architecture-evolution.md)（复杂度换层）对照：彼处写 Web 语义换传输，此处写物联网消息协议换传输。
+> 本文按一条因果链展开：**弱网为何与 TCP 错配 → TCP 上的三重结构代价 → QUIC 如何对症 → MQTT 如何映到 Stream → 落地与选型边界**。可与 [16](../10-chronicle/16-http-protocol-chronicle.md)（HTTP/3 接到 QUIC）、[16a](../10-chronicle/16a-tcp-ip-illustrated-treatise.md)（TCP/IP 栈分工与队头阻塞的传输层根）、[14](../10-chronicle/14-internet-history-chronicle.md)（协议即架构）、[21](./21-service-architecture-evolution.md)（复杂度换层）对照：彼处写 Web 语义换传输，此处写物联网消息协议换传输。
 
 先给一个直接答案：
 
