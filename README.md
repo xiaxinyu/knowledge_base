@@ -155,7 +155,7 @@ knowledge_base/
 | 14 | [Internet History Chronicle](./10-chronicle/14-internet-history-chronicle.md) | 谁定义协议，谁就定义架构；谁卡入口，谁就收流量；2026 是智能体入口的交叠点；完整任务才是分水岭 | ARPANET、TCP/IP、搜索、微信、智能体、曾鸣、比雅虎更早、60 分奇点 |
 | 15 | [Browser Custody Chronicle](./10-chronicle/15-browser-custody-chronicle.md) | 浏览器代管陌生人的程序；扩大代管范围，被迫补规矩；产品是「可点陌生链接」 | 浏览器、同源策略、沙盒、JavaScript、Flash、权限、Chromium、引擎集中、Electron、Manifest V3 |
 | 16 | [HTTP Protocol Chronicle](./10-chronicle/16-http-protocol-chronicle.md) | HTTP 语义连续，承载与并发代际替换；队头阻塞换层不消失 | HTTP、HTTP/2、HTTP/3、QUIC、队头阻塞、TLS、HTTPS |
-| 16a | [TCP/IP Illustrated Treatise](./10-chronicle/16a-tcp-ip-illustrated-treatise.md) | 四层封装；IP 尽力而为；TCP 端到端可靠；MTU/分片、ICMP、窗口与拥塞 | TCP/IP、IP、ICMP、UDP、TCP、MTU、CIDR、滑动窗口、慢启动、Stevens |
+| 16a | [TCP/IP Illustrated Treatise](./10-chronicle/16a-tcp-ip-illustrated-treatise.md) | 四层封装；IP 尽力而为；跨网 LPM/IGP/BGP；TCP 与 socket/NAPI | TCP/IP、IP、ICMP、UDP、TCP、MTU、CIDR、BGP、OSPF、socket、NAPI、CUBIC、BBR |
 | 17 | [Large Language Model Chronicle](./10-chronicle/17-large-language-model-chronicle.md) | 语言建模从循环网络走到 Transformer；预训练、规模与对齐把续写变成产品 | LLM、Transformer、注意力、GPT、BERT、缩放律、RAG、ChatGPT、Decoder-Only |
 | 18 | [Historiography Reconstruction Treatise](./10-chronicle/18-historiography-reconstruction-treatise.md) | 历史不是过去本身；史料·解释·限制下的有边界重建；选择与记忆改写问题 | 历史认识论、史料、解释、丝绸之路、工业革命、海地革命、记忆、纽伦堡 |
 
@@ -223,7 +223,7 @@ knowledge_base/
 | 互联网史、ARPANET、TCP/IP、浏览器、门户、搜索、微信、推荐算法、ChatGPT、智能体、曾鸣、比雅虎更早、60 分奇点、支付宝 | 14 |
 | 浏览器史、代管、同源策略、沙盒、CORS、CSP、JavaScript、Flash、权限提示、Chromium、Blink、引擎集中、Electron、WebView、Manifest V3 | 15 |
 | HTTP、HTTP/1.1、HTTP/2、HTTP/3、QUIC、SPDY、队头阻塞、TLS、HTTPS、ALPN、Alt-Svc、HPACK、多路复用 | 16 |
-| TCP/IP、四层模型、IP、ICMP、UDP、TCP、MTU、路径 MTU、分片、子网、CIDR、Ping、Traceroute、滑动窗口、慢启动、快速重传、Stevens | 16a |
+| TCP/IP、四层模型、IP、ICMP、UDP、TCP、MTU、路径 MTU、分片、子网、CIDR、最长前缀匹配、IGP、OSPF、BGP、自治系统、Ping、Traceroute、滑动窗口、慢启动、socket、listen、accept、NAPI、CUBIC、BBR | 16a |
 | 大语言模型、LLM、Transformer、注意力、QKV、GPT、BERT、T5、缩放律、RAG、ChatGPT、Decoder-Only、幻觉、对齐 | 17 |
 | 历史是什么、史料、解释、限制、有边界的重建、丝绸之路、海地革命、记忆与历史、纽伦堡、工厂法 | 18 |
 | 企业架构、TOGAF、四大域、**六层域**、CSVLOD、科图采夫 | 20 |
@@ -461,7 +461,7 @@ AI 如何改变工程组织、如何承接被放大的速度。
 | **取势** | 互联网的权力在协议与入口；捆绑 + 免费反复上演；收束与外溢互为下一阶段；2026 缺的是智能体的浏览器 | [14](./10-chronicle/14-internet-history-chronicle.md) |
 | **取势** | 浏览器代管陌生人的程序；产品是「可点陌生链接」，不是速度；规矩多半先出事再补 | [15](./10-chronicle/15-browser-custody-chronicle.md) |
 | **取势** | HTTP 语义连续，换的是承载与并发；队头阻塞换层不消失；HTTP/3 定稿于 2022 | [16](./10-chronicle/16-http-protocol-chronicle.md) |
-| **取势** | TCP/IP 四层封装；IP 尽力而为、TCP 端到端可靠；MTU/分片、窗口与拥塞 | [16a](./10-chronicle/16a-tcp-ip-illustrated-treatise.md) |
+| **取势** | TCP/IP 四层封装；IP 尽力而为；跨网 LPM 与 IGP/BGP；TCP 窗口与拥塞 | [16a](./10-chronicle/16a-tcp-ip-illustrated-treatise.md) |
 | **取势** | 大语言模型的核心是条件续写；Transformer 之后是预训练、规模、对齐与产品破圈 | [17](./10-chronicle/17-large-language-model-chronicle.md) |
 | **取势** | 历史不是过去本身；史料·解释·限制下的有边界重建；选择与记忆改写问题 | [18](./10-chronicle/18-historiography-reconstruction-treatise.md) |
 | **明道** | 企业架构把战略译成可执行安排并持续约束该建什么；教学用四大域，实践常见六层；不是照搬某一框架 | [20](./20-architecture/20-enterprise-architecture-treatise.md) |
