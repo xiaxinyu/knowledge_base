@@ -71,9 +71,12 @@ TCP/IP 教学上常作四层：链路层处理介质与帧；网络层负责分�
 
 ```mermaid
 flowchart LR
-  Link["上篇 · 分层 · 链路"] --> Net["中篇 · IP · ICMP"]
-  Net --> Trans["下篇 · UDP · TCP"]
-  Trans --> Impl["实现篇 · socket · 收包"]
+  classDef chap fill:#e8f1fa,stroke:#3b6ea5,color:#1f3a5f
+  Link["上篇 · 分层 · 链路<br/>§2–§3"]:::chap
+  Net["中篇 · IP · 路由 · ICMP<br/>§4–§6"]:::chap
+  Trans["下篇 · UDP · TCP<br/>§7–§9"]:::chap
+  Impl["实现篇 · socket · 收包<br/>§10–§11"]:::chap
+  Link --> Net --> Trans --> Impl
 ```
 
 ---
@@ -142,10 +145,30 @@ TCP/IP 通常被看作**四层**协议族。与 OSI 七层对照时，教学上�
 
 ```mermaid
 flowchart TB
-  App["应用数据"] --> TCP["+ TCP/UDP 首部"]
-  TCP --> IP["+ IP 首部"]
-  IP --> Eth["+ 链路首部/尾部"]
-  Eth --> Wire["比特流上链路"]
+  classDef app fill:#f0e8fa,stroke:#6a3a8a,color:#3a1f5f
+  classDef xport fill:#eef6e8,stroke:#5a8a3a,color:#2f4f1f
+  classDef net fill:#e8f1fa,stroke:#3b6ea5,color:#1f3a5f
+  classDef link fill:#fff3e0,stroke:#b8860b,color:#5a4200
+
+  subgraph SEND["发送端 · 下行加首部"]
+    direction TB
+    App["应用数据"]:::app
+    Seg["传输段：TCP/UDP 首部 + 应用数据"]:::xport
+    Dg["IP 数据报：IP 首部 + 传输段"]:::net
+    Fr["链路帧：链路首部 + IP 数据报 + 尾部/FCS"]:::link
+    App --> Seg --> Dg --> Fr
+  end
+
+  Fr -->|"比特流 · 介质"| Fr2
+
+  subgraph RECV["接收端 · 上行剥首部"]
+    direction TB
+    Fr2["链路帧"]:::link
+    Dg2["IP 数据报"]:::net
+    Seg2["传输段"]:::xport
+    App2["应用数据"]:::app
+    Fr2 --> Dg2 --> Seg2 --> App2
+  end
 ```
 
 > **所以 · 边界在哪：** 「TCP/IP」是整族名字；IP 在网络层，TCP/UDP 在传输层。可靠与否，首先看你选了谁——不是协议族名称本身自带可靠。
@@ -220,10 +243,33 @@ IP 首部中的 **DF** 位禁止中间节点再分片：置位后若仍超过下
 
 IP 数据报在路径上**不携带完整路由**；每一跳独立查表转发。控制面协议在后台交换可达性，使各路由器的转发表保持一致（或按策略有意不一致）。TTL 每跳减一，耗尽则丢弃并常回 ICMP，既防环路也支持 Traceroute（§6）。
 
-```text
-  主机 A ──▶ 路由器 R1 ──▶ 路由器 R2 ──▶ … ──▶ 主机 B
-           每跳：LPM 查 FIB → 改写链路帧 → 送下一跳
-  控制面（并行）：IGP / BGP 交换前缀与下一跳，写入 RIB → FIB
+```mermaid
+flowchart TB
+  classDef host fill:#f0e8fa,stroke:#6a3a8a,color:#3a1f5f
+  classDef rtr fill:#e8f1fa,stroke:#3b6ea5,color:#1f3a5f
+  classDef ctrl fill:#eef6e8,stroke:#5a8a3a,color:#2f4f1f
+
+  subgraph DP["转发面 · 数据报逐跳前进（分组不携带全路径）"]
+    direction LR
+    A["主机 A"]:::host
+    R1["路由器 R1"]:::rtr
+    R2["路由器 R2"]:::rtr
+    B["主机 B"]:::host
+    A -->|"直送或默认网关"| R1
+    R1 -->|"LPM 查 FIB → 换链路帧"| R2
+    R2 --> B
+  end
+
+  subgraph CP["控制面 · 与转发并行，事先填表"]
+    direction LR
+    Proto["IGP（域内）/ BGP（域间）"]:::ctrl
+    RIB["RIB"]:::ctrl
+    FIB["FIB"]:::ctrl
+    Proto -->|"通告前缀与下一跳"| RIB --> FIB
+  end
+
+  CP -.->|"安装转发表"| R1
+  CP -.->|"安装转发表"| R2
 ```
 
 ### 5.4 域内 IGP 与域间 BGP
@@ -357,14 +403,18 @@ listen(sockfd, backlog);
 
 对 TCP 而言，`listen()` 将套接字标为**被动打开**（进入 `LISTEN`），并准备承接入站请求。三次握手发生在客户端 `connect` 与服务端**协议栈**之间：`accept` 并不在用户态「执行握手」，只从已完成握手的队列取出连接。[^rfc9293]
 
-```text
-客户端                              服务端 (LISTEN)
-  │  ① SYN, seq=ISN_c                 │
-  │ ───────────────────────────────>  │
-  │  ② SYN+ACK, seq=ISN_s, ack=ISN_c+1│
-  │ <───────────────────────────────  │
-  │  ③ ACK, ack=ISN_s+1               │
-  │ ───────────────────────────────>  │  → ESTABLISHED，入 accept 队列
+```mermaid
+sequenceDiagram
+  autonumber
+  participant C as 客户端
+  participant S as 服务端（LISTEN）
+
+  C->>S: SYN，seq = ISN_c
+  Note over S: 入 SYN 队列（半连接）
+  S->>C: SYN+ACK，seq = ISN_s，ack = ISN_c+1
+  C->>S: ACK，ack = ISN_s+1
+  Note over C: 本端 ESTABLISHED（connect 通常于此返回）
+  Note over S: 本端 ESTABLISHED → accept 队列（全连接）
 ```
 
 初始序号（ISN）须谨慎选取。现行规范强调三次握手的首要理由是：**防止旧重复 SYN 造成错误连接，并完成双方序号同步**——流行说法中单独强调「确认服务端接收能力」，并不是 RFC 的主论证。[^rfc9293]
@@ -412,6 +462,23 @@ SYN 泛洪用大量伪造源地址的 SYN 占满半连接资源，使合法用�
 | 6 | 等待队列 | 唤醒阻塞于 `recv` / `epoll_wait` 的任务 |
 | 7 | `recv` | 内核 → 用户态拷贝，返回字节数 |
 
+```mermaid
+flowchart LR
+  classDef hw fill:#fff3e0,stroke:#b8860b,color:#5a4200
+  classDef kern fill:#e8f1fa,stroke:#3b6ea5,color:#1f3a5f
+  classDef user fill:#f0e8fa,stroke:#6a3a8a,color:#3a1f5f
+
+  NIC["网卡 DMA<br/>RX ring"]:::hw
+  IRQ["硬中断<br/>调度"]:::hw
+  NAPI["NAPI / softirq<br/>budget 批量收"]:::kern
+  Stack["协议栈<br/>Eth → IP → TCP"]:::kern
+  Q["接收队列<br/>更新 rwnd"]:::kern
+  Wake["唤醒等待者"]:::kern
+  Recv["recv<br/>拷入用户态"]:::user
+
+  NIC --> IRQ --> NAPI --> Stack --> Q --> Wake --> Recv
+```
+
 现代网卡普遍支持 **RSS（Receive Side Scaling）**：多个 RX 队列映射到不同 CPU，使收包在硬件侧即可并行——高并发主机多核收包的根基在此。
 
 ### 11.2 DMA、硬中断与 NAPI
@@ -431,32 +498,28 @@ SYN 泛洪用大量伪造源地址的 SYN 占满半连接资源，使合法用�
 排查丢包时，宜按站推进：网卡统计（如 `ethtool -S`）→ `softnet_stat` → `ss -tin`（Recv-Q / rwnd）→ 应用是否及时 `recv`。
 
 > **所以 · 边界在哪：** `recv` 不是「从网卡读」，而是流水线最后一站。慢与丢可能落在环、软中断、协议栈、接收队列或应用本身——先定站，再定责。
+
 ---
 
 ## 12. 收束
 
-```text
-  四层封装
-      │
-      ▼
-  链路 MTU / 环回 / ARP·NDP
-      │
-      ▼
-  IP 尽力而为 + 逐跳 LPM 转发（CIDR）
-      │     ╲
-      │      控制面：IGP（域内）/ BGP（域间）
-      ▼
-  ICMP 诊断 ── Ping / Traceroute
-      │
-      ▼
-  UDP 数据报 或 TCP 可靠字节流
-      （窗口 · SACK · CUBIC/BBR · ECN）
-      │
-      ▼
-  socket API（listen / accept / recv…）
-      │
-      ▼
-  收包：DMA → 硬中断 → NAPI → 栈 → 队列 → 唤醒 → recv
+```mermaid
+flowchart TB
+  classDef core fill:#e8f1fa,stroke:#3b6ea5,color:#1f3a5f
+  classDef ctrl fill:#eef6e8,stroke:#5a8a3a,color:#2f4f1f
+  classDef impl fill:#f0e8fa,stroke:#6a3a8a,color:#3a1f5f
+
+  Enc["四层封装 · 下行加头 / 上行剥头"]:::core
+  Link["链路 · MTU / 环回 / ARP·NDP"]:::core
+  IP["IP · 尽力而为 + 逐跳 LPM（CIDR）"]:::core
+  Ctrl["控制面 · IGP（域内）/ BGP（域间）"]:::ctrl
+  ICMP["ICMP · Ping / Traceroute"]:::core
+  Trans["传输 · UDP 数据报 或 TCP 字节流<br/>窗口 · SACK · CUBIC/BBR · ECN"]:::core
+  Sock["socket API · listen / accept / recv…"]:::impl
+  RX["收包 · DMA → 硬中断 → NAPI → 栈 → 队列 → 唤醒 → recv"]:::impl
+
+  Enc --> Link --> IP --> ICMP --> Trans --> Sock --> RX
+  IP -.-> Ctrl
 ```
 
 六条主线可以收束为：
