@@ -1,19 +1,20 @@
 # HAProxy · Nginx · Envoy：代理三杰的架构对照
 
-> 同叫「反向代理 / 负载均衡」，三者解决的主问题并不相同：HAProxy 以**连接级亲和的负载均衡**为中心；Nginx 以**事件驱动的通用边缘服务器**为中心；Envoy 以**可动态编排的云原生数据面**为中心。性能差距常被夸大；真正分叉的是**进程模型、状态共享方式与控制面合同**。
+> 同属「反向代理 / 负载均衡」品类，三者主问题不同：HAProxy 以**连接级亲和的负载均衡**为中心；Nginx 以**事件驱动的通用边缘服务器**为中心；Envoy 以**可动态编排的云原生数据面**为中心。性能差距常被夸大；分叉在**进程模型、状态共享与控制面合同**。
 >
-> 可与 [21](./21-service-architecture-evolution.md)（服务形态如何逼出网关层）、[16](../10-chronicle/16-http-protocol-chronicle.md)（HTTP/QUIC 代际）、[28](./28-http-rpc-microservice-communication-treatise.md)（东西向通信）对照：本文专写**入口与网格数据面的三条主流实现路径**。
+> 可与 [21](./21-service-architecture-evolution.md)（服务形态）、[16](../10-chronicle/16-http-protocol-chronicle.md)（HTTP/QUIC）、[28](./28-http-rpc-microservice-communication-treatise.md)（东西向）、[23](./23-kubernetes-control-plane-doctrine.md) / [24](./24-calico-l3-dataplane-treatise.md)（集群网络）对照。本文写**代理数据面**，§9 专论多节点 **VIP / 统一入口**。
 
 先给一个直接答案：
 
-> **三者都是事件驱动、非阻塞 I/O；架构分叉不在「会不会反代」，而在共享域与控制面。** 共同四原则：拒绝一连接一线程、热路径非阻塞、连接亲和、控制面与数据面分离。Nginx：master + **多进程单线程 worker**（`reuseport` 让内核分连接）。HAProxy：worker 内 **每线程一调度器**，session 钉线程，stick/peers 跨线程细锁共享。Envoy：**main（xDS）+ siloed workers**，池与 LB 游标不跨线程，配置经 Thread Local 下发。网络路径统一为 accept → 下游 → 上游 → 回程，执行体中途不换。选型先定角色与要不要跨连接共享状态，再谈延迟。
-**20-architecture 位置：** [21](./21-service-architecture-evolution.md) 写服务形态演进；本文写演进中几乎必然出现的**代理层**——谁扛流量、谁持状态、谁接控制面。
+> **三者均为事件驱动、非阻塞 I/O；分叉在共享域与控制面，而非功能清单。** 共同原则：拒绝一连接一线程、热路径非阻塞、连接亲和、控制面与数据面分离。Nginx：master + **多进程单线程 worker**；HAProxy：每线程一调度器、连接线程亲和；Envoy：main（xDS）+ siloed workers。多节点另选入口机制（§9）：ADC、VRRP 族、K8s LoadBalancer 实现、BGP ECMP、云 LB——**机制是合同，产品是实例**。选型顺序：角色 → VIP 机制 → 共享域 → 延迟。
+
+**20-architecture 位置：** [21](./21-service-architecture-evolution.md) 写服务形态演进；本文写**代理层**与其前方的 **VIP / 统一入口层**。
 
 ## 摘要
 
-HAProxy（2000 年代起）、Nginx（2004）、Envoy（2016，Lyft → CNCF）同属软件代理，却分属三条设计河床。官方句 *multi-threaded, event-driven, non-blocking daemon* 建议先按 §3 拆读：常驻服务、非阻塞等待、事件环调度、每核一工作线程——而非「一连接一线程」。共同原则是事件驱动、连接亲和、热路径非阻塞；分叉在**共享域**：Nginx 以多进程隔离换无锁；HAProxy 以「每线程一调度器 + 连接钉线程」换统一 stick/peers；Envoy 以 siloed worker + 线程本地配置视图换近线性扩展与 xDS 热更新。网络路径可统一读成 accept → 下游处理 → 上游池化转发 → 同执行体回程；L4/L7 只改变站内工作量，不改变执行体边界。截止 2026-10，HAProxy 最新 LTS 为 **3.4**。能力重叠于反代，**控制面与状态合同不可互换**。
+HAProxy（约 2000 年代）、Nginx（2004）、Envoy（2016，Lyft → CNCF）同属软件代理，分属三条设计路径。HAProxy 官方概括为 *multi-threaded, event-driven, non-blocking daemon*（§3）。共同原则为事件驱动、连接亲和、热路径非阻塞；分叉在**共享域**。多实例时，对外统一入口由 **VIP 层**回答，宜按机制分类：ADC 一体、VRRP/CARP 族、K8s `LoadBalancer` 实现（MetalLB / kube-vip / PureLB 等）、BGP ECMP / anycast、云托管 LB。产品是机制实例，非互斥品类。代理层处理「包到达之后」；入口层决定「包先到哪台机器」。截至 2026-10，HAProxy 最新 LTS 为 **3.4**。
 
-**关键词：** HAProxy；Nginx；Envoy；daemon；非阻塞；事件驱动；多线程；负载均衡；反向代理；连接亲和；多进程；xDS；Thread Local；nbthread；SO_REUSEPORT；accept_mutex；HTTP/3；QUIC
+**关键词：** HAProxy；Nginx；Envoy；VIP；VRRP；ECMP；anycast；Keepalived；MetalLB；kube-vip；PureLB；F5；Kemp；Citrix；ADC；云 LB；xDS
 
 ---
 
@@ -33,9 +34,9 @@ HAProxy（2000 年代起）、Nginx（2004）、Envoy（2016，Lyft → CNCF）�
 4. [设计原则与分层架构](#4-设计原则与分层架构)
     - [4.1 四条共同原则](#41-四条共同原则)
     - [4.2 分层：控制面 · 数据面 · 代理语义](#42-分层控制面--数据面--代理语义)
-    - [4.3 原则如何落成三条河床](#43-原则如何落成三条河床)
+    - [4.3 原则如何落成三条路径](#43-原则如何落成三条路径)
 5. [底层并发与网络模型](#5-底层并发与网络模型)
-    - [5.1 一张总图：执行体长什么样](#51-一张总图执行体长什么样)
+    - [5.1 执行体总览](#51-执行体总览)
     - [5.2 HAProxy：每线程一调度器](#52-haproxy每线程一调度器)
     - [5.3 Nginx：每进程一事件环](#53-nginx每进程一事件环)
     - [5.4 Envoy：main + siloed workers](#54-envoymain--siloed-workers)
@@ -44,22 +45,32 @@ HAProxy（2000 年代起）、Nginx（2004）、Envoy（2016，Lyft → CNCF）�
 6. [配置模型与控制面](#6-配置模型与控制面)
 7. [能力矩阵](#7-能力矩阵)
 8. [HAProxy：多线程如何收官](#8-haproxy多线程如何收官)
-9. [选型启发式](#9-选型启发式)
-10. [收束](#10-收束)
-11. [本章要点](#11-本章要点)
-12. [参考文献](#12-参考文献)
+9. [多节点统一入口：谁持 VIP](#9-多节点统一入口谁持-vip)
+    - [9.1 两层问题，勿混为一谈](#91-两层问题勿混为一谈)
+    - [9.2 五种机制（先机制，后产品）](#92-五种机制先机制后产品)
+    - [9.3 ADC 一体：F5 · Kemp · Citrix 等](#93-adc-一体f5--kemp--citrix-等)
+    - [9.4 浮动 VIP：VRRP / Keepalived 族](#94-浮动-vipvrrp--keepalived-族)
+    - [9.5 K8s 兑现 LoadBalancer：MetalLB · kube-vip · PureLB](#95-k8s-兑现-loadbalancermetallb--kube-vip--purelb)
+    - [9.6 路由面：BGP ECMP / anycast](#96-路由面bgp-ecmp--anycast)
+    - [9.7 云托管入口](#97-云托管入口)
+    - [9.8 典型叠法与选型](#98-典型叠法与选型)
+10. [选型启发式](#10-选型启发式)
+11. [收束](#11-收束)
+12. [本章要点](#12-本章要点)
+13. [参考文献](#13-参考文献)
 
 ---
 
 ## 1. 读法与边界
 
-全文只钉三条轴：
+全文按四条轴读：
 
 | 轴 | 问题 |
 | -- | ---- |
-| **角色** | 边缘 LB、通用 Web 边缘、还是 Mesh / 可编程数据面？ |
-| **并发模型** | 多进程、多线程、或「线程内事件环 + 跨线程最小共享」？ |
+| **角色** | 边缘 LB、通用 Web 边缘，还是 Mesh / 可编程数据面？ |
+| **并发模型** | 多进程、多线程，或「线程内事件环 + 跨线程最小共享」？ |
 | **控制面** | 文件热重载、Runtime API，还是 xDS / 外部编排？ |
+| **入口地址** | 多节点时谁持 VIP、如何切换或分摊？（§9） |
 
 ### 1.1 术语对照
 
@@ -70,21 +81,27 @@ HAProxy（2000 年代起）、Nginx（2004）、Envoy（2016，Lyft → CNCF）�
 | **连接亲和（connection affinity）** | 一条连接（及其上多路流）终身由同一执行上下文处理 |
 | **daemon** | 脱离终端、常驻后台的服务进程（见 §3.2） |
 | **非阻塞（non-blocking）** | I/O 未就绪时不挂起执行体；登记兴趣后去干别的（见 §3.3） |
-| **事件驱动** | 由内核就绪通知驱动推进，而非轮询「是否好了」（见 §3.4） |
+| **事件驱动** | 由内核就绪通知驱动推进，而非忙等轮询（见 §3.4） |
 | **事件环** | `epoll` / `kqueue` / `libevent` 等驱动的非阻塞调度循环 |
 | **SO_REUSEPORT** | 多 socket 同绑一端口，内核把新连接分给不同监听者 |
 | **xDS** | Envoy 的动态发现 API 族（LDS/CDS/RDS/EDS 等） |
 | **stick-table** | HAProxy 可跨连接记忆的键值表（会话粘滞、限流计数等） |
 | **Filter chain** | Envoy 上按监听器挂接的过滤器流水线 |
+| **VIP** | Virtual IP：客户端与上游路由器看到的统一入口地址 |
+| **VRRP / CARP** | 虚拟路由器冗余：选举持有浮动 VIP 的节点（Keepalived、部分 ADC HA） |
+| **ADC** | Application Delivery Controller：VIP、池、健康检查、L4–L7 与设备 HA 常一体（F5、Kemp、Citrix ADC/NetScaler 等） |
+| **ECMP / anycast** | 多下一跳等价路径 / 多点通告同一前缀；由路由器分流入多机 |
+| **MetalLB / kube-vip / PureLB** | 裸金属等环境为 K8s `LoadBalancer`（及控制面）兑现外部 IP 的实现族 |
 
-读法提示：若官方句 *multi-threaded, event-driven, non-blocking daemon* 仍像黑话，先读 **§3**，再进 §4–§5 的对照细节。
+读法：官方四词见 **§3**；单机并发与共享域见 §4–§5；多节点入口见 **§9**。勿将 VIP 漂移与代理进程模型混为一谈。
 
 ### 1.2 边界
 
-1. **不做法庭式「谁最快」排名。** 吞吐随协议、TLS、报文大小、核数与特性开关剧变；正文给架构因果，不背某一博客的 QPS。  
-2. **开源主线为准。** Nginx Plus、HAProxy Enterprise、商用 WAF 插件另册；能力差异在矩阵中点到为止。  
-3. **Istio / Linkerd / Kong 等是编排与产品层**，本文只拆其下常见数据面之一（Envoy）与两类经典代理。  
-4. **版本以官网维护表为准。** HAProxy 3.x：偶号 LTS（约 5 年）、奇号短期稳定；叙事锚在 3.0 多线程收官，并注明 2026-10 时最新 LTS 为 3.4。
+1. **不做绝对性能排名。** 吞吐随协议、TLS、报文与核数变化；正文给架构因果与量级方向。  
+2. **以开源主线为默认口径。** 商业发行版（Nginx Plus、HAProxy Enterprise 等）能力另注。  
+3. **Istio / Linkerd / Kong 属编排与产品层**；本文拆其下常见数据面（Envoy）与两类经典代理。  
+4. **版本以官网维护表为准。** HAProxy 3.x：偶号 LTS（约 5 年）、奇号短期稳定；叙事锚于 3.0 多线程默认化；2026-10 最新 LTS 为 3.4。  
+5. **§9 论入口机制与代表实现**，非某一 ADC 策略语言或 CRD 全集；GSLB / 全球 DNS 另册。
 
 ---
 
@@ -97,32 +114,32 @@ HAProxy（2000 年代起）、Nginx（2004）、Envoy（2016，Lyft → CNCF）�
 | **成功判据** | 连接公平、故障切流、状态一致、重载不停机 | 延迟稳定、缓存命中、配置简单、生态模块 | 热更新配置、可观测、策略可组合、与控制面解耦 |
 | **不该被简化成** | 「只会四层转发」 | 「只会静态站」 | 「只会 Mesh」 |
 
-一句话分工：**HAProxy 把「均衡与会话状态」做透；Nginx 把「边缘内容与连接密度」做透；Envoy 把「动态发现与过滤器可编程」做透。**
+分工：**HAProxy** 精于均衡与会话状态；**Nginx** 精于边缘内容与连接密度；**Envoy** 精于动态发现与过滤器可编程。
 
 ---
 
 ## 3. 官方四词：daemon · non-blocking · event-driven · multi-threaded
 
-HAProxy 管理文档开篇即称：*a multi-threaded, event-driven, non-blocking daemon*。[^haproxy-mgmt] 四词不是营销堆砌，而是对运行形态的压缩描述。Nginx、Envoy 在「事件驱动 + 非阻塞」上同构；差别主要在多核载体（进程 vs 线程）与状态共享（§5）。
+HAProxy 管理文档概括为：*a multi-threaded, event-driven, non-blocking daemon*。[^haproxy-mgmt] 四词描述运行形态，而非营销口号。Nginx、Envoy 在事件驱动与非阻塞上同构；差别在多核载体（进程 vs 线程）与状态共享（§5）。
 
 ### 3.1 总纲
 
-> **用与 CPU 核数同阶的少量工作线程，以「就绪才推进、未就绪不空等」的方式同时服务海量连接，并作为后台服务常驻。**
+> **以与 CPU 核数同阶的少量工作线程，按「就绪才推进、未就绪不空等」服务海量连接，并以守护进程常驻。**
 
 | 词 | 解决的问题 | 常见误读 |
 | -- | ---------- | -------- |
-| **daemon** | 如何部署与存活 | 当成「不占 CPU」——错；只表示不绑终端 |
-| **non-blocking** | 等待 I/O 时执行体做什么 | 当成「从不等待」——错；等待交给内核，执行体去干别的 |
-| **event-driven** | 何时知道该继续干 | 当成「另派线程处理事件」——错；**同一线程**跑环并处理 |
-| **multi-threaded** | 如何吃满多核 | 当成「一连接一线程」——错；是**固定少量**线程各跑一环 |
+| **daemon** | 部署与存活形态 | 误解为「不占 CPU」；实为不绑定控制终端 |
+| **non-blocking** | 等待 I/O 时执行体做什么 | 误解为「从不等待」；等待交给内核，执行体处理其他就绪连接 |
+| **event-driven** | 何时继续推进连接 | 误解为「另派线程处理事件」；实为**同一线程**跑环并处理 |
+| **multi-threaded** | 如何利用多核 | 误解为「一连接一线程」；实为**固定少量**线程各跑一环 |
 
 ### 3.2 daemon：守护进程
 
 | | 说明 |
 | - | ---- |
-| **含义** | 进程与控制终端分离，通常由 init/systemd（或容器主进程）拉起，长期驻留 |
-| **运维直觉** | 等同于「常驻网络服务」，而非跑完即退出的 CLI |
-| **在 HAProxy** | worker（及 master-worker 模式下的 master）以服务形态存在；软重载时新旧进程短暂并存属正常[^haproxy-mgmt] |
+| **含义** | 与控制终端分离，通常由 init/systemd（或容器主进程）拉起并长期驻留 |
+| **工程含义** | 常驻网络服务，而非执行完毕即退出的 CLI |
+| **在 HAProxy** | worker（及 master-worker 下的 master）以服务形态运行；软重载时新旧进程可短暂并存[^haproxy-mgmt] |
 
 ### 3.3 non-blocking：非阻塞
 
@@ -130,13 +147,13 @@ HAProxy 管理文档开篇即称：*a multi-threaded, event-driven, non-blocking
 
 | 阶段 | 阻塞做法 | 代价 |
 | ---- | -------- | ---- |
-| 等客户端请求 | 执行体睡眠在 `read` | 连接空闲仍占一个工人 |
-| 等上游响应 | 同上 | 并发 N ≈ 工人数 N |
-| 长连接挂起 | 工人被占满 | 万级并发即内存与调度崩溃 |
+| 等客户端请求 | 执行体阻塞在 `read` | 连接空闲仍占一个执行体 |
+| 等上游响应 | 同上 | 并发连接数 ≈ 执行体数 |
+| 长连接挂起 | 执行体被占满 | 万级并发即内存与调度崩溃 |
 
-**非阻塞**：套接字设为非阻塞；`read`/`write` 暂时不可用时立即返回，把「对该 fd 感兴趣」登记给内核，执行体转向其他已就绪连接。代理大部分时间本就在等对端——非阻塞把「等人」从占用工人改成占用一个轻量连接对象。[^aosa-nginx]
+**非阻塞**：套接字设为非阻塞；`read`/`write` 暂时不可用时立即返回，向内核登记对该 fd 的兴趣，执行体转向其他已就绪连接。代理大量时间本在等待对端——非阻塞把「等待」从占用执行体，变成占用轻量连接对象。[^aosa-nginx]
 
-> 直觉（可选）：服务员不会在一桌旁干等到出菜；下单后去服务其他桌，出菜铃响再回来——工人数远小于同时开桌数。
+> 直观对照：执行体数远小于同时打开的连接数；就绪才推进，未就绪不空占。
 
 ### 3.4 event-driven：事件驱动
 
@@ -148,9 +165,9 @@ HAProxy 管理文档开篇即称：*a multi-threaded, event-driven, non-blocking
 | **事件环（event loop）** | 线程反复：向内核询问就绪集合 → 逐个推进对应连接的状态机 → 再休眠等待 |
 | **与内核的接口** | Linux 上常见 `epoll`；BSD 系 `kqueue`；Envoy 经 `libevent` 等封装[^envoy-thread] |
 
-**纠偏：** 环上的处理发生在**跑这个环的同一线程**内，并不是「事件到了再另开一个线程」。另开线程会回到一连接一工人的成本结构。
+**要点：** 处理发生在**跑该环的同一线程**内，而非事件到达后再创建线程——后者退化为「一连接一执行体」。
 
-事件驱动与非阻塞是一对：前者提供就绪信号，后者保证处理时不把线程卡死在单次系统调用上。
+事件驱动提供就绪信号；非阻塞保证单次系统调用不长期占用线程。二者配合使用。
 
 ### 3.5 multi-threaded：多线程
 
@@ -160,7 +177,7 @@ HAProxy 管理文档开篇即称：*a multi-threaded, event-driven, non-blocking
 | **每线程内部** | 独立事件环 + 非阻塞 I/O，托管一批连接 | 线程内再「一连接一子线程」 |
 | **连接归属** | 一条连接终身由 accept 到它的那一线程处理 | 请求级乱跳线程 |
 
-单线程事件驱动吃不满多核；多线程把「每核一环」铺开。HAProxy 选线程而非多进程，是为了 stick-table、peers、统计等**共享内存语义**更便宜——代价是共享点必须细锁（§5.2、§5.6）。Nginx 用**多进程**达到同一「每核一环」效果，共享域更小。[^nginx-inside]
+单线程事件驱动无法充分利用多核；多线程将「每核一环」并行展开。HAProxy 选用线程而非多进程，是为 stick-table、peers、统计等**共享内存语义**更便宜——代价是共享点须细锁（§5.2、§5.6）。Nginx 以**多进程**达到同一「每核一环」效果，共享域更小。[^nginx-inside]
 
 ### 3.6 合起来：一条工作流
 
@@ -177,24 +194,24 @@ flowchart TB
 
 1. 以 daemon 拉起；线程数与核数同阶。  
 2. 每线程跑自己的事件环，托管一批连接。  
-3. 向下游读请求、向上游写、再读上游、写回客户端——每一步只在 fd 就绪时推进。  
-4. 未就绪则回到环上；空闲长连接只占连接状态，不占「专用工人」。
+3. 读下游、写上游、读上游、写回客户端——每步仅在 fd 就绪时推进。  
+4. 未就绪则回到环上；空闲长连接只保留连接状态，不独占执行体。
 
 ### 3.7 为何特别适合负载均衡
 
 | LB 场景特征 | 阻塞模型的困境 | 四词模型的应对 |
 | ----------- | -------------- | -------------- |
-| 连接数极大、大量空闲长连接 | 工人数被连接数绑死 | 空闲只留连接对象；工人数≈核数 |
-| 代理自身计算轻，时间花在等待 | 工人大部分时间睡眠占槽 | 等待交给内核；CPU 用在真正拷贝与协议处理 |
-| 需要吃满多核 | 单环只用一核 | 多线程（或 Nginx 多进程）每核一环 |
+| 连接数极大、大量空闲长连接 | 执行体数被连接数绑死 | 空闲只留连接对象；执行体数 ≈ 核数 |
+| 代理计算轻，时间花在等待 | 执行体大量时间睡眠占槽 | 等待交给内核；CPU 用于拷贝与协议处理 |
+| 需利用多核 | 单环仅用一核 | 多线程（或 Nginx 多进程）每核一环 |
 
-> **收一句：** daemon 定部署形态；non-blocking 定等待策略；event-driven 定调度信号；multi-threaded 定多核铺开方式。后文 §4–§5 是这四词在 HAProxy / Nginx / Envoy 上的展开，不是另一套理论。
+> **小结：** daemon 定部署形态；non-blocking 定等待策略；event-driven 定调度信号；multi-threaded 定多核并行。§4–§5 展开三者差异。
 
 ---
 
 ## 4. 设计原则与分层架构
 
-表格式对照容易只剩口号。先钉**共同原则**，再拆**分层**，最后看三条河床各自押哪一头。
+先立**共同原则**，再拆**分层**，最后对照三条路径的取舍——重接口合同，而非产品名清单。
 
 ### 4.1 四条共同原则
 
@@ -226,29 +243,29 @@ flowchart TB
 
 | 层 | HAProxy | Nginx | Envoy |
 | -- | ------- | ----- | ----- |
-| **控制面** | master 管重载；Runtime API；peers 同步 stick | master 读配置、fork worker；信号重载 | **main 线程**：xDS、stats flush、`/admin`；不扛业务流量[^envoy-thread] |
+| **控制面** | master 管重载；Runtime API；peers 同步 stick | master 读配置、fork worker；信号重载 | **main 线程**：xDS、stats flush、`/admin`；不处理业务流量[^envoy-thread] |
 | **代理语义** | `frontend` 决策 → `backend` 池 / 算法 / check | `server`/`location` → `upstream`；缓存与静态同源 | Listener → Filter chain → Router → Cluster / 端点 |
 | **数据面** | worker 内 N 线程，每线程独立调度器 | N 个单线程 worker 进程 | N 个 worker，各有 `Event::Dispatcher`（libevent 系） |
 
-读图口诀：**控制面改「表」；语义层读「表」做决策；数据面只在自己的环里搬字节。**
+读图要点：**控制面改表；语义层据表决策；数据面在本执行体事件环内搬字节。**
 
-### 4.3 原则如何落成三条河床
+### 4.3 原则如何落成三条路径
 
 | 设计押注 | HAProxy | Nginx | Envoy |
 | -------- | ------- | ----- | ----- |
-| **多核怎么吃** | 同进程多线程，共享地址空间 | 多进程，地址空间隔离 | 同进程多线程，但**刻意 silo 热数据** |
-| **跨连接状态** | 必须共享（stick-table、peers）→ **细锁 + 分片** | 尽量不共享；缓存等走共享内存 | 热路径不共享；配置用 **TLS（Thread Local）槽** 异步下发[^envoy-thread] |
-| **配置合同** | 文件极稳 + Runtime 改运行时对象 | 文件极稳；动态靠生态 | 静态 bootstrap + **xDS 热路径** |
-| **可编程位置** | ACL / Lua / SPOE（外置代理） | 模块 / Lua(OpenResty) / njs | C++·Wasm Filter / ext_proc |
-| **可观测默认** | stats 体系成熟 | stub_status；完整面靠 Plus/生态 | metrics · tracing · access log 一等公民 |
+| **多核利用** | 同进程多线程，共享地址空间 | 多进程，地址空间隔离 | 同进程多线程，热数据 **siloed** |
+| **跨连接状态** | 须共享（stick-table、peers）→ **细锁 + 分片** | 尽量不共享；缓存等用共享内存 | 热路径不共享；配置经 **线程局部存储（TLS）槽** 下发[^envoy-thread] |
+| **配置合同** | 文件稳定 + Runtime 改运行时对象 | 文件稳定；动态多依赖生态 | 静态 bootstrap + **xDS 热路径** |
+| **可编程** | ACL / Lua / SPOE | 模块 / Lua（OpenResty）/ njs | C++ / Wasm Filter、ext_proc |
+| **可观测** | stats 体系成熟 | stub_status；完整能力多在 Plus/生态 | metrics、tracing、access log 为一等公民 |
 
-> **所以 · 边界在哪：** 原则相同，**共享域大小**不同。共享域越大，语义越「全集群一致」，锁与 NUMA 越敏感；共享域越小，扩展越线性，粘滞/全局限流越要另想办法。
+> **边界：** 原则相同，**共享域大小**不同。共享域越大，跨连接语义越强，锁与 NUMA 越敏感；共享域越小，扩展越线性，粘滞与全局限流需另设计。
 
 ---
 
 ## 5. 底层并发与网络模型
 
-### 5.1 一张总图：执行体长什么样
+### 5.1 执行体总览
 
 ```mermaid
 flowchart TB
@@ -277,23 +294,23 @@ flowchart TB
 | | HAProxy | Nginx | Envoy |
 | - | ------- | ----- | ----- |
 | **OS 可见** | 常为 1 个 worker 进程（重载时短暂双进程）[^haproxy-mgmt] | 1 master + N worker | 1 进程 |
-| **扛流量的执行体** | 线程 | 进程 | 线程（worker） |
+| **承载流量的执行体** | 线程 | 进程 | 线程（worker） |
 | **调参旋钮** | `nbthread` / CPU 亲和 / thread-groups | `worker_processes`（常 `auto`） | `--concurrency` |
 | **事件设施** | 每线程自有调度（epoll 等）[^haproxy-mt] | 每 worker：`ngx_process_events_and_timers` | 每线程：`Event::Dispatcher` |
 
 ### 5.2 HAProxy：每线程一调度器
 
-官方多线程文的关键选择：**不是「1 个调度线程 + N 个干活线程」，而是每个线程自带完整调度器**——与昔日多进程用法接近，却共享内存。[^haproxy-mt]
+官方多线程模型的关键选择：**非「1 个调度线程 + N 个工作线程」，而是每线程自带完整调度器**——接近昔日多进程用法，但共享地址空间。[^haproxy-mt]
 
 | 机制 | 细节 |
 | ---- | ---- |
-| **亲和** | task / fd / applet 同时只被一线程处理；**同一 session 上的实体钉在 accept 该连接的线程** |
+| **亲和** | task / fd / applet 同时只被一线程处理；**同一 session 上的实体亲和于 accept 该连接的线程** |
 | **全局实体** | listener、peers、health check、DNS 等无会话亲和，但同一时刻仍只被一线程处理 |
-| **后端连接池** | 可复用连接对「钉在同一线程的会话」可见——线程局部副作用，换来少锁[^haproxy-mt] |
-| **锁** | 剩余共享点用 progressive lock（plock）等；stick-table 等持续分片降争用 |
-| **thread-groups** | 2.7+：按 CPU 局部性分组，把共享限制在组内，缓和跨 NUMA 延迟[^haproxy-perf] |
+| **后端连接池** | 可复用连接通常仅对同线程会话可见——以局部性换少锁[^haproxy-mt] |
+| **锁** | 剩余共享点用 progressive lock（plock）等；stick-table 等分片降争用 |
+| **thread-groups** | 2.7+：按 CPU 局部性分组，收缩共享域，降低跨 NUMA 延迟[^haproxy-perf] |
 
-管理文档口径：默认每许可 CPU 一线程；**单连接单线程服务**；要吃满核，并发连接数通常至少与线程数同阶（生产几乎总能满足）。[^haproxy-mgmt]
+管理文档：默认每许可 CPU 一线程；**单连接由单线程服务**；充分利用多核通常需要并发连接数至少与线程数同阶。[^haproxy-mgmt]
 
 ### 5.3 Nginx：每进程一事件环
 
@@ -305,8 +322,8 @@ AOSA / 官方「Inside NGINX」模型：master 做特权与配置；**worker 才
 | **accept 争用（历史）** | 多 worker 抢同一 listen fd 会惊群；曾用 `accept_mutex` 轮流 accept |
 | **当代默认** | `accept_mutex` 默认 **off**（有 `EPOLLEXCLUSIVE` 或 `reuseport` 时本就不需要）[^nginx-accept] |
 | **reuseport** | `listen … reuseport`：每 worker 一个监听套接字，**内核**分连接，减用户态锁[^nginx-reuseport] |
-| **阻塞逃生** | 读盘等可走有界 **thread pool**，完成后再回 worker 环——承认「纯事件环扛不住同步盘」[^cf-event] |
-| **进程间** | 请求路径基本无锁；限流/缓存计数等靠共享内存，语义弱于「单表强一致」 |
+| **阻塞卸载** | 读盘等可走有界 **thread pool**，完成后再回 worker 环[^cf-event] |
+| **进程间** | 请求路径基本无锁；限流/缓存计数等靠共享内存，一致性语义弱于单表强一致 |
 
 ### 5.4 Envoy：main + siloed workers
 
@@ -318,14 +335,14 @@ AOSA / 官方「Inside NGINX」模型：master 做特权与配置；**worker 才
 
 Worker 侧要点：
 
-1. **连接终身钉在 accept 到的那个 worker**；热路径按单线程写法，几乎不锁。[^envoy-thread]  
+1. **连接终身亲和于 accept 到的那个 worker**；热路径按单线程写法，几乎不锁。[^envoy-thread]  
 2. **默认所有 worker 都 listen**；新连接由内核分；长连接稀少（如 Mesh 出口少量 H2）时可开 **listener connection balancer** 做强制均衡。  
-3. **TLS（Thread Local Storage）槽**：main 解析配置后 `post` 到各 worker，worker 本地 O(1) 读集群视图——热路径无全局锁读配置。[^envoy-thread]  
-4. **Siloed 后果**：每 worker 自有 upstream 连接池与 LB 游标 → 每上游稳态可有「worker 数」条 H2 连接；RR「不均」是模型特性。[^envoy-rr]
+3. **线程局部存储（TLS）槽**：main 解析配置后 `post` 至各 worker；worker O(1) 读本地集群视图，热路径无需全局锁。[^envoy-thread]（TLS = Thread Local Storage，非传输层安全。）  
+4. **Siloed 后果**：每 worker 自有 upstream 池与 LB 游标；稳态下每上游可约有 worker 数条 H2 连接；RR 表观不均属模型特性。[^envoy-rr]
 
 ### 5.5 网络路径：accept → 处理 → 上游
 
-把「网络模型」落成同一条请求链上的站：
+将网络模型落在同一请求链的各站：
 
 ```mermaid
 flowchart LR
@@ -340,14 +357,14 @@ flowchart LR
 
 | 站 | HAProxy | Nginx | Envoy |
 | -- | ------- | ----- | ----- |
-| **① Accept** | 线程共享监听；内核/均衡把连接交给某线程后**钉死** | 共享 listen +（可选）mutex，或 **reuseport** 每 worker 一 socket | 各 worker listen；内核分；可选强制 balancer |
+| **① Accept** | 线程共享监听；连接交某线程后**终身亲和** | 共享 listen +（可选）mutex，或 **reuseport** 每 worker 一 socket | 各 worker listen；内核分发；可选强制 balancer |
 | **② 下游** | 同线程：TCP/HTTP 模式、ACL、stick 查询 | 同进程：`http`/`stream` 阶段、rewrite、access | 同 worker：Listener filter → HTTP/TCP 连接管理 → Filter chain |
-| **③ 上游** | backend 算法 + 健康状态；池连接常**线程内复用** | `upstream` 选 peer；进程内池化 | Cluster LB + **本 worker 连接池**；健康/outlier 视图经 TLS 下发 |
+| **③ 上游** | backend 算法 + 健康状态；池连接常**线程内复用** | `upstream` 选 peer；进程内池化 | Cluster LB + **本 worker 连接池**；健康/outlier 视图经线程局部槽可见 |
 | **④ 回程** | 不换线程 | 不换进程 | 不换 worker |
 
-L4 与 L7 的差别在 ②：L4 几乎只搬字节；L7 才解析方法/头/`:authority`、做路由与协议翻译（如 H3→H1）。**执行体边界不变**——变的是站内工作量。
+L4 与 L7 的差别在 ②：L4 主要搬字节；L7 解析方法/头/`:authority` 并做路由与协议翻译（如 H3→H1）。**执行体边界不变**，变化的是站内工作量。
 
-UDP/QUIC 额外约束：无「连接」时，常靠五元组哈希把同一会话钉到同一执行体（Envoy 文档对 UDP 明确依赖 `SO_REUSEPORT` 哈希一致性）；HAProxy 的 QUIC accept 亦走向线程均衡，避免单线程打满。[^envoy-life][^haproxy-quic]
+UDP/QUIC：无连接语义时，常以五元组哈希将会话亲和到同一执行体（Envoy UDP 依赖 `SO_REUSEPORT` 一致性）；HAProxy 的 QUIC accept 亦做线程均衡。[^envoy-life][^haproxy-quic]
 
 ### 5.6 状态共享合同：锁什么、不锁什么
 
@@ -357,13 +374,13 @@ UDP/QUIC 额外约束：无「连接」时，常靠五元组哈希把同一会�
 | **上游连接池** | 偏线程可见 | 进程内 | **每 worker 一份** |
 | **LB 游标 / RR** | 共享结构 + 锁/原子（随算法） | 进程内 | **每 worker 一份** → 全局看起来不均[^envoy-rr] |
 | **会话粘滞表** | stick-table **跨线程共享**（分片锁） | 弱/外置/Plus | 有限；常靠上游亲和或外置 |
-| **配置/集群成员** | 重载换进程或 Runtime 改；线程见一致内存 | 重载换 worker 代际 | main 下发 → worker TLS 槽 |
+| **配置/集群成员** | 重载换进程或 Runtime 改；线程见一致内存 | 重载换 worker 代际 | main 下发 → worker 线程局部槽 |
 | **统计** | 可共享；3.0+ 可跨重载落盘 | 每 worker + 共享内存聚合 | worker 计数 → main 汇总 flush |
 
-> **所以 · 边界在哪：**  
-> - 问「为何 HAProxy 敢默认多线程」→ 连接不共享 + 共享点极窄。  
-> - 问「为何 Nginx 不靠多线程吃多核」→ 进程隔离已够用，且避开共享表。  
-> - 问「为何 Envoy RR 看起来歪」→ silo 是特性；调 `--concurrency` 与连接 balancer，而不是先疑 LB 坏了。
+> **边界：**  
+> - HAProxy：多线程默认可用；连接不跨线程，共享点极窄。  
+> - Nginx：以多进程利用多核；进程隔离，请求路径少共享。  
+> - Envoy RR 表观不均属 siloed 模型特性；应调节 `--concurrency` 与 connection balancer，而非先怀疑算法。
 
 ---
 
@@ -373,10 +390,10 @@ UDP/QUIC 额外约束：无「连接」时，常靠五元组哈希把同一会�
 | - | ------- | ----- | ----- |
 | **静态骨架** | `global` / `defaults` / `frontend` / `backend` | `events` / `http` / `upstream` / `server` | Bootstrap + Listener / Cluster / Route |
 | **热更新** | 软重载（新旧进程交接）；Runtime API 改权重、地图等 | `nginx -s reload`；多数变更需重载 | **xDS 热更新**为主；也可热重启 |
-| **服务发现** | DNS、Runtime API、外部编排写文件 | DNS、变量 upstream；常靠外围 | EDS/CDS 原生；与 K8s / Mesh 控制面咬合 |
+| **服务发现** | DNS、Runtime API、外部编排写文件 | DNS、变量 upstream；常靠外围 | EDS/CDS 原生；与 K8s / Mesh 控制面集成 |
 | **治理动作** | ACL、stick、限流、健康检查内建扎实 | `limit_req`、反代头、缓存；复杂策略常靠模块/OpenResty | Outlier、重试、熔断、RBAC、JWT… Filter 组合 |
 
-HAProxy 的运维优势常在：**一份十年前的 `frontend`/`backend` 思路仍可读**；Envoy 的优势在：**无需进程级重载即可换路由与集群成员**。Nginx 居中——文件配置极稳，动态能力靠生态补丁而非单一官方控制面。
+HAProxy：`frontend`/`backend` 配置模型长期稳定。Envoy：路由与集群成员可经 xDS 热更新，无需进程级重载。Nginx：文件配置稳定；动态能力多依赖生态扩展，而非统一官方控制面。
 
 ---
 
@@ -386,20 +403,20 @@ HAProxy 的运维优势常在：**一份十年前的 `frontend`/`backend` 思路
 | ---- | ------- | ------------- | ----- |
 | TCP / UDP 代理 | 强（LB 本业） | 有（stream）；定位次于 HTTP | 强（Listener 通用） |
 | HTTP/1.1 · H2 | 成熟 | 成熟 | 成熟 |
-| HTTP/3 · QUIC | 2.5 引入，**2.8 起标生产可用**；3.x 继续磨 accept/发送路径[^haproxy-quic] | 官方模块演进中；部署看构建与发行版 | 一等公民（下游/上游路径视版本） |
-| 主动健康检查 / 高级 LB | 核心竞争力 | 基础 upstream；高级能力多在 Plus / 生态 | 健康、outlier、多种 LB 策略 |
-| 会话粘滞 | stick-table 体系 | 有限 / 需模块或 Plus | 有；常与 Mesh 身份策略叠加 |
+| HTTP/3 · QUIC | 2.5 引入，**2.8 起生产可用**；3.x 继续优化[^haproxy-quic] | 视构建与发行版 | 一等公民（上下游能力随版本） |
+| 主动健康检查 / 高级 LB | 核心能力 | 基础 upstream；高级多在 Plus / 生态 | 健康检查、outlier、多种 LB |
+| 会话粘滞 | stick-table | 有限 / 模块或 Plus | 有；常与 Mesh 身份策略叠加 |
 | 静态文件 / 缓存 | 非主业 | **主业之一** | 非主业 |
-| 动态配置面 | Runtime API 强；非 xDS 原生 | 文件重载为主 | **xDS 原生** |
-| 服务网格数据面 | 可作入口；非典型 sidecar 标准 | 少作 sidecar | **事实标准之一** |
+| 动态配置 | Runtime API 强；非 xDS 原生 | 文件重载为主 | **xDS 原生** |
+| 服务网格数据面 | 可作入口；非典型 sidecar | 少作 sidecar | **常见事实标准** |
 
-协议翻译是常见落地模式：例如 HAProxy **前端 H3、后端 H1/H2**，用入口红利承接老上游——合同允许，并不要求后端同步升协议。[^haproxy-quic]
+协议翻译常见：如 HAProxy **前端 H3、后端 H1/H2**，无需后端同步升级协议。[^haproxy-quic]
 
 ---
 
 ## 8. HAProxy：多线程如何收官
 
-多线程**不是 3.0 才发明**，而是分步默认化；3.0 的意义是协议栈与共享结构对线程模型「可长期默认」。
+多线程并非 3.0 才出现，而是分步默认化；3.0 标志协议栈与共享结构对线程模型达到可长期默认的成熟度。
 
 | 节点 | 版本 / 年 | 事实 |
 | ---- | --------- | ---- |
@@ -409,58 +426,175 @@ HAProxy 的运维优势常在：**一份十年前的 `frontend`/`backend` 思路
 | 超多核 | **2.7+** | thread-groups：按拓扑分组，单组线程上限（历史上 64）服务超多核 |
 | 收官 | **3.0**（2024-05） | stick-table 多树头分片（官方称约 80 线程上 ~6×）；stats 可跨重载持久；`crt-store`；H2/H3 防护与运维面补强[^haproxy-30] |
 
-版本选型（官方政策）：**偶号 LTS、奇号短期稳定**。2026-10 时最新 LTS 为 **3.4**；3.0 仍在 LTS 窗内。生产闭眼选当前 LTS 线，奇号留给尝鲜。[^haproxy-eol]
+版本选型（官方政策）：**偶号 LTS、奇号短期稳定**。2026-10 时最新 LTS 为 **3.4**；3.0 仍在 LTS 维护窗内。生产宜跟踪当前 LTS；奇号适合验证新特性。[^haproxy-eol]
 
 与 §3、§5.2 同一内核：**多线程、事件驱动、非阻塞；默认每许可 CPU 一线程；连接单线程服务。**[^haproxy-mgmt] 3.0 运维侧补强：热重载前 `dump stats-file` + 对象 `guid` 可延续计数；`nbthread` / thread-groups 收束到 `global`。[^haproxy-30]
 
 ---
 
-## 9. 选型启发式
+## 9. 多节点统一入口：谁持 VIP
 
-| 场景 | 更常优先 | 原因 |
+§3–§8 讨论单机如何利用多核。多节点另有三问：**对外地址是什么？如何漂移？能否多节点同时进流量？**
+
+HAProxy / Nginx / Envoy **默认不提供二层/三层 VIP 选举**（商业发行版可附 VRRP）。[^haproxy-as][^f5-nginx-mig] 统一入口是独立合同；宜**先定机制，再选产品**。F5、Kemp、Keepalived、MetalLB 等为常见实例，非穷尽列表。
+
+### 9.1 两层问题，勿混为一谈
+
+```mermaid
+flowchart LR
+  classDef vip fill:#fff3e0,stroke:#b8860b,color:#5a4200
+  classDef px fill:#e8f1fa,stroke:#3b6ea5,color:#1f3a5f
+  classDef be fill:#eef6e8,stroke:#5a8a3a,color:#2f4f1f
+
+  C["客户端 / 上游路由器"] --> V["入口层 · VIP<br/>谁宣告 · 如何漂移 / 分摊"]:::vip
+  V --> P["代理层 · HAProxy / Nginx / Envoy<br/>L4–L7 决策与转发"]:::px
+  P --> B["后端 / Pod"]:::be
+```
+
+| 层 | 回答 | 代表（非穷尽） |
+| -- | ---- | -------------- |
+| **入口层** | 对外地址归谁；单活还是多下一跳 | ADC；VRRP 族；MetalLB / kube-vip / PureLB；BGP ECMP；云 LB |
+| **代理层** | 解析、路由、粘滞、TLS、观测 | HAProxy、Nginx、Envoy；ADC 内置代理 |
+
+**peers / stick 同步 ≠ VIP。** 前者同步会话状态；后者决定包先落到哪台机。
+
+### 9.2 五种机制（先机制，后产品）
+
+| # | 机制 | 地址如何呈现 | 流量形态（典型） | 代表实现 |
+| - | ---- | ------------ | ---------------- | -------- |
+| 1 | **ADC 一体** | 设备 HA 持浮动 VIP；池与健康检查同箱 | 多为 Active/Standby；策略面强 | F5 BIG-IP、Kemp LoadMaster、Citrix ADC（NetScaler）等[^f5-nginx-mig][^kemp-ha][^citrix-ha] |
+| 2 | **浮动 VIP（VRRP/CARP 族）** | 选举 Master，VIP 绑定其网卡 | **单活**入口；可叠加 IPVS | Keepalived；HAProxy Enterprise VRRP；NGINX Plus `nginx-ha-keepalived`[^keepalived][^haproxy-as][^f5-nginx-mig] |
+| 3 | **K8s LoadBalancer 实现** | 分配外部 IP，并以 ARP/NDP 或 BGP 通告 | L2 偏单节点进流；BGP 可多下一跳 | MetalLB、kube-vip、PureLB；云上为 CCM + 云 LB[^metallb][^kube-vip][^purelb] |
+| 4 | **路由面 ECMP / anycast** | 多机通告同一前缀；路由器哈希选路 | **多机同时进流量**；失败则撤路由 | MetalLB/kube-vip BGP；主机 BGP + FRR；数据中心 anycast[^metallb-bgp][^rfc7938][^cf-maglev] |
+| 5 | **云托管 LB** | 控制面持前端 IP；多区后端探测 | 多 AZ 分发；客户侧通常不自管 VRRP | AWS NLB/ALB、GCP/Azure LB 等 |
+
+读表要点：**1–2** 保证单一地址高可用；**3** 将地址合同接入 K8s API；**4–5** 实现多点同时接流（或交云托管）。
+
+### 9.3 ADC 一体：F5 · Kemp · Citrix 等
+
+共同合同：把 **VIP + 服务池 + 健康检查 +（常见）设备级 HA** 收成一台逻辑 ADC；可直接终结业务，也可只做 L4、后面再挂软件代理。
+
+| | F5 BIG-IP | Kemp LoadMaster | Citrix ADC / NetScaler |
+| - | --------- | --------------- | ---------------------- |
+| **VIP** | Virtual Server | Virtual Service；HA 用 Shared IP[^kemp-ha] | VIP 在 HA 中为 floating；NSIP/SNIP 等可节点私有（含 INC）[^citrix-ha] |
+| **HA** | Active/Standby 设备对，VIP 随 Active | Active/Standby；Shared IP 仅 Active 关联 | Primary/Secondary；同二层靠 GARP 等；**云上常需云 LB 前端**（无传统 L2 浮动）[^citrix-azure] |
+| **适用** | 企业运维面、多租户、合规一体 | 中小规模 ADC，部署较轻 | ADC 路径；桌面与应用网关生态常见 |
+
+迁出 ADC 时常见拆分：**入口 HA → VRRP 族或云 LB**；**L7 → HAProxy / Nginx / Envoy**。[^f5-nginx-mig]
+
+### 9.4 浮动 VIP：VRRP / Keepalived 族
+
+| 组件 | 角色 |
+| ---- | ---- |
+| **Keepalived** | VRRP + 可选 **LVS/IPVS** + 健康检查 / BFD；可与代理进程 `track_script` 联动[^keepalived] |
+| **HAProxy Enterprise VRRP** | Active/Standby；实现源自 Keepalived[^haproxy-as] |
+| **NGINX Plus HA** | `nginx-ha-keepalived`：浮动 VIP 由 VRRP 管理[^f5-nginx-mig] |
+
+要点：VRRP/CARP 保证 **IP 归属单活**。多机同时进流量需机制 4 或 5，不能由增大 `nbthread` 替代。
+
+### 9.5 K8s 兑现 LoadBalancer：MetalLB · kube-vip · PureLB
+
+裸金属（及部分非云 IaaS）上，上游不提供 `LoadBalancer` 控制器时，需集群内实现：**分配 IP + 让集群外网络可达。**[^metallb]
+
+| | MetalLB | kube-vip | PureLB |
+| - | ------- | -------- | ------ |
+| **定位** | 裸金属 LB；发行版与 OpenShift 广泛采用[^metallb] | 控制面 VIP 与 Service LB；ARP / BGP / 路由表等[^kube-vip] | 以 Linux 网络栈挂地址，可选 BGP；支持 `LoadBalancerClass` 并存[^purelb] |
+| **L2 / ARP** | 单节点通告；实质偏 **failover**[^metallb-l2] | Leader 发 GARP；可按 Service 分散选举[^kube-vip] | Local 地址挂接口；GARP 可配 |
+| **BGP** | 多节点通告 → 路由器 ECMP[^metallb-bgp] | 多节点通告，由路由器分摊[^kube-vip-bgp] | 集成 goBGP 等通告 remote 地址[^purelb] |
+| **补充** | FRR-K8s 等后端 | 控制面可用 IPVS 均衡 API[^kube-vip] | NetBox IPAM、双栈等 |
+
+均**不能**替代 HAProxy/Envoy 的 L7 语义；其后仍接 Ingress / Gateway / 独立代理。与 Calico 等 BGP 并存时须规划 AS 与通告边界（见 [24](./24-calico-l3-dataplane-treatise.md)）。
+
+### 9.6 路由面：BGP ECMP / anycast
+
+多机通告**同一服务前缀**且路由器启用 **ECMP** 时，入口由「单机持 VIP」变为网络层分摊。RFC 7938 将 anycast + ECMP 列为数据中心水平扩展负载均衡的路径之一；[^rfc7938] 产业实践常见 BGP 通告服务 IP，再以一致哈希在 LB 间调度。[^cf-maglev]
+
+| 要点 | 说明 |
+| ---- | ---- |
+| **与 MetalLB / kube-vip BGP** | 同一机制在 Kubernetes 边界上的产品化 |
+| **与 VRRP** | VRRP：单活归属；ECMP：多下一跳并存 |
+| **有状态注意** | 纯网络 ECMP 对长连接不友好时，需一致哈希 LB 层，或健康失败即 withdraw[^nvidia-anycast] |
+
+### 9.7 云托管入口
+
+| 形态 | 合同 |
+| ---- | ---- |
+| **云 NLB/ALB 等** | 前端 IP 由云控制面持有；多 AZ 探测与转发（同一 VIP 问题，接口为云 API） |
+| **云上 ADC** | 通常无客户侧 L2 GARP；需 **云 LB + 健康探测** 判定 Active[^citrix-azure] |
+| **托管 K8s** | `type=LoadBalancer` 由云 CCM 接线，一般无需 MetalLB |
+
+### 9.8 典型叠法与选型
+
+| 场景 | 常见叠法 | 机制 |
 | ---- | -------- | ---- |
-| 高并发 TCP/HTTP **纯 LB**、粘滞/健康检查重 | **HAProxy** | LB 语义与 stick/peers 一体；配置面稳 |
-| 静态、缓存、TLS 边缘、反代「内容站」 | **Nginx** | Web 服务器血统；运维心智与模块生态 |
-| K8s / Mesh、需 **xDS 热配**、多协议 Filter | **Envoy** | 为动态控制面而生；可观测默认强 |
-| 只要「一个进程扛边缘 + 偶尔 Lua」 | Nginx 或 HAProxy | 看团队存量配置与监控习惯 |
-| 极多核且强依赖跨连接共享状态 | HAProxy（+ thread-groups）或外置状态 | Envoy silo 与 Nginx 多进程都要额外设计 |
+| 机房双机软件代理 | Keepalived / 发行版 VRRP → HAProxy/Nginx | 2 → 代理层 |
+| 厂商一体交付 | F5 / Kemp / Citrix（或 ADC 仅 L4 + 软件代理） | 1 |
+| 裸金属 K8s 外部 IP | MetalLB / kube-vip / PureLB → Ingress/Gateway | 3（BGP 则叠加 4） |
+| 多机同时接入口流量 | BGP ECMP / anycast（或云 NLB） | 4 或 5 |
+| 公有云 | 云 LB → 节点代理 / Ingress；云上 ADC 常前置云 LB | 5（可叠加 1） |
+| 控制面 HA（kube-apiserver） | kube-vip 等持 API VIP | 3 |
+| 网格东西向 | 通常无需南北向 VIP；ClusterIP / sidecar | — |
 
 反模式：
 
-1. **用 QPS 神话替代角色定义**——先写清南北向还是东西向、是否要热配。  
-2. **在 Envoy 多 worker 下解读「RR 不均」为故障**——先读 siloed 模型。[^envoy-rr]  
-3. **在 Nginx worker 内跑长 CPU**——事件环协作式调度，长任务拖死同进程连接。[^cf-event]  
-4. **HAProxy 仍用 `nbproc` 思维调参**——当代合同是线程与 CPU 亲和，不是堆进程。
+1. **多实例代理 ≠ 统一入口**——缺少机制 1–5 之一。  
+2. **L2/ARP 通告 ≠ 多节点负载均衡**——多为单点进流。[^metallb-l2]  
+3. **peers ≠ VIP**；**Ingress ≠ LoadBalancer 实现**。  
+4. **跨二层域使用 VRRP 组播**——应改单播 peer，或改用机制 4/5。  
+5. **云上假定 GARP 浮动 VIP**——应按云 LB 健康探测模型设计。[^citrix-azure]
 
 ---
 
-## 10. 收束
+## 10. 选型启发式
+
+| 场景 | 更常优先 | 原因 |
+| ---- | -------- | ---- |
+| 高并发 TCP/HTTP 纯 LB，粘滞与健康检查重 | **HAProxy** | LB 语义与 stick/peers 一体 |
+| 静态、缓存、TLS 边缘、内容反代 | **Nginx** | Web 服务器血统与模块生态 |
+| K8s / Mesh，需 xDS 与多协议 Filter | **Envoy** | 动态控制面与可观测为一等公民 |
+| 浮动 VIP 且代理已定 | **VRRP 族** + 上表代理 | 机制 2（§9） |
+| 裸金属 K8s 外部 IP | **MetalLB / kube-vip / PureLB** | 机制 3；多下一跳用 BGP |
+| 一体 ADC / 强合规运维面 | **F5 / Kemp / Citrix** 等 | 机制 1 |
+| 多机同时接入口 | **BGP ECMP** 或 **云 NLB** | 机制 4 或 5 |
+| 边缘反代 + 轻量脚本 | Nginx 或 HAProxy | 视团队存量与监控习惯 |
+| 极多核且强依赖跨连接共享状态 | HAProxy（+ thread-groups）或外置状态 | Envoy silo / Nginx 多进程需另设计共享 |
+
+反模式：
+
+1. **以 QPS 数字替代角色定义**——先明确南北向/东西向、是否热配、VIP 机制。  
+2. **将 Envoy 多 worker 下 RR 不均视为故障**——先理解 siloed 模型。[^envoy-rr]  
+3. **在 Nginx worker 内执行长 CPU**——协作式事件环会被拖死。[^cf-event]  
+4. **仍按 `nbproc` 思路调 HAProxy**——当代接口合同是线程与 CPU 亲和。  
+5. **混淆入口层与代理层**——见 §9.1。
+
+---
+
+## 11. 收束
 
 ```mermaid
 flowchart TB
-  R["角色：LB / Web 边缘 / Mesh 数据面"] --> M["模型：进程隔离 · 线程共享 · 线程孤立"]
+  V["入口层机制：ADC · VRRP · K8s LB · ECMP · 云 LB"] --> R["代理角色：LB / Web 边缘 / Mesh 数据面"]
+  R --> M["模型：进程隔离 · 线程共享 · 线程孤立"]
   M --> C["控制面：文件重载 · Runtime API · xDS"]
-  C --> P["协议：H1/H2/H3 只是能力层，不定义身份"]
 ```
 
-三条河床可以并存于同一架构：边缘 HAProxy 或 Nginx 做南北向；网格内 Envoy 做东西向。争论「谁取代谁」通常是把**不同合同**按成同一产品品类。
+代理层与入口层正交：先按 §9.2 选定机制，再落产品。比较「谁取代谁」之前，须分清讨论的是**地址归属**还是**请求处理**。
 
 ---
 
-## 11. 本章要点
+## 12. 本章要点
 
-1. 官方四词：daemon 定常驻；non-blocking 定「未就绪不占工人」；event-driven 定就绪信号；multi-threaded 定每核一环——**不是**一连接一线程。  
-2. 事件在**跑环的同一线程**内处理；非阻塞与事件驱动成对出现。  
-3. 共同原则：非「一连接一线程」、热路径非阻塞、连接亲和、控制面与数据面分离。  
-4. 分层：控制面改表 → 语义层决策 → 数据面在单执行体上搬字节。  
-5. HAProxy：每线程一调度器，session 钉线程；共享 stick/peers，用分片锁与 thread-groups。  
-6. Nginx：每 worker 一进程一环；`reuseport` / `EPOLLEXCLUSIVE` 替代旧 accept 惊群套路。  
-7. Envoy：main 管 xDS；worker siloed；TLS 槽下发配置；池与 RR 不跨 worker。  
-8. 网络路径四站执行体不变；选型先角色与共享域，再谈 QPS。
+1. 官方四词：daemon、non-blocking、event-driven、multi-threaded——**不是**一连接一线程。  
+2. 事件在跑环的同一线程内处理；非阻塞与事件驱动配合使用。  
+3. 代理三分叉：Nginx 进程隔离；HAProxy 线程细锁共享；Envoy siloed + xDS。  
+4. 多节点入口：先定五种机制（ADC / VRRP / K8s LB 实现 / BGP ECMP / 云 LB），产品为实例。  
+5. L2/ARP 偏单点进流；多下一跳靠 BGP ECMP 或云 LB；云上 ADC 常需云 LB 前端。  
+6. peers ≠ VIP；LoadBalancer 实现 ≠ L7 网关；多实例代理 ≠ 统一入口。  
+7. 选型顺序：角色 → VIP 机制 → 共享域 → 延迟。
 
 ---
 
-## 12. 参考文献
+## 13. 参考文献
 
 [^aosa-nginx]: O. Garrett et al., *The Architecture of Open Source Applications*, Vol. 2, ch. “nginx”. https://aosabook.org/en/v2/nginx.html 。事件驱动、worker 进程模型。
 
@@ -473,6 +607,7 @@ flowchart TB
 [^cf-event]: Cloudflare Blog, *The problem with thread^W event loops*. https://blog.cloudflare.com/the-problem-with-event-loops/ 。事件环忌长任务；Nginx thread pool 背景。
 
 [^haproxy-perf]: HAProxy Documentation, *Performance optimization for large systems*（thread groups 与 NUMA 局部性）. https://www.haproxy.com/documentation/haproxy-configuration-tutorials/performance/performance-tuning/ 。
+
 [^haproxy-mgmt]: HAProxy Documentation, *Management Guide*（架构速览：多线程、事件驱动、每 CPU 一线程、连接单线程服务）. https://docs.haproxy.org/ 。
 
 [^haproxy-mt]: HAProxy Technologies, *Multithreading in HAProxy*. https://www.haproxy.com/blog/multithreading-in-haproxy 。1.8 引入；实体/会话单线程处理。
@@ -493,4 +628,34 @@ flowchart TB
 
 [^envoy-life]: Envoy documentation, *Life of a Request*. https://www.envoyproxy.io/docs/envoy/latest/intro/life_of_a_request 。Listener / Cluster；worker 并行。
 
-**声明：** 正文是架构对照，不是安装手册或压测排行榜。企业发行版特性、具体 sysctl 与编译开关以当期文档为准；与 HTTP 代际见 [16](../10-chronicle/16-http-protocol-chronicle.md)，与服务形态见 [21](./21-service-architecture-evolution.md)。
+[^haproxy-as]: HAProxy Technologies, *Configure two HAProxy Enterprise servers for active/standby clustering*（VRRP / Keepalived 血统）. https://www.haproxy.com/documentation/haproxy-enterprise/administration/high-availability/active-standby/ 。
+
+[^keepalived]: Keepalived Project, *What is Keepalived?*（VRRP · LVS/IPVS · health check / BFD）. https://www.keepalived.org/ 。
+
+[^kemp-ha]: Progress Kemp, *High Availability (HA) Configuration* / HA FAQ（Shared IP；CARP 类协议；同站点约束）. https://docs.progress.com/bundle/loadmaster-product-overview-progress-kemp-loadmaster-ltsf/page/High-Availability-HA-Configuration.html ；https://kemptechnologies.com/faq/high-availability 。
+
+[^f5-nginx-mig]: F5/NGINX Docs, *Migrating Load Balancer Configuration from F5 BIG-IP LTM to F5 NGINX Plus*（浮动 VIP 与 HA 概念对照）. https://docs.nginx.com/nginx/deployment-guides/migrate-hardware-adc/f5-big-ip-configuration/ 。
+
+[^metallb]: MetalLB, *Concepts*（外部 IP 分配与 ARP/NDP/BGP 通告）. https://metallb.io/concepts/ 。
+
+[^metallb-l2]: MetalLB / OpenShift docs：Layer 2 模式为单节点通告，本质偏 failover 而非多节点 LB. https://metallb.io/concepts/ ；https://docs.redhat.com/en/documentation/openshift_container_platform/4.15/html/networking/load-balancing-with-metallb 。
+
+[^metallb-bgp]: MetalLB, *MetalLB in BGP mode*（多下一跳与路由器 ECMP）. https://metallb.io/concepts/bgp/ 。
+
+[^kube-vip]: kube-vip documentation（控制面 VIP 与 Service LoadBalancer；ARP / BGP / 路由表）. https://kube-vip.io/ ；https://kube-vip.io/docs/about/architecture/ 。
+
+[^kube-vip-bgp]: kube-vip, *BGP* mode. https://kube-vip.io/docs/modes/bgp/ 。
+
+[^purelb]: PureLB（Linux 网络栈挂地址；可选 BGP；`LoadBalancerClass`）. https://purelb.io/ ；https://github.com/purelb/purelb 。
+
+[^citrix-ha]: Citrix / NetScaler docs, high availability（VIP floating；INC 下节点私有地址）. https://docs.netscaler.com/en-us/citrix-adc/current-release/system/high-availability-introduction/configuring-high-availability-nodes-different-subnets.html 。
+
+[^citrix-azure]: Citrix, cloud HA 与 Azure LB floating IP（云上无传统 L2 GARP 浮动时的模型）. https://www.citrix.com/blogs/2021-05/citrix-tips-5-questions-about-deploying-citrix-adcs-in-azure 。
+
+[^rfc7938]: P. Lapukhov et al., *Use of BGP for Routing in Large-Scale Data Centers*, RFC 7938, 2016（anycast + ECMP 作水平扩展 LB 层）. https://www.rfc-editor.org/rfc/rfc7938 。
+
+[^cf-maglev]: Cloudflare Blog, *High Availability Load Balancers with Maglev*（BGP 通告 + ECMP + 一致哈希）. https://blog.cloudflare.com/high-availability-load-balancers-with-maglev/ 。
+
+[^nvidia-anycast]: NVIDIA Networking KB, *Anycast Design Guide*（ECMP anycast 与 TCP 长连接失效注意）. https://docs.nvidia.com/networking-ethernet-software/knowledge-base/Network-Solutions/Anycast-Design-Guide/ 。
+
+**声明：** 本文为架构对照，非安装手册或性能排行。§9 论述入口机制与代表实现，产品列表非穷尽；版本与云 API 以当期文档为准。HTTP 代际见 [16](../10-chronicle/16-http-protocol-chronicle.md)；服务形态见 [21](./21-service-architecture-evolution.md)。

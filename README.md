@@ -165,7 +165,7 @@ knowledge_base/
 |------|------|----------|------------------|
 | 20 | [Enterprise Architecture Treatise](./20-architecture/20-enterprise-architecture-treatise.md) | 战略译成可执行安排；教学四大域、实践六层；实践不是照搬某一框架 | EA、四大域、六层域、CSVLOD |
 | 21 | [Service Architecture Evolution](./20-architecture/21-service-architecture-evolution.md) | 复杂度不会消失，只会代际转移 | 单体→微服务→无服务 |
-| 21a | [HAProxy · Nginx · Envoy Treatise](./20-architecture/21a-haproxy-nginx-envoy-treatise.md) | 先拆官方四词再对照共享域；进程隔离 / 线程细锁 / siloed+xDS | HAProxy、Nginx、Envoy、daemon、非阻塞、事件驱动、多线程、xDS |
+| 21a | [HAProxy · Nginx · Envoy Treatise](./20-architecture/21a-haproxy-nginx-envoy-treatise.md) | 代理三杰 + VIP 五种机制（ADC/VRRP/K8s LB/ECMP/云）；产品是实例 | HAProxy、Nginx、Envoy、VIP、VRRP、MetalLB、kube-vip、ECMP、ADC |
 | 22 | [Distributed Consistency Treatise](./20-architecture/22-distributed-consistency-treatise.md) | 跨节点之后，强一致与持续可用如何取舍 | CAP、共识、一致性 |
 | 23 | [Kubernetes Control-Plane Doctrine](./20-architecture/23-kubernetes-control-plane-doctrine.md) | 声明式协调 + Label 契约 + 网络合同 / CIDR + 同一循环 | K8s 控制面、CNI、Pod CIDR、Service CIDR、Label |
 | 24 | [Calico L3 Dataplane Treatise](./20-architecture/24-calico-l3-dataplane-treatise.md) | 节点即路由器：控制面写表、内核转发；Service 虚地址经 DNAT / conntrack 到达 Endpoint | Calico、Pod 网络、Service |
@@ -229,7 +229,7 @@ knowledge_base/
 | 历史是什么、史料、解释、限制、有边界的重建、丝绸之路、海地革命、记忆与历史、纽伦堡、工厂法 | 18 |
 | 企业架构、TOGAF、四大域、**六层域**、CSVLOD、科图采夫 | 20 |
 | 服务架构代际、复杂度转移 | 21 |
-| HAProxy、Nginx、Envoy、daemon、非阻塞、事件驱动、多线程、负载均衡、反向代理、连接亲和、reuseport、xDS、stick-table、siloed | 21a |
+| HAProxy、Nginx、Envoy、VIP、VRRP、ECMP、anycast、Keepalived、MetalLB、kube-vip、PureLB、F5、Kemp、Citrix、ADC、云 LB | 21a |
 | 服务代际 ↔ 入口代理 / 网格数据面 | 21 / 21a |
 | 服务代际 ↔ 服务间通信选型 | 21 / 28 |
 | CAP、共识、强一致 vs 可用 | 22 |
@@ -476,7 +476,7 @@ AI 如何改变工程组织、如何承接被放大的速度。
 | **明道** | Kafka 是可回放的分布式事件日志：解耦、削峰、多订阅；不是数据库，也不是同步 RPC | [29](./20-architecture/29-kafka-event-streaming-treatise.md) |
 | **明道** | Calico：节点即路由器；Cilium：eBPF 换底座，身份策略与替代 kube-proxy | [24](./20-architecture/24-calico-l3-dataplane-treatise.md) / [24a](./20-architecture/24a-cilium-ebpf-dataplane-treatise.md) |
 | **明道** | 复杂度不会消失，只会转移；跨节点之后，强一致与持续可用必须取舍 | [21](./20-architecture/21-service-architecture-evolution.md) / [22](./20-architecture/22-distributed-consistency-treatise.md) |
-| **明道** | 代理三杰皆事件驱动；分叉在多核载体与状态/控制面：HAProxy 线程共享、Nginx 进程隔离、Envoy siloed + xDS | [21a](./20-architecture/21a-haproxy-nginx-envoy-treatise.md) |
+| **明道** | 代理三杰分叉在共享域；多节点入口先定五种 VIP 机制，再落产品；与代理层正交 | [21a](./20-architecture/21a-haproxy-nginx-envoy-treatise.md) |
 | **明道** | 治理与管理必须分离；平台质量是期望与感知的差距 | [30](./30-governance/30-cobit-it-governance-framework.md) / [31](./30-governance/31-platform-service-quality-case-study.md) |
 | **优术** | 遗忘有时强于记忆；个人写出代码变快之后，组织交付未必变快 | [40](./40-paradigm/40-unix-agent-stateless-philosophy.md) / [41](./40-paradigm/41-ai-engineering-paradigm.md) |
 | **优术** | AI 主清偶然之难；本质之难仍在；难的是精确决定要构建什么；局部十倍不是银弹 | [47](./40-paradigm/47-no-silver-bullet-ai-essential-difficulty-philosophy.md) |
