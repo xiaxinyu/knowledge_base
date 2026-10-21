@@ -176,7 +176,7 @@ knowledge_base/
 | 27 | [MQTT over QUIC Treatise](./20-architecture/27-mqtt-over-quic-treatise.md) | MQTT 语义不变，传输换 QUIC；压失联窗口与重连风暴；单 Stream 主流；RFC/草案/产品能力须分开读 | MQTT、QUIC、连接迁移、队头阻塞、0-RTT、弱网、车联网 |
 | 28 | [Microservice Communication Treatise](./20-architecture/28-http-rpc-microservice-communication-treatise.md) | 比的是组合不是四字对立；慢常在 JSON/头/连接模型；gRPC 也是 HTTP/2；通信占比低则不必换栈 | HTTP、RPC、gRPC、REST、JSON、Protobuf、Dubbo、OpenFeign |
 | 29 | [Kafka Event Streaming Treatise](./20-architecture/29-kafka-event-streaming-treatise.md) | 分布式事件日志：解耦、削峰、多订阅管道；分区内有序；不是数据库/同步 RPC | Kafka、Topic、Partition、Offset、Consumer Group、削峰、至少一次 |
-| 29a | [Data Store WAL · MVCC Treatise](./20-architecture/29a-data-store-wal-mvcc-treatise.md) | WAL/MVCC 通识；共识 Safety 优先；Paxos/Raft 同一目标，etcd 落 Raft | WAL、MVCC、Safety、Liveness、Paxos、Raft、etcd |
+| 29a | [Storage Contracts: WAL · MVCC · Consensus Log](./20-architecture/29a-data-store-wal-mvcc-treatise.md) | 七维选型×三条合同；RDBMS/Redis/etcd/ES 目的·网络·优劣与 WAL/MVCC 因果 | WAL、MVCC、etcd、Elasticsearch、translog、Raft |
 
 #### 30 · 明道 · 治
 
@@ -243,8 +243,8 @@ knowledge_base/
 | HTTP vs RPC、gRPC、REST、JSON、Protobuf、Dubbo、Triple、OpenFeign、微服务通信、序列化 | 28 |
 | Kafka、事件流、提交日志、Topic、Partition、Offset、Consumer Group、削峰、异步解耦、至少一次 | 29 |
 | 同步 RPC ↔ 异步事件日志 | 28 / 29 |
-| WAL、MVCC、Safety、Liveness、Paxos、Raft、redo、undo、InnoDB、PostgreSQL、Oracle、Redis、etcd、revision | 29a |
-| 日志耐久 ↔ 事件日志产品 ↔ 共识 WAL | 29a / 29 / 22 |
+| STEAL、NO-FORCE、WAL、ARIES、MVCC、translog、refresh、flush、Elasticsearch、revision、Raft、etcd | 29a |
+| 恢复理论 ↔ 共识提交 ↔ 事件日志产品 | 29a / 22 / 29 |
 | COBIT、治理 vs 管理 | 30 |
 | 平台服务质量、期望—感知差距 | 31 |
 | Unix 哲学、无状态 Agent、可组合 | 40 |
@@ -477,7 +477,7 @@ AI 如何改变工程组织、如何承接被放大的速度。
 | **明道** | MQTT 语义可不变；弱网下换的是传输——QUIC 压失联窗口与重连风暴，单 Stream 尚未等于业务无阻塞 | [27](./20-architecture/27-mqtt-over-quic-treatise.md) |
 | **明道** | 「HTTP vs RPC」比的是组合；慢常在序列化与连接模型；gRPC 也是 HTTP/2；多数业务通信不是瓶颈 | [28](./20-architecture/28-http-rpc-microservice-communication-treatise.md) |
 | **明道** | Kafka 是可回放的分布式事件日志：解耦、削峰、多订阅；不是数据库，也不是同步 RPC | [29](./20-architecture/29-kafka-event-streaming-treatise.md) |
-| **明道** | WAL / MVCC 是通识；共识按 Safety 优先、Liveness 靠选主；Paxos / Raft 同一目标，etcd 落 Raft | [29a](./20-architecture/29a-data-store-wal-mvcc-treatise.md) |
+| **明道** | WAL/MVCC 是合同；etcd 逐写 Raft，ES 用 translog+refresh，共识只钉 cluster state | [29a](./20-architecture/29a-data-store-wal-mvcc-treatise.md) |
 | **明道** | Calico：节点即路由器；Cilium：eBPF 换底座，身份策略与替代 kube-proxy | [24](./20-architecture/24-calico-l3-dataplane-treatise.md) / [24a](./20-architecture/24a-cilium-ebpf-dataplane-treatise.md) |
 | **明道** | 复杂度不会消失，只会转移；跨节点之后，强一致与持续可用必须取舍 | [21](./20-architecture/21-service-architecture-evolution.md) / [22](./20-architecture/22-distributed-consistency-treatise.md) |
 | **明道** | 代理在 L4–L7，VIP 入口在 L2–L3；分叉在共享域；五种入口机制与代理正交 | [21a](./20-architecture/21a-haproxy-nginx-envoy-treatise.md) |
