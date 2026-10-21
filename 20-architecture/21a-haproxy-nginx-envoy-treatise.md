@@ -415,7 +415,7 @@ flowchart LR
 | **③ 上游** | backend 算法 + 健康状态；池连接常**线程内复用** | `upstream` 选 peer；进程内池化 | Cluster LB + **本 worker 连接池**；健康/outlier 视图经线程局部槽可见 |
 | **④ 回程** | 不换线程 | 不换进程 | 不换 worker |
 
-站 ② 区分 L4 与 L7：L4 主要搬字节；L7 解析方法/头/`:authority` 并做路由与协议翻译（如 H3→H1）。**执行体边界不变**，变化的是站内工作量。层位总图见 §1.3。
+站 ② 区分 L4 与 L7：L4 主要搬字节；L7 解析方法/头/`:authority` 并做路由与协议翻译（如 H3→H1）。**执行体边界不变**，变化的是站内工作量。
 
 UDP/QUIC：无连接语义时，常以五元组哈希将会话亲和到同一执行体（Envoy UDP 依赖 `SO_REUSEPORT` 一致性）；HAProxy 的 QUIC accept 亦做线程均衡。[^envoy-life][^haproxy-quic]
 
@@ -488,9 +488,9 @@ HAProxy：`frontend`/`backend` 配置模型长期稳定。Envoy：路由与集�
 
 ## 9. 多节点统一入口：谁持 VIP
 
-§3–§8 讨论单机 **L4–L7** 如何利用多核。多节点另有三问（多在 **L2–L3**）：**对外地址是什么？如何漂移？能否多节点同时进流量？**
+§3–§8 讨论单机如何利用多核。多节点另有三问：**对外地址是什么？如何漂移？能否多节点同时进流量？**（与代理的层位分工见 **§1.3**。）
 
-HAProxy / Nginx / Envoy **默认不提供 L2/L3 VIP 选举**（商业发行版可附 VRRP）。[^haproxy-as][^f5-nginx-mig] 统一入口是独立合同；宜**先定工作层与机制，再选产品**。F5、Kemp、Keepalived、MetalLB 等为常见实例，非穷尽列表。层位总图见 **§1.3**。
+HAProxy / Nginx / Envoy **默认不提供 VIP 选举**（商业发行版可附 VRRP）。[^haproxy-as][^f5-nginx-mig] 统一入口是独立合同；宜**先定机制，再选产品**。F5、Kemp、Keepalived、MetalLB 等为常见实例，非穷尽列表。
 
 ### 9.1 两层问题，勿混为一谈
 
@@ -500,129 +500,128 @@ flowchart LR
   classDef px fill:#e8f1fa,stroke:#3b6ea5,color:#1f3a5f
   classDef be fill:#eef6e8,stroke:#5a8a3a,color:#2f4f1f
 
-  C["客户端 / 上游路由器"] --> V["入口层 · VIP<br/>L2–L3：谁宣告 · 如何漂移 / 分摊"]:::vip
-  V --> P["代理层<br/>L4–L7：决策与转发"]:::px
+  C["客户端 / 上游路由器"] --> V["入口层 · VIP<br/>谁宣告 · 如何漂移 / 分摊"]:::vip
+  V --> P["代理层 · HAProxy / Nginx / Envoy<br/>决策与转发"]:::px
   P --> B["后端 / Pod"]:::be
 ```
 
-| 层 | 网络层位 | 回答 | 代表（非穷尽） |
-| -- | -------- | ---- | -------------- |
-| **入口层** | 主 **L2–L3**（云 LB 可为 L4/L7） | 对外地址归谁；单活还是多下一跳 | ADC；VRRP 族；MetalLB / kube-vip / PureLB；BGP ECMP；云 LB |
-| **代理层** | **L4–L7** | 解析、路由、粘滞、TLS、观测 | HAProxy、Nginx、Envoy；ADC 内置代理 |
+| 层 | 回答 | 代表（非穷尽） |
+| -- | ---- | -------------- |
+| **入口层** | 对外地址归谁；单活还是多下一跳 | ADC；VRRP 族；MetalLB / kube-vip / PureLB；BGP ECMP；云 LB |
+| **代理层** | 解析、路由、粘滞、TLS、观测 | HAProxy、Nginx、Envoy；ADC 内置代理 |
 
-**peers / stick 同步 ≠ VIP。** 前者是 L4–L7 会话状态同步；后者是 L2–L3 决定包先落到哪台机。
+**peers / stick 同步 ≠ VIP。** 前者同步会话状态；后者决定包先落到哪台机。
 
 ### 9.2 五种机制（先机制，后产品）
 
-| # | 机制 | 主工作层 | 地址如何呈现 | 流量形态（典型） | 代表实现 |
-| - | ---- | -------- | ------------ | ---------------- | -------- |
-| 1 | **ADC 一体** | **L2–L7** | 设备 HA 持浮动 VIP；池与健康检查同箱 | 多为 Active/Standby；策略面强 | F5 BIG-IP、Kemp LoadMaster、Citrix ADC（NetScaler）等[^f5-nginx-mig][^kemp-ha][^citrix-ha] |
-| 2 | **浮动 VIP（VRRP/CARP 族）** | **L2–L3**（+ 可选 L4 IPVS） | 选举 Master，VIP 绑定其网卡 | **单活**入口；可叠加 IPVS | Keepalived；HAProxy Enterprise VRRP；NGINX Plus `nginx-ha-keepalived`[^keepalived][^haproxy-as][^f5-nginx-mig] |
-| 3 | **K8s LoadBalancer 实现** | **L2** 或 **L3** | 分配外部 IP，并以 ARP/NDP 或 BGP 通告 | L2 偏单节点进流；BGP 可多下一跳 | MetalLB、kube-vip、PureLB；云上为 CCM + 云 LB[^metallb][^kube-vip][^purelb] |
-| 4 | **路由面 ECMP / anycast** | **L3** | 多机通告同一前缀；路由器哈希选路 | **多机同时进流量**；失败则撤路由 | MetalLB/kube-vip BGP；主机 BGP + FRR；数据中心 anycast[^metallb-bgp][^rfc7938][^cf-maglev] |
-| 5 | **云托管 LB** | **L4**（NLB）/ **L7**（ALB） | 控制面持前端 IP；多区后端探测 | 多 AZ 分发；客户侧通常不自管 VRRP | AWS NLB/ALB、GCP/Azure LB 等 |
+层位对照见 **§1.3**；下表只列机制与产品。
 
-读表要点：**1–2** 在 L2–L3 保证单一地址高可用；**3** 用 L2 或 L3 将地址合同接入 K8s API；**4** 纯 L3 多下一跳；**5** 由云在 L4 或 L7 托管入口。
+| # | 机制 | 地址如何呈现 | 流量形态（典型） | 代表实现 |
+| - | ---- | ------------ | ---------------- | -------- |
+| 1 | **ADC 一体** | 设备 HA 持浮动 VIP；池与健康检查同箱 | 多为 Active/Standby；策略面强 | F5 BIG-IP、Kemp LoadMaster、Citrix ADC（NetScaler）等[^f5-nginx-mig][^kemp-ha][^citrix-ha] |
+| 2 | **浮动 VIP（VRRP/CARP 族）** | 选举 Master，VIP 绑定其网卡 | **单活**入口；可叠加 IPVS | Keepalived；HAProxy Enterprise VRRP；NGINX Plus `nginx-ha-keepalived`[^keepalived][^haproxy-as][^f5-nginx-mig] |
+| 3 | **K8s LoadBalancer 实现** | 分配外部 IP，并以 ARP/NDP 或 BGP 通告 | L2 偏单节点进流；BGP 可多下一跳 | MetalLB、kube-vip、PureLB；云上为 CCM + 云 LB[^metallb][^kube-vip][^purelb] |
+| 4 | **路由面 ECMP / anycast** | 多机通告同一前缀；路由器哈希选路 | **多机同时进流量**；失败则撤路由 | MetalLB/kube-vip BGP；主机 BGP + FRR；数据中心 anycast[^metallb-bgp][^rfc7938][^cf-maglev] |
+| 5 | **云托管 LB** | 控制面持前端 IP；多区后端探测 | 多 AZ 分发；客户侧通常不自管 VRRP | AWS NLB/ALB、GCP/Azure LB 等 |
+
+读表要点：**1–2** 保证单一地址高可用；**3** 将地址合同接入 K8s API；**4–5** 实现多点同时接流（或交云托管）。
 
 ### 9.3 ADC 一体：F5 · Kemp · Citrix 等
 
-共同合同：把 **VIP（L2/L3 HA）+ 服务池 + 健康检查 + L4–L7 转发** 收成一台逻辑 ADC；可直接终结业务，也可只做 L4、后面再挂软件代理。
+共同合同：把 **VIP + 服务池 + 健康检查 +（常见）设备级 HA** 收成一台逻辑 ADC；可直接终结业务，也可只做 L4、后面再挂软件代理。
 
 | | F5 BIG-IP | Kemp LoadMaster | Citrix ADC / NetScaler |
 | - | --------- | --------------- | ---------------------- |
-| **层位** | L2–L7 同箱（策略深度随许可） | 同左 | 同左 |
 | **VIP** | Virtual Server | Virtual Service；HA 用 Shared IP[^kemp-ha] | VIP 在 HA 中为 floating；NSIP/SNIP 等可节点私有（含 INC）[^citrix-ha] |
 | **HA** | Active/Standby 设备对，VIP 随 Active | Active/Standby；Shared IP 仅 Active 关联 | Primary/Secondary；同二层靠 GARP 等；**云上常需云 LB 前端**（无传统 L2 浮动）[^citrix-azure] |
 | **适用** | 企业运维面、多租户、合规一体 | 中小规模 ADC，部署较轻 | ADC 路径；桌面与应用网关生态常见 |
 
-迁出 ADC 时常见拆分：**L2/L3 入口 HA → VRRP 族或云 LB**；**L4–L7 → HAProxy / Nginx / Envoy**。[^f5-nginx-mig]
+迁出 ADC 时常见拆分：**入口 HA → VRRP 族或云 LB**；**L7 → HAProxy / Nginx / Envoy**。[^f5-nginx-mig]
 
 ### 9.4 浮动 VIP：VRRP / Keepalived 族
 
-| 组件 | 工作层 | 角色 |
-| ---- | ------ | ---- |
-| **Keepalived** | **L2–L3**（VRRP）；可选 **L4**（LVS/IPVS） | VIP 选举与绑定；可选内核四元组转发；可 `track_script` 联动代理[^keepalived] |
-| **HAProxy Enterprise VRRP** | **L2–L3** | Active/Standby；实现源自 Keepalived[^haproxy-as] |
-| **NGINX Plus HA** | **L2–L3** | `nginx-ha-keepalived`：浮动 VIP 由 VRRP 管理[^f5-nginx-mig] |
+| 组件 | 角色 |
+| ---- | ---- |
+| **Keepalived** | VRRP + 可选 **LVS/IPVS** + 健康检查 / BFD；可与代理进程 `track_script` 联动[^keepalived] |
+| **HAProxy Enterprise VRRP** | Active/Standby；实现源自 Keepalived[^haproxy-as] |
+| **NGINX Plus HA** | `nginx-ha-keepalived`：浮动 VIP 由 VRRP 管理[^f5-nginx-mig] |
 
-要点：VRRP/CARP 保证 **L3 地址在 L2/L3 上的单活归属**。多机同时进流量需机制 4 或 5，不能由增大 `nbthread` 替代。
+要点：VRRP/CARP 保证 **IP 归属单活**。多机同时进流量需机制 4 或 5，不能由增大 `nbthread` 替代。
 
 ### 9.5 K8s 兑现 LoadBalancer：MetalLB · kube-vip · PureLB
 
-裸金属（及部分非云 IaaS）上，上游不提供 `LoadBalancer` 控制器时，需集群内实现：**分配 L3 地址 + 用 L2 或 L3 让集群外可达。**[^metallb]
+裸金属（及部分非云 IaaS）上，上游不提供 `LoadBalancer` 控制器时，需集群内实现：**分配 IP + 让集群外网络可达。**[^metallb]
 
 | | MetalLB | kube-vip | PureLB |
 | - | ------- | -------- | ------ |
 | **定位** | 裸金属 LB；发行版与 OpenShift 广泛采用[^metallb] | 控制面 VIP 与 Service LB；ARP / BGP / 路由表等[^kube-vip] | 以 Linux 网络栈挂地址，可选 BGP；支持 `LoadBalancerClass` 并存[^purelb] |
 | **L2 / ARP** | 单节点通告；实质偏 **failover**[^metallb-l2] | Leader 发 GARP；可按 Service 分散选举[^kube-vip] | Local 地址挂接口；GARP 可配 |
-| **L3 / BGP** | 多节点通告 → 路由器 ECMP[^metallb-bgp] | 多节点通告，由路由器分摊[^kube-vip-bgp] | 集成 goBGP 等通告 remote 地址[^purelb] |
-| **补充** | FRR-K8s 等后端 | 控制面可用 **L4 IPVS** 均衡 API[^kube-vip] | NetBox IPAM、双栈等 |
+| **BGP** | 多节点通告 → 路由器 ECMP[^metallb-bgp] | 多节点通告，由路由器分摊[^kube-vip-bgp] | 集成 goBGP 等通告 remote 地址[^purelb] |
+| **补充** | FRR-K8s 等后端 | 控制面可用 IPVS 均衡 API[^kube-vip] | NetBox IPAM、双栈等 |
 
-均工作在 **L2/L3（或可选 L4）**，**不能**替代 HAProxy/Envoy 的 L7 语义；其后仍接 Ingress / Gateway / 独立代理。与 Calico 等 BGP 并存时须规划 AS 与通告边界（见 [24](./24-calico-l3-dataplane-treatise.md)）。
+均**不能**替代 HAProxy/Envoy 的 L7 语义；其后仍接 Ingress / Gateway / 独立代理。与 Calico 等 BGP 并存时须规划 AS 与通告边界（见 [24](./24-calico-l3-dataplane-treatise.md)）。
 
 ### 9.6 路由面：BGP ECMP / anycast
 
-多机在 **L3** 通告**同一服务前缀**且路由器启用 **ECMP** 时，入口由「单机持 VIP」变为网络层分摊。RFC 7938 将 anycast + ECMP 列为数据中心水平扩展负载均衡的路径之一；[^rfc7938] 产业实践常见 BGP 通告服务 IP，再以一致哈希在 LB 间调度。[^cf-maglev]
+多机通告**同一服务前缀**且路由器启用 **ECMP** 时，入口由「单机持 VIP」变为网络层分摊。RFC 7938 将 anycast + ECMP 列为数据中心水平扩展负载均衡的路径之一；[^rfc7938] 产业实践常见 BGP 通告服务 IP，再以一致哈希在 LB 间调度。[^cf-maglev]
 
 | 要点 | 说明 |
 | ---- | ---- |
-| **工作层** | 纯 **L3**；不解析 TCP/HTTP |
-| **与 MetalLB / kube-vip BGP** | 同一 L3 机制在 Kubernetes 边界上的产品化 |
-| **与 VRRP** | VRRP：L2/L3 单活归属；ECMP：L3 多下一跳并存 |
-| **有状态注意** | 纯 L3 ECMP 对长连接不友好时，需上层 L4/L7 一致哈希，或健康失败即 withdraw[^nvidia-anycast] |
+| **与 MetalLB / kube-vip BGP** | 同一机制在 Kubernetes 边界上的产品化 |
+| **与 VRRP** | VRRP：单活归属；ECMP：多下一跳并存 |
+| **有状态注意** | 纯网络 ECMP 对长连接不友好时，需一致哈希 LB 层，或健康失败即 withdraw[^nvidia-anycast] |
 
 ### 9.7 云托管入口
 
-| 形态 | 工作层 | 合同 |
-| ---- | ------ | ---- |
-| **云 NLB 类** | **L4** | 前端 IP 由云控制面持有；按四元组分发 |
-| **云 ALB / 应用型 LB** | **L7** | 按 HTTP 等语义分发；同一「统一入口」问题，接口为云 API |
-| **云上 ADC** | L4–L7 + 云前端 | 通常无客户侧 L2 GARP；需 **云 LB + 健康探测** 判定 Active[^citrix-azure] |
-| **托管 K8s** | 视云 LB 产品 | `type=LoadBalancer` 由云 CCM 接线，一般无需 MetalLB |
+| 形态 | 合同 |
+| ---- | ---- |
+| **云 NLB/ALB 等** | 前端 IP 由云控制面持有；多 AZ 探测与转发（同一 VIP 问题，接口为云 API） |
+| **云上 ADC** | 通常无客户侧 L2 GARP；需 **云 LB + 健康探测** 判定 Active[^citrix-azure] |
+| **托管 K8s** | `type=LoadBalancer` 由云 CCM 接线，一般无需 MetalLB |
 
 ### 9.8 典型叠法与选型
 
-| 场景 | 常见叠法（层位） | 机制 |
-| ---- | ---------------- | ---- |
-| 机房双机软件代理 | L2/L3 VRRP → L4–L7 HAProxy/Nginx | 2 → 代理层 |
-| 厂商一体交付 | ADC 同箱 L2–L7（或 ADC 仅 L4 + 软件 L7） | 1 |
-| 裸金属 K8s 外部 IP | L2/L3 LoadBalancer 实现 → L7 Ingress/Gateway | 3（BGP 则叠加 4） |
-| 多机同时接入口流量 | L3 BGP ECMP / anycast（或云 L4 NLB） | 4 或 5 |
-| 公有云 | 云 L4/L7 LB → 节点代理 / Ingress；云上 ADC 常前置云 LB | 5（可叠加 1） |
-| 控制面 HA（kube-apiserver） | L2/L3（kube-vip 等）持 API VIP | 3 |
-| 网格东西向 | 通常无需南北向 VIP；ClusterIP / sidecar（L4–L7） | — |
+| 场景 | 常见叠法 | 机制 |
+| ---- | -------- | ---- |
+| 机房双机软件代理 | Keepalived / 发行版 VRRP → HAProxy/Nginx | 2 → 代理层 |
+| 厂商一体交付 | F5 / Kemp / Citrix（或 ADC 仅 L4 + 软件代理） | 1 |
+| 裸金属 K8s 外部 IP | MetalLB / kube-vip / PureLB → Ingress/Gateway | 3（BGP 则叠加 4） |
+| 多机同时接入口流量 | BGP ECMP / anycast（或云 NLB） | 4 或 5 |
+| 公有云 | 云 LB → 节点代理 / Ingress；云上 ADC 常前置云 LB | 5（可叠加 1） |
+| 控制面 HA（kube-apiserver） | kube-vip 等持 API VIP | 3 |
+| 网格东西向 | 通常无需南北向 VIP；ClusterIP / sidecar | — |
 
 反模式：
 
-1. **多实例 L4–L7 代理 ≠ 统一入口**——缺少 L2–L3（或云 LB）机制 1–5 之一。  
+1. **多实例代理 ≠ 统一入口**——缺少机制 1–5 之一。  
 2. **L2/ARP 通告 ≠ 多节点负载均衡**——多为单点进流。[^metallb-l2]  
-3. **peers ≠ VIP**；**Ingress（L7）≠ LoadBalancer 实现（L2/L3）**。  
-4. **跨二层域使用 VRRP 组播**——应改单播 peer，或改用 L3 机制 4/5。  
-5. **云上假定 GARP（L2）浮动 VIP**——应按云 LB 健康探测模型设计。[^citrix-azure]
+3. **peers ≠ VIP**；**Ingress ≠ LoadBalancer 实现**。  
+4. **跨二层域使用 VRRP 组播**——应改单播 peer，或改用机制 4/5。  
+5. **云上假定 GARP 浮动 VIP**——应按云 LB 健康探测模型设计。[^citrix-azure]
 
 ---
 
 ## 10. 选型启发式
 
-| 场景 | 层位 | 更常优先 | 原因 |
-| ---- | ---- | -------- | ---- |
-| 高并发 TCP/HTTP 纯 LB，粘滞与健康检查重 | L4–L7 | **HAProxy** | LB 语义与 stick/peers 一体 |
-| 静态、缓存、TLS 边缘、内容反代 | L7 | **Nginx** | Web 服务器血统与模块生态 |
-| K8s / Mesh，需 xDS 与多协议 Filter | L4–L7 | **Envoy** | 动态控制面与可观测为一等公民 |
-| 浮动 VIP 且代理已定 | L2–L3 → L4–L7 | **VRRP 族** + 上表代理 | 机制 2（§9） |
-| 裸金属 K8s 外部 IP | L2 或 L3 | **MetalLB / kube-vip / PureLB** | 机制 3；多下一跳用 BGP |
-| 一体 ADC / 强合规运维面 | L2–L7 | **F5 / Kemp / Citrix** 等 | 机制 1 |
-| 多机同时接入口 | L3 或云 L4 | **BGP ECMP** 或 **云 NLB** | 机制 4 或 5 |
-| 边缘反代 + 轻量脚本 | L7 | Nginx 或 HAProxy | 视团队存量与监控习惯 |
-| 极多核且强依赖跨连接共享状态 | L4–L7 | HAProxy（+ thread-groups）或外置状态 | Envoy silo / Nginx 多进程需另设计共享 |
+| 场景 | 更常优先 | 原因 |
+| ---- | -------- | ---- |
+| 高并发 TCP/HTTP 纯 LB，粘滞与健康检查重 | **HAProxy** | LB 语义与 stick/peers 一体 |
+| 静态、缓存、TLS 边缘、内容反代 | **Nginx** | Web 服务器血统与模块生态 |
+| K8s / Mesh，需 xDS 与多协议 Filter | **Envoy** | 动态控制面与可观测为一等公民 |
+| 浮动 VIP 且代理已定 | **VRRP 族** + 上表代理 | 机制 2（§9） |
+| 裸金属 K8s 外部 IP | **MetalLB / kube-vip / PureLB** | 机制 3；多下一跳用 BGP |
+| 一体 ADC / 强合规运维面 | **F5 / Kemp / Citrix** 等 | 机制 1 |
+| 多机同时接入口 | **BGP ECMP** 或 **云 NLB** | 机制 4 或 5 |
+| 边缘反代 + 轻量脚本 | Nginx 或 HAProxy | 视团队存量与监控习惯 |
+| 极多核且强依赖跨连接共享状态 | HAProxy（+ thread-groups）或外置状态 | Envoy silo / Nginx 多进程需另设计共享 |
 
 反模式：
 
-1. **以 QPS 数字替代角色与层位定义**——先明确南北向/东西向、L4 还是 L7、VIP 在哪一层。  
+1. **以 QPS 数字替代角色定义**——先明确南北向/东西向、是否热配、VIP 机制。  
 2. **将 Envoy 多 worker 下 RR 不均视为故障**——先理解 siloed 模型。[^envoy-rr]  
 3. **在 Nginx worker 内执行长 CPU**——协作式事件环会被拖死。[^cf-event]  
 4. **仍按 `nbproc` 思路调 HAProxy**——当代接口合同是线程与 CPU 亲和。  
-5. **混淆 L2/L3 入口与 L4/L7 代理**——见 §1.3、§9.1。
+5. **混淆入口层与代理层**——见 §1.3、§9.1。
 
 ---
 
@@ -630,26 +629,25 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-  L["层位：入口 L2–L3 · 代理 L4–L7"] --> V["入口机制：ADC · VRRP · K8s LB · ECMP · 云 LB"]
-  V --> R["代理角色：LB / Web 边缘 / Mesh 数据面"]
+  V["入口层机制：ADC · VRRP · K8s LB · ECMP · 云 LB"] --> R["代理角色：LB / Web 边缘 / Mesh 数据面"]
   R --> M["模型：进程隔离 · 线程共享 · 线程孤立"]
   M --> C["控制面：文件重载 · Runtime API · xDS"]
 ```
 
-入口层与代理层正交，且工作在不同网络层：先按 §1.3 定层位，再按 §9.2 选机制与产品。比较「谁取代谁」之前，须分清讨论的是 **L2/L3 地址归属**还是 **L4/L7 请求处理**。
+代理层与入口层正交（层位见 §1.3）：先按 §9.2 选定机制，再落产品。比较「谁取代谁」之前，须分清讨论的是**地址归属**还是**请求处理**。
 
 ---
 
 ## 12. 本章要点
 
-1. **层位：** 代理三杰主战场为 **L4–L7**；VIP / 统一入口主战场为 **L2–L3**（云 LB 可为 L4/L7）；二者正交。  
+1. **层位（§1.3）：** 代理在 L4–L7，入口多在 L2–L3；二者正交，不可互相替代。  
 2. 官方四词：daemon、non-blocking、event-driven、multi-threaded——**不是**一连接一线程。  
 3. 事件在跑环的同一线程内处理；非阻塞与事件驱动配合使用。  
 4. 代理三分叉：Nginx 进程隔离；HAProxy 线程细锁共享；Envoy siloed + xDS。  
-5. 多节点入口：先定五种机制及其工作层（ADC L2–L7 / VRRP L2–L3 / K8s LB 的 L2 或 L3 / ECMP L3 / 云 L4·L7），产品为实例。  
-6. L2/ARP 偏单点进流；多下一跳靠 L3 BGP ECMP 或云 LB；云上 ADC 常需云 LB 前端。  
-7. peers ≠ VIP；LoadBalancer 实现（L2/L3）≠ L7 网关；多实例代理 ≠ 统一入口。  
-8. 选型顺序：角色 → **工作层** → VIP 机制 → 共享域 → 延迟。
+5. 多节点入口：先定五种机制（ADC / VRRP / K8s LB 实现 / BGP ECMP / 云 LB），产品为实例。  
+6. L2/ARP 偏单点进流；多下一跳靠 BGP ECMP 或云 LB；云上 ADC 常需云 LB 前端。  
+7. peers ≠ VIP；LoadBalancer 实现 ≠ L7 网关；多实例代理 ≠ 统一入口。  
+8. 选型顺序：角色 → VIP 机制 → 共享域 → 延迟。
 
 ---
 
