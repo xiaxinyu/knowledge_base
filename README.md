@@ -176,7 +176,7 @@ knowledge_base/
 | 27 | [MQTT over QUIC Treatise](./20-architecture/27-mqtt-over-quic-treatise.md) | MQTT 语义不变，传输换 QUIC；压失联窗口与重连风暴；单 Stream 主流；RFC/草案/产品能力须分开读 | MQTT、QUIC、连接迁移、队头阻塞、0-RTT、弱网、车联网 |
 | 28 | [Microservice Communication Treatise](./20-architecture/28-http-rpc-microservice-communication-treatise.md) | 比的是组合不是四字对立；慢常在 JSON/头/连接模型；gRPC 也是 HTTP/2；通信占比低则不必换栈 | HTTP、RPC、gRPC、REST、JSON、Protobuf、Dubbo、OpenFeign |
 | 29 | [Kafka Event Streaming Treatise](./20-architecture/29-kafka-event-streaming-treatise.md) | 分布式事件日志：解耦、削峰、多订阅管道；分区内有序；不是数据库/同步 RPC | Kafka、Topic、Partition、Offset、Consumer Group、削峰、至少一次 |
-| 29a | [Storage Contracts: WAL · MVCC · Consensus Log](./20-architecture/29a-data-store-wal-mvcc-treatise.md) | 七维选型×三条合同；RDBMS/Redis/etcd/ES 目的·网络·优劣与 WAL/MVCC 因果 | WAL、MVCC、etcd、Elasticsearch、translog、Raft |
+| 29a | [Storage Contracts: WAL · MVCC · Consensus Log](./20-architecture/29a-data-store-wal-mvcc-treatise.md) | 耐久·可见·集群保证；RDBMS/Redis/etcd/ES 与 WAL/MVCC/Raft 分叉 | WAL、MVCC、etcd、Elasticsearch、translog、Raft |
 
 #### 30 · 明道 · 治
 

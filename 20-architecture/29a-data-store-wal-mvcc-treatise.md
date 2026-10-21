@@ -1,22 +1,19 @@
 # 存储合同：WAL · MVCC · 共识日志
 
-> 比较 RDBMS、Redis、etcd、Elasticsearch，应检验三条合同，而非停留于功能清单：  
-> **① 耐久**——已确认写入在崩溃后能否恢复（WAL / STEAL · NO-FORCE）；  
-> **② 并发与可见**——读写如何隔离，旧版本如何存放与回收（MVCC / segment）；  
-> **③ 集群**——「写成功」绑定在哪一层的复制或多数派上（共识日志或分片复制）。  
-> 产品差异是上述合同的取舍结果。
+> RDBMS、Redis、etcd、Elasticsearch 的差异，不在功能清单，而在三条保证如何取舍：  
+> **① 耐久**——已确认写入崩溃后能否恢复（WAL / STEAL · NO-FORCE）；  
+> **② 可见**——读写如何隔离、旧版本如何回收（MVCC / segment）；  
+> **③ 集群**——「写成功」绑在复制层还是多数派（共识日志或分片复制）。
 >
 > 对照：[22](./22-distributed-consistency-treatise.md)（CAP / 共识）、[23](./23-kubernetes-control-plane-doctrine.md)（控制面与 etcd）、[29](./29-kafka-event-streaming-treatise.md)（日志即产品）。
 
-直接答案：
+> **WAL** 是 STEAL / NO-FORCE 下的恢复纪律；[^haerder83][^aries] **MVCC / segment** 解决可见性；[^pg-mvcc] **Raft** 将提交提升为多数派日志。[^raft] **RDBMS** 业务真相，**Redis** 低延迟，**etcd** 控制面强顺序，**Elasticsearch** 检索。关键分叉：etcd 对每次写入做 Raft；Elasticsearch 以 translog 管分片耐久、以 refresh 管可搜索，多数派只约束 cluster state。[^es-translog][^es-nrt][^es-cluster]
 
-> **选型看七维（目的 · 作用 · 功能 · 原则 · 架构 · 网络 · 优劣）；机制看三条合同。** WAL 是 STEAL / NO-FORCE 下的恢复纪律；[^haerder83][^aries] MVCC / segment 解决可见性；[^pg-mvcc] Raft 将提交提升为多数派日志。[^raft] **RDBMS** 承载业务真相，**Redis** 承载低延迟，**etcd** 承载控制面强顺序，**Elasticsearch** 承载检索。后两者的关键分叉：etcd 对每次写入做 Raft；Elasticsearch 以 translog 管分片耐久、以 refresh 管可搜索，多数派共识仅约束 cluster state。[^es-translog][^es-nrt][^es-cluster]
-
-**20-architecture 位置：** [22](./22-distributed-consistency-treatise.md) 论跨节点一致性取舍；本文论存储引擎如何落实耐久与可见性，以及共识落在数据路径还是元数据路径。
+[22](./22-distributed-consistency-treatise.md) 论跨节点一致性；本文论引擎如何落实耐久与可见性，以及共识落在数据路径还是元数据路径。
 
 ## 摘要
 
-Haerder & Reuter（1983）以 STEAL / FORCE 刻画缓冲策略；主流 OLTP 取 **STEAL + NO-FORCE**，故须 WAL，并具备 REDO / UNDO 安排。[^haerder83] ARIES 给出可实现的恢复框架。[^aries] PostgreSQL 采用 redo-only WAL，UNDO 交由堆版本。[^pg-wal] Redis 将耐久做成可配置策略。[^redis-persist] etcd 以 Raft WAL 定义 commit，以 revision 定义总序。[^etcd-dm] Elasticsearch 以 **translog** 充当分片 WAL，以 **flush** 完成 Lucene commit，以 **refresh** 提供近实时搜索；cluster state 经 master-eligible 多数派提交，文档写入不经该共识。[^es-translog][^es-cluster] 全文按「总览 → 原则 → 合同 → 血统与写路径 → 选型」展开。
+Haerder & Reuter（1983）以 STEAL / FORCE 刻画缓冲策略；主流 OLTP 取 **STEAL + NO-FORCE**，故须 WAL 与 REDO / UNDO。[^haerder83] ARIES 给出可实现恢复框架。[^aries] PostgreSQL 用 redo-only WAL，UNDO 交堆版本。[^pg-wal] Redis 将耐久做成可配置策略。[^redis-persist] etcd 以 Raft WAL 定义 commit，以 revision 定义总序。[^etcd-dm] Elasticsearch 以 **translog** 充当分片 WAL，以 **flush** 完成 Lucene commit，以 **refresh** 提供近实时搜索；cluster state 经 master-eligible 多数派提交，文档写不经该共识。[^es-translog][^es-cluster]
 
 **关键词：** WAL；STEAL；NO-FORCE；ARIES；MVCC；Raft；etcd；Redis；PostgreSQL；Elasticsearch；translog；refresh；flush
 
@@ -25,56 +22,27 @@ Haerder & Reuter（1983）以 STEAL / FORCE 刻画缓冲策略；主流 OLTP 取
 ## 目录
 
 - [摘要](#摘要)
-1. [读法：合同与七维](#1-读法合同与七维)
-2. [总览：目的 · 功能 · 架构 · 网络 · 优劣](#2-总览目的--功能--架构--网络--优劣)
-    - [2.1 目的与作用](#21-目的与作用)
-    - [2.2 功能合同](#22-功能合同)
-    - [2.3 架构分层](#23-架构分层)
-    - [2.4 网络模型](#24-网络模型)
-    - [2.5 优劣](#25-优劣)
-3. [设计原则](#3-设计原则)
-4. [耐久合同：STEAL · NO-FORCE · WAL](#4-耐久合同steal--no-force--wal)
-5. [并发合同：三条物理路径](#5-并发合同三条物理路径)
-6. [四条工程血统](#6-四条工程血统)
-7. [集群合同与网络路径](#7-集群合同与网络路径)
-8. [写路径对照：etcd 与 Elasticsearch](#8-写路径对照etcd-与-elasticsearch)
-9. [选型](#9-选型)
-10. [本章要点](#10-本章要点)
-11. [参考文献](#11-参考文献)
+1. [总览](#1-总览)
+    - [1.1 目的与作用](#11-目的与作用)
+    - [1.2 功能边界](#12-功能边界)
+    - [1.3 架构分层](#13-架构分层)
+    - [1.4 网络模型](#14-网络模型)
+    - [1.5 优劣](#15-优劣)
+2. [设计原则](#2-设计原则)
+3. [耐久：STEAL · NO-FORCE · WAL](#3-耐久steal--no-force--wal)
+4. [并发：三条物理路径](#4-并发三条物理路径)
+5. [四条工程血统](#5-四条工程血统)
+6. [集群与网络路径](#6-集群与网络路径)
+7. [写路径：etcd 与 Elasticsearch](#7-写路径etcd-与-elasticsearch)
+8. [选型](#8-选型)
+9. [本章要点](#9-本章要点)
+10. [参考文献](#10-参考文献)
 
 ---
 
-## 1. 读法：合同与七维
+## 1. 总览
 
-| 工具 | 用途 |
-| ---- | ---- |
-| **三条合同** | 解释实现成因与失败模式 |
-| **七维对照** | 支撑选型与边界判断 |
-
-| # | 合同 | 核心问题 | 失败形态 |
-| - | ---- | -------- | -------- |
-| ① | **耐久** | 已确认写入在崩溃后能否重现？ | 丢提交 |
-| ② | **并发 / 可见** | 读写如何隔离？旧版本如何回收？ | 锁竞争、版本膨胀、近实时误解 |
-| ③ | **集群** | 「写成功」绑定在哪一层的复制或多数派？ | 状态分叉、假强一致 |
-
-| 维 | 问题 | 落点 |
-| -- | ---- | ---- |
-| **目的 / 作用** | 为何存在、承担哪段职责 | §2.1、§6 |
-| **功能** | 对外能力与默认不保证项 | §2.2 |
-| **设计原则** | 取舍时守住什么 | §3 |
-| **架构 / 底层** | API · 引擎 · 日志 · 复制如何叠放 | §2.3、§4–§6 |
-| **网络模型** | 客户端协议、写路径、元数据路径 | §2.4、§7 |
-| **优劣** | 收益、代价、误用 | §2.5、§6、§9 |
-
-1. 论证合同与因果，非调参手册或性能排行。  
-2. InnoDB / Oracle 归入 ARIES 系；Elasticsearch 单列（可见性与耐久分离，共识仅约束元数据）。  
-3. CAP / 协议形式化见 [22](./22-distributed-consistency-treatise.md)。
-
----
-
-## 2. 总览：目的 · 功能 · 架构 · 网络 · 优劣
-
-### 2.1 目的与作用
+### 1.1 目的与作用
 
 | 系统 | 目的 | 作用 |
 | ---- | ---- | ---- |
@@ -83,7 +51,7 @@ Haerder & Reuter（1983）以 STEAL / FORCE 刻画缓冲策略；主流 OLTP 取
 | **etcd** | 小键空间上的可靠协调与 watch | 控制面元数据；服务发现、锁、Kubernetes 状态源 |
 | **Elasticsearch** | 倒排检索与聚合分析 | 搜索与可观测数据面；通常位于业务库或日志管道之后 |
 
-### 2.2 功能合同
+### 1.2 功能边界
 
 | 系统 | 核心能力 | 默认不保证 |
 | ---- | -------- | ---------- |
@@ -92,7 +60,7 @@ Haerder & Reuter（1983）以 STEAL / FORCE 刻画缓冲策略；主流 OLTP 取
 | **etcd** | KV / Txn / Watch / Lease；严格可串行化；线性一致读可配[^etcd-api] | 高吞吐分析、复杂关系查询 |
 | **Elasticsearch** | 倒排索引、聚合、近实时搜索、分片扩展[^es-nrt] | 多行 SQL 事务；逐文档线性一致；refresh 之前的搜索可见性 |
 
-### 2.3 架构分层
+### 1.3 架构分层
 
 ```mermaid
 flowchart TB
@@ -118,7 +86,7 @@ flowchart TB
 | **etcd** | MVCC（revision） | **Raft WAL** | bbolt |
 | **Elasticsearch** | Lucene segments | **translog** | Lucene commit（flush） |
 
-### 2.4 网络模型
+### 1.4 网络模型
 
 | 系统 | 客户端协议 | 数据写路径 | 元数据 / 协调 |
 | ---- | ---------- | ---------- | ------------- |
@@ -127,18 +95,18 @@ flowchart TB
 | **etcd** | gRPC | **Leader → Raft 多数派** | 成员即 Raft 节点 |
 | **Elasticsearch** | HTTP / REST | 定位 primary 写入；**不经 master 处理每条文档**[^es-cluster] | master-eligible 多数派提交 cluster state |
 
-### 2.5 优劣
+### 1.5 优劣
 
 | 系统 | 优势 | 代价 |
 | ---- | ---- | ---- |
 | **RDBMS** | 事务与约束完整；工具链成熟 | 水平扩展与跨分片事务成本高；强同步复制有延迟 |
-| **Redis** | 延迟低；数据结构丰富 | 默认可弱于账本合同；内存成本；Cluster 语义边界多 |
+| **Redis** | 延迟低；数据结构丰富 | 默认可弱于账本保证；内存成本；Cluster 语义边界多 |
 | **etcd** | 强顺序与 watch；控制面语义清晰 | 容量与写放大受限；多数派不可达则停写 |
 | **Elasticsearch** | 检索与聚合强；分片易扩展 | 近实时与事务语义弱；分片/映射/merge 运维重 |
 
 ---
 
-## 3. 设计原则
+## 2. 设计原则
 
 | # | 原则 | 含义 | 违反时 |
 | - | ---- | ---- | ------ |
@@ -147,13 +115,13 @@ flowchart TB
 | 3 | **隔离尽量不依赖长读锁** | MVCC、单线程命令串行、或不可变 segment | 读写互相阻塞，吞吐下降 |
 | 4 | **旧版本必须可回收** | purge / VACUUM / compact / merge | 空间与性能持续恶化 |
 | 5 | **共识仅用于不可分叉的一层** | etcd：逐写；ES：cluster state；缓存：通常不启用 | 用检索集群替代协调存储 |
-| 6 | **先定 API 合同，再选引擎** | 先明确一致性与查询形态 | 先定品牌，再补语义缺口 |
+| 6 | **先定保证，再选引擎** | 先明确一致性与查询形态 | 先定品牌，再补语义缺口 |
 
 ---
 
-## 4. 耐久合同：STEAL · NO-FORCE · WAL
+## 3. 耐久：STEAL · NO-FORCE · WAL
 
-### 4.1 缓冲策略决定日志形态
+### 3.1 缓冲策略决定日志形态
 
 Haerder & Reuter 将缓冲管理归结为两个开关：[^haerder83]
 
@@ -170,7 +138,7 @@ Haerder & Reuter 将缓冲管理归结为两个开关：[^haerder83]
 
 顺序写日志、批量刷数据页，是该策略下的性能交换，而非「多写一份备份」。
 
-### 4.2 ARIES：可实现的恢复框架
+### 3.2 ARIES：可实现的恢复框架
 
 ARIES 在 STEAL / NO-FORCE 与细粒度锁下给出恢复算法：[^aries]
 
@@ -183,10 +151,10 @@ ARIES 在 STEAL / NO-FORCE 与细粒度锁下给出恢复算法：[^aries]
 | 推论 | 含义 |
 | ---- | ---- |
 | **日志是权威** | 数据页可落后；恢复以日志为准 |
-| **fsync 首先针对日志** | `innodb_flush_log_at_trx_commit`、PostgreSQL `synchronous_commit` 调节的即此合同 |
+| **fsync 首先针对日志** | `innodb_flush_log_at_trx_commit`、PostgreSQL `synchronous_commit` 调节的即此保证 |
 | **复制消费日志流** | 物理复制、binlog、逻辑解码，均为权威流的外溢 |
 
-### 4.3 PostgreSQL：redo-only WAL
+### 3.3 PostgreSQL：redo-only WAL
 
 PostgreSQL：数据文件变更仅发生在描述该变更的 WAL 已刷入持久存储之后；崩溃后 **roll-forward（REDO）**。[^pg-wal]
 
@@ -203,14 +171,14 @@ PostgreSQL：数据文件变更仅发生在描述该变更的 WAL 已刷入持�
 
 ---
 
-## 5. 并发合同：三条物理路径
+## 4. 并发：三条物理路径
 
-### 5.1 多版本的动机
+### 4.1 多版本的动机
 
 PostgreSQL：语句所见为某一时刻的数据快照；**读锁与写锁不互相冲突——读不阻塞写，写不阻塞读**。[^pg-mvcc]  
 隔离从「读时加锁」转为「读时选版本」。
 
-### 5.2 三条物理路径
+### 4.2 三条物理路径
 
 ```mermaid
 flowchart TB
@@ -232,7 +200,7 @@ flowchart TB
 
 路径 C **并非** RDBMS 意义的快照隔离 MVCC：默认搜索读的是最近一次 refresh 之后的近实时视图，与「已确认写入」可相差一个 refresh 周期（默认约 1s）。[^es-nrt] 乐观并发依赖 `_seq_no` / `_primary_term`（或外部版本号），而非全局 revision 总序。
 
-### 5.3 etcd：revision 作为全局逻辑时钟
+### 4.3 etcd：revision 作为全局逻辑时钟
 
 etcd 数据模型：[^etcd-dm]
 
@@ -240,49 +208,49 @@ etcd 数据模型：[^etcd-dm]
 2. 逻辑上结构不可变：不覆盖，只生成新结构；旧 revision 可查询直至 **compaction**。  
 3. 物理上：持久 B+Tree 仅存相对前一 revision 的 **delta**；内存 B-Tree 加速按 key 查询。
 
-据此支撑 API 合同：KV 操作 **严格可串行化（strict serializability）**，总序由 revision 给出；默认可线性一致（经 Raft）；watch 按 revision 有序、不丢窗内事件。[^etcd-api]
+据此支撑 API 保证：KV 操作 **严格可串行化（strict serializability）**，总序由 revision 给出；默认可线性一致（经 Raft）；watch 按 revision 有序、不丢窗内事件。[^etcd-api]
 
 > etcd 的 MVCC 以 **revision 充当集群逻辑时钟**，使 list/watch、Txn/CAS、历史读落在同一序上——这是 Kubernetes 控制面「声明式 + 持续收敛」的存储前提（见 [23](./23-kubernetes-control-plane-doctrine.md)）。
 
 ---
 
-## 6. 四条工程血统
+## 5. 四条工程血统
 
-### 6.1 通用事务库：ARIES 系与 PostgreSQL 系
+### 5.1 通用事务库：ARIES 系与 PostgreSQL 系
 
 | 维度 | InnoDB / Oracle | PostgreSQL |
 | ---- | --------------- | ---------- |
 | 目的 / 作用 | 业务真相存储 | 业务真相存储；扩展 SQL / 逻辑解码 |
-| 合同 ① | redo + undo（STEAL / NO-FORCE） | WAL redo-only + 堆版本 |
-| 合同 ② | 路径 A | 路径 B |
+| 耐久 | redo + undo（STEAL / NO-FORCE） | WAL redo-only + 堆版本 |
+| 可见 | 路径 A | 路径 B |
 | 网络 / 复制 | 会话连主；binlog / WAL 流复制 | 同左；同步级别可配 |
 | 优势 | 约束与工具链完整 | 回滚轻；逻辑复制 / CDC 友好 |
 | 代价 | undo、长事务与同步复制成本 | 膨胀与 VACUUM / xid 运维 |
 
 MySQL：**InnoDB redo（崩溃恢复）与 binlog（复制 / PITR）** 经内部两阶段对齐——调节耐久须同时审视二者。[^bytebase-wal][^mysql-redo]
 
-### 6.2 Redis：耐久作为可配置策略
+### 5.2 Redis：耐久作为可配置策略
 
 Redis 持久化：[^redis-persist]
 
-| 机制 | 合同强度 | 含义 |
+| 机制 | 保证强度 | 含义 |
 | ---- | -------- | ---- |
 | **RDB** | 点时刻快照 | `fork` + COW；快照间隔内写入可丢 |
 | **AOF** | 命令日志重放 | `appendfsync`：always / everysec / no——**以丢失窗口换延迟** |
 | **无持久化** | 纯缓存 | 进程退出即空 |
 
-产品合同刻意不将每次写入绑定到多数派磁盘。以 Redis 作唯一账本，属合同误用，而非调优问题。
+默认设计不将每次写入绑定到多数派磁盘。以 Redis 作唯一账本，属误用，而非调优问题。
 
 | | 说明 |
 | - | ---- |
 | **优势** | 亚毫秒延迟；结构命令表达力强；分片路径清晰 |
 | **代价** | 耐久与一致性默认可弱；内存成本；跨槽事务缺失 |
 
-### 6.3 etcd：小键空间、强合同的协调型 KV
+### 5.3 etcd：小键空间、强保证的协调型 KV
 
 定位：可靠存储**低频更新**数据，并提供可靠 watch；多版本服务历史窗口。[^etcd-dm]
 
-| 层 | 组件 | 合同 |
+| 层 | 组件 | 保证 |
 | -- | ---- | ---- |
 | 共识 | Raft WAL | 多数派持久化 = commit[^etcd-persist][^raft] |
 | 状态机 | MVCC（revision） | 严格可串行化总序[^etcd-api] |
@@ -292,14 +260,14 @@ Redis 持久化：[^redis-persist]
 
 适用边界：小键空间上的强顺序与 watch；不适合大体量分析。
 
-### 6.4 Elasticsearch：translog · refresh · 元数据共识
+### 5.4 Elasticsearch：translog · refresh · 元数据共识
 
 Elasticsearch 建立在 Lucene 之上。Lucene **commit** 代价高，不宜在每次 index/delete 后执行；commit 点之间的变更在进程崩溃时会被 Lucene 丢弃。因此每个分片副本另写 **translog**：操作先进入 Lucene 索引结构，再写入 translog，**于确认客户端之前**完成；崩溃后尚未进入最近 Lucene commit 的已确认操作，自 translog 重放恢复。[^es-translog]
 
-**合同 ①：三层时间语义须分离**
+**耐久：三层时间语义须分离**
 
-| 操作 | 行为 | 合同含义 |
-| ---- | ---- | -------- |
+| 操作 | 行为 | 含义 |
+| ---- | ---- | ---- |
 | **index + translog fsync** | 默认 `index.translog.durability=request`：主分片与已分配副本均 fsync/commit translog 后，才向客户端返回成功[^es-translog] | **已确认 ≈ 已耐久**（相对副本集合） |
 | **`durability=async`** | 按 `sync_interval` 后台 fsync | 与 Redis AOF everysec 同构：以丢失窗口换延迟 |
 | **refresh** | 将内存缓冲写成新 segment 并打开，供搜索可见；默认约 1s 近实时[^es-nrt] | **可搜索 ≠ 已 Lucene commit** |
@@ -317,15 +285,15 @@ flowchart LR
   B --> F["flush = Lucene commit<br/>固化 + 截断 translog"]:::d
 ```
 
-> Lucene segment 不可变且 commit 代价高 → 以 translog 充当 WAL（NO-FORCE）；搜索需高频可见新文档 → 以轻于 commit 的 **refresh** 打开 segment。将 refresh 视为「提交」，或将「搜不到」视为「丢数据」，均为合同错位。
+> Lucene segment 不可变且 commit 代价高 → 以 translog 充当 WAL（NO-FORCE）；搜索需高频可见新文档 → 以轻于 commit 的 **refresh** 打开 segment。将 refresh 视为「提交」，或将「搜不到」视为「丢数据」，均为语义错位。
 
-**合同 ②：非 RDBMS MVCC**
+**可见：非 RDBMS MVCC**
 
 - 更新/删除常体现为新文档 + 旧文档标记删除，由 merge 回收——接近追加不可变结构，但**不提供** etcd / PostgreSQL 式按全局逻辑时钟的任意历史快照读。  
 - 并发控制为文档级乐观并发（`_seq_no` / `_primary_term`），冲突时重试——服务搜索更新率，而非控制面严格可串行化。  
 - 搜索可见性由 refresh 边界决定，而非事务快照。[^es-nrt]
 
-**合同 ③：共识约束元数据，不约束逐条文档**
+**集群：共识约束元数据，不约束逐条文档**
 
 官方架构：[^es-cluster]
 
@@ -337,7 +305,7 @@ flowchart LR
 | - | -------- | ----------------- |
 | 共识覆盖 | 每一次 KV 写 | **cluster state**；文档写走分片复制 |
 | 权威日志 | Raft WAL | 每副本 **translog**（+ Lucene commit） |
-| 读合同 | 默认可线性一致 | 近实时搜索；可搜与已确认可分离 |
+| 读语义 | 默认可线性一致 | 近实时搜索；可搜与已确认可分离 |
 | 适合 | 小键空间协调 | 全文检索、日志/指标分析、文档检索 |
 
 | | 说明 |
@@ -349,9 +317,9 @@ flowchart LR
 
 ---
 
-## 7. 集群合同与网络路径
+## 6. 集群与网络路径
 
-### 7.1 共识落点
+### 6.1 共识落点
 
 | 类型 | 含义 | 代表 |
 | ---- | ---- | ---- |
@@ -359,9 +327,9 @@ flowchart LR
 | **元数据多数派 + 数据复制** | 多数派只决定拓扑 / 映射；数据按主从复制 | Elasticsearch cluster state + shard replication[^es-cluster] |
 | **可选复制** | 提交可不绑定多数派 | 异步主从 RDBMS、Redis 副本 |
 
-异步主从下，「主已返回成功」**不蕴含**「多数派已持久化」。将半同步 / 异步复制称为「强一致」，或将「ES 绿集群」等同于「每条文档线性一致」，均属偷换合同 ③。
+异步主从下，「主已返回成功」**不蕴含**「多数派已持久化」。将半同步 / 异步复制称为「强一致」，或将「ES 绿集群」等同于「每条文档线性一致」，均属偷换集群保证。
 
-### 7.2 网络写路径
+### 6.2 网络写路径
 
 ```mermaid
 flowchart LR
@@ -388,7 +356,7 @@ flowchart LR
 | **Redis** | 否（直连主或槽位主） | 副本异步时：是 |
 | **RDBMS** | 通常写主 | 读库异步时：是 |
 
-### 7.3 Safety 与 Liveness
+### 6.3 Safety 与 Liveness
 
 | 性质 | 含义 | 存储后果 |
 | ---- | ---- | -------- |
@@ -402,7 +370,7 @@ flowchart LR
 
 对 Elasticsearch：cluster state 发布遵循「先收集足够 master-eligible 确认再 commit，再令节点 apply」——Safety 落在元数据；数据面 Safety 依赖分片复制与 translog 策略，**弱于 etcd 的逐写 Raft**。[^es-cluster][^es-translog]
 
-### 7.4 Paxos 与 Raft：同一提交合同，不同分解
+### 6.4 Paxos 与 Raft：同一提交语义，不同分解
 
 | | **Paxos / Multi-Paxos** | **Raft** |
 | - | ----------------------- | -------- |
@@ -415,9 +383,9 @@ flowchart LR
 
 ---
 
-## 8. 写路径对照：etcd 与 Elasticsearch
+## 7. 写路径：etcd 与 Elasticsearch
 
-### 8.1 etcd：commit 先于 apply
+### 7.1 etcd：commit 先于 apply
 
 ```mermaid
 sequenceDiagram
@@ -441,7 +409,7 @@ sequenceDiagram
 | commit 后再 apply | 先改 MVCC 再共识 → 节点间版本分叉 |
 | 后台 compact | revision 窗口无限增长 |
 
-### 8.2 Elasticsearch：耐久、可搜索、Lucene 固化
+### 7.2 Elasticsearch：耐久、可搜索、Lucene 固化
 
 ```mermaid
 sequenceDiagram
@@ -469,19 +437,17 @@ sequenceDiagram
 | 读可见 | 与写同一 revision 序（线性一致可读） | refresh 之后近实时可搜[^es-nrt] |
 | 共识 | 每条写 | 仅 cluster state |
 
-RDBMS / Redis 同构：权威仍是日志。Elasticsearch 额外引入「搜索可见性」时间线。Redis AOF `everysec` 与 ES `translog.durability=async` 同属削弱合同 ① 以换延迟。[^redis-persist][^es-translog]
+RDBMS / Redis 同构：权威仍是日志。Elasticsearch 额外引入「搜索可见性」时间线。Redis AOF `everysec` 与 ES `translog.durability=async` 同属削弱耐久以换延迟。[^redis-persist][^es-translog]
 
 ---
 
-## 9. 选型
+## 8. 选型
 
-先匹配 §2 目的与功能，再核对三条合同与网络路径，最后以优劣排除误用。
-
-| 需求 | 合同 | 网络路径 | 落点 |
-| ---- | ---- | -------- | ---- |
-| 业务账本、约束、复杂查询 | ① 强 + ② SQL / MVCC | 写主；慎读异步库 | PostgreSQL / MySQL / Oracle |
-| 热路径、可丢可重建 | ① 可弱 | 直连 / 槽位 | Redis |
-| 控制面、锁、配置、Kubernetes | ①+③ 逐写强 + watch | 写经 Leader / 多数派 | etcd |
+| 需求 | 耐久 / 可见 / 集群 | 写路径 | 落点 |
+| ---- | ------------------ | ------ | ---- |
+| 业务账本、约束、复杂查询 | 耐久强；SQL / MVCC | 写主；慎读异步库 | PostgreSQL / MySQL / Oracle |
+| 热路径、可丢可重建 | 耐久可弱 | 直连 / 槽位 | Redis |
+| 控制面、锁、配置、Kubernetes | 逐写强 + watch | 写经 Leader / 多数派 | etcd |
 | 全文检索、日志分析 | 分片耐久 + 近实时 + 倒排 | 写 primary；搜索可经协调节点 | Elasticsearch |
 | 海量事件多订阅 | 日志即产品 | 拉取分区 | Kafka（[29](./29-kafka-event-streaming-treatise.md)） |
 
@@ -495,18 +461,16 @@ RDBMS / Redis 同构：权威仍是日志。Elasticsearch 额外引入「搜索�
 
 ---
 
-## 10. 本章要点
+## 9. 本章要点
 
-1. **七维**（目的 / 作用 / 功能 / 原则 / 架构 / 网络 / 优劣）与**三条合同**正交：前者用于选型，后者解释机制。  
-2. **STEAL + NO-FORCE ⇒ WAL**；可见性与耐久分离时须显式（ES refresh / Redis fsync）。  
-3. **并发三路径：** undo 回拼、追加版本、Lucene segment + refresh。  
-4. **网络分叉：** etcd 写绑定 Raft Leader；Elasticsearch 文档写绑定 primary，共识仅绑定 cluster state。  
-5. **优劣即合同代价：** 强一致换停写，近实时换检索，弱耐久换延迟。  
-6. **选型匹配合同与网络路径，而非品牌。**
+1. **STEAL + NO-FORCE ⇒ WAL**；可见与耐久分离时须显式（ES refresh / Redis fsync）。  
+2. **并发三路径：** undo 回拼、追加版本、Lucene segment + refresh。  
+3. **网络分叉：** etcd 写绑 Raft Leader；ES 文档写绑 primary，共识只绑 cluster state。  
+4. **代价：** 强一致换停写，近实时换检索，弱耐久换延迟——按保证选型，不按品牌。
 
 ---
 
-## 11. 参考文献
+## 10. 参考文献
 
 [^haerder83]: T. Haerder & A. Reuter, *Principles of Transaction-Oriented Database Recovery*, ACM Computing Surveys, 15(4), 1983. https://dl.acm.org/doi/10.1145/289.291 。
 
@@ -542,4 +506,4 @@ RDBMS / Redis 同构：权威仍是日志。Elasticsearch 额外引入「搜索�
 
 [^es-cluster]: Elastic, *Cluster state*（master 发布、多数派提交后再 apply；高吞吐 API 不经 master）. https://www.elastic.co/docs/deploy-manage/distributed-architecture/discovery-cluster-formation/cluster-state-overview ；*A new era for cluster coordination in Elasticsearch*. https://www.elastic.co/blog/a-new-era-for-cluster-coordination-in-elasticsearch 。
 
-**声明：** 本文论证存储与共识的合同与因果，非调参手册。具体版本行为以当期官方文档为准。CAP 与协议全景见 [22](./22-distributed-consistency-treatise.md)；控制面用法见 [23](./23-kubernetes-control-plane-doctrine.md)。
+**声明：** 本文论证存储与共识的保证与因果，非调参手册。具体版本行为以当期官方文档为准。CAP 与协议全景见 [22](./22-distributed-consistency-treatise.md)；控制面用法见 [23](./23-kubernetes-control-plane-doctrine.md)。
