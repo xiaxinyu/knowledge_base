@@ -2,7 +2,7 @@
 
 > Kafka 常被叫作消息队列，更准确的定位是**分布式事件流平台 / 可回放的提交日志（commit log）**。生产者追加写入，消费者按偏移量拉取；同一份事件可被多个下游独立消费。Jay Kreps 后来把这一抽象概括为：日志是实时数据集成的统一底座——有序、可多订阅、写入与读取速度可以解耦。[^kreps-log]
 >
-> 本文按一条因果链展开：**它解决什么 → 与传统队列差在哪 → 解耦与削峰如何成立 → 核心概念 → 消息路径与吞吐机制 → 场景、选型与边界**。可与 [21](./21-service-architecture-evolution.md)（服务拆分后的集成压力）、[28](./28-http-rpc-microservice-communication-treatise.md)（同步调用慢在哪）、[22](./22-distributed-consistency-treatise.md)（跨节点一致性代价）对照：彼处谈同步 RPC 与共识，此处谈**异步事件主干**。
+> 本文按一条因果链展开：**它解决什么 → 与传统队列差在哪 → 解耦与削峰如何成立 → 核心概念 → 消息路径与吞吐机制 → 场景、选型与边界**。可与 [21](./21-service-architecture-evolution.md)（服务拆分后的集成压力）、[28](./28-http-rpc-microservice-communication-treatise.md)（同步调用慢在哪）、[22](./22-distributed-consistency-treatise.md)（跨节点一致性代价）、[29a](./29a-data-store-wal-mvcc-treatise.md)（引擎内 WAL vs 把日志做成产品）对照：彼处谈同步 RPC、共识与存储引擎，此处谈**异步事件主干**。
 
 先给一个直接答案：
 

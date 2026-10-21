@@ -8,7 +8,7 @@
 > 以 etcd 为真相源，以声明式 API 为协调语言，以 Label / Selector 做查询式分组，以可失败的控制循环持续逼近期望态；控制面短暂失联时，数据面尽量按上次指令继续服务。  
 > 调度、自愈、服务发现、滚动发布，并不是四套魔法——**驱动这一切的，是同一个调谐循环。**[1][11][12][18][46]
 
-全文可与本库 [《服务架构演进》](./21-service-architecture-evolution.md)（复杂度如何转移）、[《分布式一致性》](./22-distributed-consistency-treatise.md)（CAP / Raft）、[《Calico 三层数据面》](./24-calico-l3-dataplane-treatise.md) / [《Cilium》](./24a-cilium-ebpf-dataplane-treatise.md)（CNI 如何兑现网络合同）、[《TCP/IP 协议栈》](../10-chronicle/16a-tcp-ip-illustrated-treatise.md)（跨网转发与地址空间）对照阅读。更长的容器与云原生时间线见 [《计算与云编年》](../10-chronicle/10-computing-cloud-chronicle.md) §8。关键史实与论断尽量对齐一手文献，文末附参考文献。
+全文可与本库 [《服务架构演进》](./21-service-architecture-evolution.md)（复杂度如何转移）、[《分布式一致性》](./22-distributed-consistency-treatise.md)（CAP / Raft）、[《数据存储：WAL · MVCC》](./29a-data-store-wal-mvcc-treatise.md)（etcd 引擎与 RDBMS/Redis 对照）、[《Calico 三层数据面》](./24-calico-l3-dataplane-treatise.md) / [《Cilium》](./24a-cilium-ebpf-dataplane-treatise.md)（CNI 如何兑现网络合同）、[《TCP/IP 协议栈》](../10-chronicle/16a-tcp-ip-illustrated-treatise.md)（跨网转发与地址空间）对照阅读。更长的容器与云原生时间线见 [《计算与云编年》](../10-chronicle/10-computing-cloud-chronicle.md) §8。关键史实与论断尽量对齐一手文献，文末附参考文献。
 
 ## 摘要
 

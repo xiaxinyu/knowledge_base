@@ -176,6 +176,7 @@ knowledge_base/
 | 27 | [MQTT over QUIC Treatise](./20-architecture/27-mqtt-over-quic-treatise.md) | MQTT 语义不变，传输换 QUIC；压失联窗口与重连风暴；单 Stream 主流；RFC/草案/产品能力须分开读 | MQTT、QUIC、连接迁移、队头阻塞、0-RTT、弱网、车联网 |
 | 28 | [Microservice Communication Treatise](./20-architecture/28-http-rpc-microservice-communication-treatise.md) | 比的是组合不是四字对立；慢常在 JSON/头/连接模型；gRPC 也是 HTTP/2；通信占比低则不必换栈 | HTTP、RPC、gRPC、REST、JSON、Protobuf、Dubbo、OpenFeign |
 | 29 | [Kafka Event Streaming Treatise](./20-architecture/29-kafka-event-streaming-treatise.md) | 分布式事件日志：解耦、削峰、多订阅管道；分区内有序；不是数据库/同步 RPC | Kafka、Topic、Partition、Offset、Consumer Group、削峰、至少一次 |
+| 29a | [Data Store WAL · MVCC Treatise](./20-architecture/29a-data-store-wal-mvcc-treatise.md) | WAL/MVCC 通识；共识 Safety 优先；Paxos/Raft 同一目标，etcd 落 Raft | WAL、MVCC、Safety、Liveness、Paxos、Raft、etcd |
 
 #### 30 · 明道 · 治
 
@@ -242,6 +243,8 @@ knowledge_base/
 | HTTP vs RPC、gRPC、REST、JSON、Protobuf、Dubbo、Triple、OpenFeign、微服务通信、序列化 | 28 |
 | Kafka、事件流、提交日志、Topic、Partition、Offset、Consumer Group、削峰、异步解耦、至少一次 | 29 |
 | 同步 RPC ↔ 异步事件日志 | 28 / 29 |
+| WAL、MVCC、Safety、Liveness、Paxos、Raft、redo、undo、InnoDB、PostgreSQL、Oracle、Redis、etcd、revision | 29a |
+| 日志耐久 ↔ 事件日志产品 ↔ 共识 WAL | 29a / 29 / 22 |
 | COBIT、治理 vs 管理 | 30 |
 | 平台服务质量、期望—感知差距 | 31 |
 | Unix 哲学、无状态 Agent、可组合 | 40 |
@@ -474,6 +477,7 @@ AI 如何改变工程组织、如何承接被放大的速度。
 | **明道** | MQTT 语义可不变；弱网下换的是传输——QUIC 压失联窗口与重连风暴，单 Stream 尚未等于业务无阻塞 | [27](./20-architecture/27-mqtt-over-quic-treatise.md) |
 | **明道** | 「HTTP vs RPC」比的是组合；慢常在序列化与连接模型；gRPC 也是 HTTP/2；多数业务通信不是瓶颈 | [28](./20-architecture/28-http-rpc-microservice-communication-treatise.md) |
 | **明道** | Kafka 是可回放的分布式事件日志：解耦、削峰、多订阅；不是数据库，也不是同步 RPC | [29](./20-architecture/29-kafka-event-streaming-treatise.md) |
+| **明道** | WAL / MVCC 是通识；共识按 Safety 优先、Liveness 靠选主；Paxos / Raft 同一目标，etcd 落 Raft | [29a](./20-architecture/29a-data-store-wal-mvcc-treatise.md) |
 | **明道** | Calico：节点即路由器；Cilium：eBPF 换底座，身份策略与替代 kube-proxy | [24](./20-architecture/24-calico-l3-dataplane-treatise.md) / [24a](./20-architecture/24a-cilium-ebpf-dataplane-treatise.md) |
 | **明道** | 复杂度不会消失，只会转移；跨节点之后，强一致与持续可用必须取舍 | [21](./20-architecture/21-service-architecture-evolution.md) / [22](./20-architecture/22-distributed-consistency-treatise.md) |
 | **明道** | 代理在 L4–L7，VIP 入口在 L2–L3；分叉在共享域；五种入口机制与代理正交 | [21a](./20-architecture/21a-haproxy-nginx-envoy-treatise.md) |
@@ -488,7 +492,7 @@ AI 如何改变工程组织、如何承接被放大的速度。
 | **优术** | 实物向消费端、美元回流美国是近四十年分工主轴的教学像；升级是金字塔上跃迁，去美元缓慢、替代未成型 | [57](./50-strategy/57-dollar-system-division-of-labor-treatise.md) / [13](./10-chronicle/13-world-hegemony-transfer-chronicle.md) |
 | **优术** | 特许贸易公司可渐进吸收税收与武力；Diwani 后成本外化；内部难自刹，约束来自外部主权 | [58](./50-strategy/58-east-india-company-corporate-colonialism-treatise.md) |
 
-运维侧可核对的价值，是压缩 MTTR 中可并行、可检索、可证据化的时间段，而不是承诺无人值守自愈——见 [42](./40-paradigm/42-agentic-sre-operations-playbook.md)、[44](./40-paradigm/44-agentic-ops-frontier-treatise.md)。编排平台是持续收敛的控制计算机；节点即路由器，或 eBPF 换数据面底座——见 [23](./20-architecture/23-kubernetes-control-plane-doctrine.md)、[24](./20-architecture/24-calico-l3-dataplane-treatise.md)、[24a](./20-architecture/24a-cilium-ebpf-dataplane-treatise.md)。单机一次 Load 的虚实翻译与 Cache 链路见 [26](./20-architecture/26-cpu-memory-access-treatise.md)；指令流水线、冒险与乱序见 [26a](./20-architecture/26a-cpu-instruction-pipeline-treatise.md)。资本配置可带走的是三问，选人三则合验于烂摊子——见 [53](./50-strategy/53-li-ka-shing-capital-allocation-treatise.md)、[54](./50-strategy/54-ning-gaoning-talent-selection-treatise.md)。特许公司如何渐进吸收主权职能见 [58](./50-strategy/58-east-india-company-corporate-colonialism-treatise.md)。品牌走出去，目标是少打折扣、多造溢价——见 [51](./50-strategy/51-brand-cultural-translation.md)。智能体编年见 [12](./10-chronicle/12-artificial-intelligence-chronicle.md)。AI 数学骨架（表示 / 计算 / 度量）见 [48](./40-paradigm/48-ai-mathematical-foundations-treatise.md)。互联网编年见 [14](./10-chronicle/14-internet-history-chronicle.md)。浏览器代管与沙盒规矩见 [15](./10-chronicle/15-browser-custody-chronicle.md)。HTTP 从 0.9 到 QUIC 见 [16](./10-chronicle/16-http-protocol-chronicle.md)。MQTT over QUIC 与弱网传输层替换见 [27](./20-architecture/27-mqtt-over-quic-treatise.md)。微服务里 HTTP 与 RPC 慢在哪见 [28](./20-architecture/28-http-rpc-microservice-communication-treatise.md)。入口与网格数据面：HAProxy / Nginx / Envoy 对照见 [21a](./20-architecture/21a-haproxy-nginx-envoy-treatise.md)。Kafka 事件日志与解耦 / 削峰见 [29](./20-architecture/29-kafka-event-streaming-treatise.md)。Brooks「无银弹」与 AI 偶然 / 本质之难见 [47](./40-paradigm/47-no-silver-bullet-ai-essential-difficulty-philosophy.md)。
+运维侧可核对的价值，是压缩 MTTR 中可并行、可检索、可证据化的时间段，而不是承诺无人值守自愈——见 [42](./40-paradigm/42-agentic-sre-operations-playbook.md)、[44](./40-paradigm/44-agentic-ops-frontier-treatise.md)。编排平台是持续收敛的控制计算机；节点即路由器，或 eBPF 换数据面底座——见 [23](./20-architecture/23-kubernetes-control-plane-doctrine.md)、[24](./20-architecture/24-calico-l3-dataplane-treatise.md)、[24a](./20-architecture/24a-cilium-ebpf-dataplane-treatise.md)。单机一次 Load 的虚实翻译与 Cache 链路见 [26](./20-architecture/26-cpu-memory-access-treatise.md)；指令流水线、冒险与乱序见 [26a](./20-architecture/26a-cpu-instruction-pipeline-treatise.md)。资本配置可带走的是三问，选人三则合验于烂摊子——见 [53](./50-strategy/53-li-ka-shing-capital-allocation-treatise.md)、[54](./50-strategy/54-ning-gaoning-talent-selection-treatise.md)。特许公司如何渐进吸收主权职能见 [58](./50-strategy/58-east-india-company-corporate-colonialism-treatise.md)。品牌走出去，目标是少打折扣、多造溢价——见 [51](./50-strategy/51-brand-cultural-translation.md)。智能体编年见 [12](./10-chronicle/12-artificial-intelligence-chronicle.md)。AI 数学骨架（表示 / 计算 / 度量）见 [48](./40-paradigm/48-ai-mathematical-foundations-treatise.md)。互联网编年见 [14](./10-chronicle/14-internet-history-chronicle.md)。浏览器代管与沙盒规矩见 [15](./10-chronicle/15-browser-custody-chronicle.md)。HTTP 从 0.9 到 QUIC 见 [16](./10-chronicle/16-http-protocol-chronicle.md)。MQTT over QUIC 与弱网传输层替换见 [27](./20-architecture/27-mqtt-over-quic-treatise.md)。微服务里 HTTP 与 RPC 慢在哪见 [28](./20-architecture/28-http-rpc-microservice-communication-treatise.md)。入口与网格数据面：HAProxy / Nginx / Envoy 对照见 [21a](./20-architecture/21a-haproxy-nginx-envoy-treatise.md)。Kafka 事件日志与解耦 / 削峰见 [29](./20-architecture/29-kafka-event-streaming-treatise.md)。WAL / MVCC 与 MySQL·PG·Oracle·Redis·etcd 对照见 [29a](./20-architecture/29a-data-store-wal-mvcc-treatise.md)。Brooks「无银弹」与 AI 偶然 / 本质之难见 [47](./40-paradigm/47-no-silver-bullet-ai-essential-difficulty-philosophy.md)。
 
 ### 6.2 态度
 
