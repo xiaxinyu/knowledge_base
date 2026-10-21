@@ -165,7 +165,7 @@ knowledge_base/
 |------|------|----------|------------------|
 | 20 | [Enterprise Architecture Treatise](./20-architecture/20-enterprise-architecture-treatise.md) | 战略译成可执行安排；教学四大域、实践六层；实践不是照搬某一框架 | EA、四大域、六层域、CSVLOD |
 | 21 | [Service Architecture Evolution](./20-architecture/21-service-architecture-evolution.md) | 复杂度不会消失，只会代际转移 | 单体→微服务→无服务 |
-| 21a | [HAProxy · Nginx · Envoy Treatise](./20-architecture/21a-haproxy-nginx-envoy-treatise.md) | 代理三杰 + VIP 五种机制（ADC/VRRP/K8s LB/ECMP/云）；产品是实例 | HAProxy、Nginx、Envoy、VIP、VRRP、MetalLB、kube-vip、ECMP、ADC |
+| 21a | [HAProxy · Nginx · Envoy Treatise](./20-architecture/21a-haproxy-nginx-envoy-treatise.md) | 代理 L4–L7；VIP 入口 L2–L3；五种机制（ADC/VRRP/K8s LB/ECMP/云） | HAProxy、Nginx、Envoy、L4、L7、VIP、VRRP、MetalLB、ECMP、ADC |
 | 22 | [Distributed Consistency Treatise](./20-architecture/22-distributed-consistency-treatise.md) | 跨节点之后，强一致与持续可用如何取舍 | CAP、共识、一致性 |
 | 23 | [Kubernetes Control-Plane Doctrine](./20-architecture/23-kubernetes-control-plane-doctrine.md) | 声明式协调 + Label 契约 + 网络合同 / CIDR + 同一循环 | K8s 控制面、CNI、Pod CIDR、Service CIDR、Label |
 | 24 | [Calico L3 Dataplane Treatise](./20-architecture/24-calico-l3-dataplane-treatise.md) | 节点即路由器：控制面写表、内核转发；Service 虚地址经 DNAT / conntrack 到达 Endpoint | Calico、Pod 网络、Service |
@@ -476,7 +476,7 @@ AI 如何改变工程组织、如何承接被放大的速度。
 | **明道** | Kafka 是可回放的分布式事件日志：解耦、削峰、多订阅；不是数据库，也不是同步 RPC | [29](./20-architecture/29-kafka-event-streaming-treatise.md) |
 | **明道** | Calico：节点即路由器；Cilium：eBPF 换底座，身份策略与替代 kube-proxy | [24](./20-architecture/24-calico-l3-dataplane-treatise.md) / [24a](./20-architecture/24a-cilium-ebpf-dataplane-treatise.md) |
 | **明道** | 复杂度不会消失，只会转移；跨节点之后，强一致与持续可用必须取舍 | [21](./20-architecture/21-service-architecture-evolution.md) / [22](./20-architecture/22-distributed-consistency-treatise.md) |
-| **明道** | 代理三杰分叉在共享域；多节点入口先定五种 VIP 机制，再落产品；与代理层正交 | [21a](./20-architecture/21a-haproxy-nginx-envoy-treatise.md) |
+| **明道** | 代理在 L4–L7，VIP 入口在 L2–L3；分叉在共享域；五种入口机制与代理正交 | [21a](./20-architecture/21a-haproxy-nginx-envoy-treatise.md) |
 | **明道** | 治理与管理必须分离；平台质量是期望与感知的差距 | [30](./30-governance/30-cobit-it-governance-framework.md) / [31](./30-governance/31-platform-service-quality-case-study.md) |
 | **优术** | 遗忘有时强于记忆；个人写出代码变快之后，组织交付未必变快 | [40](./40-paradigm/40-unix-agent-stateless-philosophy.md) / [41](./40-paradigm/41-ai-engineering-paradigm.md) |
 | **优术** | AI 主清偶然之难；本质之难仍在；难的是精确决定要构建什么；局部十倍不是银弹 | [47](./40-paradigm/47-no-silver-bullet-ai-essential-difficulty-philosophy.md) |
