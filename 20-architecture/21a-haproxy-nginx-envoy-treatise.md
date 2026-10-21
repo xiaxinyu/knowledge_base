@@ -1,18 +1,18 @@
 # HAProxy · Nginx · Envoy：代理三杰的架构对照
 
-> 同属「反向代理 / 负载均衡」品类，三者主问题不同：HAProxy 以**连接级亲和的负载均衡**为中心；Nginx 以**事件驱动的通用边缘服务器**为中心；Envoy 以**可动态编排的云原生数据面**为中心。性能差距常被夸大；分叉在**进程模型、状态共享与控制面合同**。三者工作在 **L4–L7**；前方 VIP / 入口机制工作在 **L2–L3**（或云 L4/L7）。
+> 同属「反向代理 / 负载均衡」品类，三者主问题不同：HAProxy 以**连接级亲和的负载均衡**为中心；Nginx 以**事件驱动的通用边缘服务器**为中心；Envoy 以**可动态编排的云原生数据面**为中心。性能差距常被夸大；分叉在**进程模型、状态共享与控制面合同**。网络层位见 **§1.3**。
 >
-> 可与 [21](./21-service-architecture-evolution.md)（服务形态）、[16](../10-chronicle/16-http-protocol-chronicle.md)（HTTP/QUIC）、[28](./28-http-rpc-microservice-communication-treatise.md)（东西向）、[23](./23-kubernetes-control-plane-doctrine.md) / [24](./24-calico-l3-dataplane-treatise.md)（集群网络）对照。本文写 **L4–L7 代理数据面**；§1.3 定层位，§9 专论多节点 **VIP / 统一入口（L2–L3）**。
+> 可与 [21](./21-service-architecture-evolution.md)（服务形态）、[16](../10-chronicle/16-http-protocol-chronicle.md)（HTTP/QUIC）、[28](./28-http-rpc-microservice-communication-treatise.md)（东西向）、[23](./23-kubernetes-control-plane-doctrine.md) / [24](./24-calico-l3-dataplane-treatise.md)（集群网络）对照。本文写**代理数据面**；§9 专论多节点 **VIP / 统一入口**。
 
 先给一个直接答案：
 
-> **三者均为事件驱动、非阻塞 I/O；分叉在共享域与控制面，而非功能清单。** 层位上：HAProxy / Nginx / Envoy 工作在 **L4–L7**（用户态套接字代理）；其前方的 VIP / 入口机制工作在 **L2–L3**（地址归属与选路），可选叠加 **L4**（如 IPVS、云 NLB）。共同原则：拒绝一连接一线程、热路径非阻塞、连接亲和、控制面与数据面分离。选型顺序：角色 → **工作层** → VIP 机制 → 共享域 → 延迟。
+> **三者均为事件驱动、非阻塞 I/O；分叉在共享域与控制面，而非功能清单。** 共同原则：拒绝一连接一线程、热路径非阻塞、连接亲和、控制面与数据面分离。Nginx：master + **多进程单线程 worker**；HAProxy：每线程一调度器、连接线程亲和；Envoy：main（xDS）+ siloed workers。多节点另选入口机制（§9）；层位总图见 **§1.3**。选型顺序：角色 → VIP 机制 → 共享域 → 延迟。
 
 **20-architecture 位置：** [21](./21-service-architecture-evolution.md) 写服务形态演进；本文写**代理层**与其前方的 **VIP / 统一入口层**。
 
 ## 摘要
 
-HAProxy（约 2000 年代）、Nginx（2004）、Envoy（2016，Lyft → CNCF）同属软件代理，分属三条设计路径。HAProxy 官方概括为 *multi-threaded, event-driven, non-blocking daemon*（§3）。三者主战场在 **传输层至应用层（L4–L7）**；多节点统一入口则多在 **链路层 / 网络层（L2–L3）** 解决地址归属与选路（§1.3、§9）。共同原则为事件驱动、连接亲和、热路径非阻塞；分叉在**共享域**。入口机制按层位分类：ADC（L2–L7 一体）、VRRP/CARP（L2–L3）、K8s `LoadBalancer` 实现（L2 ARP 或 L3 BGP）、BGP ECMP / anycast（L3）、云托管 LB（L4 或 L7）。代理层处理「包到达之后」；入口层决定「包先到哪台机器」。截至 2026-10，HAProxy 最新 LTS 为 **3.4**。
+HAProxy（约 2000 年代）、Nginx（2004）、Envoy（2016，Lyft → CNCF）同属软件代理，分属三条设计路径。HAProxy 官方概括为 *multi-threaded, event-driven, non-blocking daemon*（§3）。共同原则为事件驱动、连接亲和、热路径非阻塞；分叉在**共享域**。网络层位（代理 vs 入口各自在哪一层）见 **§1.3**。多实例时，对外统一入口由 VIP 层回答，宜按机制分类：ADC、VRRP/CARP、K8s `LoadBalancer` 实现、BGP ECMP / anycast、云托管 LB（§9）。代理层处理「包到达之后」；入口层决定「包先到哪台机器」。截至 2026-10，HAProxy 最新 LTS 为 **3.4**。
 
 **关键词：** HAProxy；Nginx；Envoy；L2；L3；L4；L7；VIP；VRRP；ECMP；anycast；Keepalived；MetalLB；kube-vip；PureLB；F5；Kemp；Citrix；ADC；云 LB；xDS
 
@@ -162,13 +162,12 @@ flowchart TB
 
 | | **HAProxy** | **Nginx** | **Envoy** |
 | - | ----------- | --------- | --------- |
-| **主工作层** | **L4 + L7** | **L7** 为主，兼 **L4** | **L4 + L7**（动态控制面） |
 | **原初目的** | 可靠、可观测的 TCP/HTTP **负载均衡** | 高并发 **Web 服务器**（后扩反代/缓存） | **云原生数据面**：统一 L4/L7，可动态配置 |
 | **今日主战场** | 边缘 / 内部 LB、四七层入口、粘滞与健康检查 | 静态与边缘、反代、TLS 终结、API 网关底座 | Sidecar / 网关、服务网格、多协议过滤 |
 | **成功判据** | 连接公平、故障切流、状态一致、重载不停机 | 延迟稳定、缓存命中、配置简单、生态模块 | 热更新配置、可观测、策略可组合、与控制面解耦 |
 | **不该被简化成** | 「只会四层转发」 | 「只会静态站」 | 「只会 Mesh」 |
 
-分工：**HAProxy** 精于 L4/L7 均衡与会话状态；**Nginx** 精于 L7 边缘内容与连接密度；**Envoy** 精于 L4/L7 动态发现与过滤器可编程。均不承担 L2/L3 VIP 选举（见 §1.3、§9）。
+分工：**HAProxy** 精于均衡与会话状态；**Nginx** 精于边缘内容与连接密度；**Envoy** 精于动态发现与过滤器可编程。工作层见 §1.3。
 
 ---
 
@@ -416,7 +415,7 @@ flowchart LR
 | **③ 上游** | backend 算法 + 健康状态；池连接常**线程内复用** | `upstream` 选 peer；进程内池化 | Cluster LB + **本 worker 连接池**；健康/outlier 视图经线程局部槽可见 |
 | **④ 回程** | 不换线程 | 不换进程 | 不换 worker |
 
-**层位落点：** ①–④ 均发生在代理进程的 **L4–L7** 路径上——前提是 L2/L3 已把包送到本机（§1.3）。站 ② 决定 L4 还是 L7：L4 主要搬字节；L7 解析方法/头/`:authority` 并做路由与协议翻译（如 H3→H1）。**执行体边界不变**，变化的是站内工作量。
+站 ② 区分 L4 与 L7：L4 主要搬字节；L7 解析方法/头/`:authority` 并做路由与协议翻译（如 H3→H1）。**执行体边界不变**，变化的是站内工作量。层位总图见 §1.3。
 
 UDP/QUIC：无连接语义时，常以五元组哈希将会话亲和到同一执行体（Envoy UDP 依赖 `SO_REUSEPORT` 一致性）；HAProxy 的 QUIC accept 亦做线程均衡。[^envoy-life][^haproxy-quic]
 
@@ -455,15 +454,14 @@ HAProxy：`frontend`/`backend` 配置模型长期稳定。Envoy：路由与集�
 
 | 能力 | HAProxy | Nginx（开源） | Envoy |
 | ---- | ------- | ------------- | ----- |
-| **主工作层** | L4 + L7 | L7 为主；L4（stream） | L4 + L7 |
-| TCP / UDP 代理（L4） | 强（LB 本业） | 有（stream）；定位次于 HTTP | 强（Listener 通用） |
-| HTTP/1.1 · H2（L7） | 成熟 | 成熟 | 成熟 |
-| HTTP/3 · QUIC（L7 / QUIC） | 2.5 引入，**2.8 起生产可用**；3.x 继续优化[^haproxy-quic] | 视构建与发行版 | 一等公民（上下游能力随版本） |
+| TCP / UDP 代理 | 强（LB 本业） | 有（stream）；定位次于 HTTP | 强（Listener 通用） |
+| HTTP/1.1 · H2 | 成熟 | 成熟 | 成熟 |
+| HTTP/3 · QUIC | 2.5 引入，**2.8 起生产可用**；3.x 继续优化[^haproxy-quic] | 视构建与发行版 | 一等公民（上下游能力随版本） |
 | 主动健康检查 / 高级 LB | 核心能力 | 基础 upstream；高级多在 Plus / 生态 | 健康检查、outlier、多种 LB |
 | 会话粘滞 | stick-table | 有限 / 模块或 Plus | 有；常与 Mesh 身份策略叠加 |
-| 静态文件 / 缓存（L7 内容） | 非主业 | **主业之一** | 非主业 |
+| 静态文件 / 缓存 | 非主业 | **主业之一** | 非主业 |
 | 动态配置 | Runtime API 强；非 xDS 原生 | 文件重载为主 | **xDS 原生** |
-| L2/L3 VIP 选举 | 无（Enterprise 可附 VRRP） | 无（Plus 可附 keepalived） | 无 |
+| VIP 选举 | 无（Enterprise 可附 VRRP） | 无（Plus 可附 keepalived） | 无 |
 | 服务网格数据面 | 可作入口；非典型 sidecar | 少作 sidecar | **常见事实标准** |
 
 协议翻译常见：如 HAProxy **前端 H3、后端 H1/H2**，无需后端同步升级协议。[^haproxy-quic]
