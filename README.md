@@ -130,7 +130,7 @@ knowledge_base/
 
 同域内按认知依赖递增：先概念，后演进，再原则，再落地。域简介如下（与 §3.1 索引表一致；冲突以索引表为准）：
 
-- **`10`**：技术与秩序长河 + 读史方法。`10`–`12` 计算 / 信息 / 智能；`13` 霸权与工业革命（与 [55](./50-strategy/55-global-manufacturing-migration-chronicle.md) 互参）；`14`–`16` 互联网 → 浏览器 → HTTP/QUIC；`16a` TCP/IP 栈专论（接 14/16）；`17` 语言模型；`18` 历史认识论（读编年的方法篇，不是又一段国别史）。  
+- **`10`**：技术与秩序长河 + 读史方法。`10`–`12` 计算 / 信息 / 智能；`13` 霸权与工业革命（与 [55](./50-strategy/55-global-manufacturing-migration-chronicle.md) 互参）；`14`–`16` 互联网 → 浏览器 → HTTP/QUIC；`16a` TCP/IP 栈专论、`16b` 消息分帧 / 粘包半包（接 14/16）；`17` 语言模型；`18` 历史认识论（读编年的方法篇，不是又一段国别史）。  
 - **`20`**：系统如何立身，内分三簇（编号不重排，阅读可按簇跳）：**企业与服务** `20`–`21`、`25`、`28`–`29`（`28` 同步调用，`29` 异步事件日志）；**分布式平台** `22`–`24`；**机器与传输** `26`–`27`（`27` 与史域 [16](./10-chronicle/16-http-protocol-chronicle.md) 同谈 QUIC，一史一用）。  
 - **`30`**：`30` IT 治理（COBIT）；`31` 平台质量实证。域薄，空号留给后续控制 / 审计专题。  
 - **`40`**：智能协作与横切镜片。`40`–`42` 工具哲学 → 组织范式 → 运维落地；`44`–`45` 产业前沿与多 Agent 协作；`43` / `46` 为熵与系统思维（横切）；`47` 以 Brooks「无银弹」重读 AI 提效（偶然 / 本质）；`48` 为 AI 数学骨架（表示 / 计算 / 度量）。  
@@ -156,6 +156,7 @@ knowledge_base/
 | 15 | [Browser Custody Chronicle](./10-chronicle/15-browser-custody-chronicle.md) | 浏览器代管陌生人的程序；扩大代管范围，被迫补规矩；产品是「可点陌生链接」 | 浏览器、同源策略、沙盒、JavaScript、Flash、权限、Chromium、引擎集中、Electron、Manifest V3 |
 | 16 | [HTTP Protocol Chronicle](./10-chronicle/16-http-protocol-chronicle.md) | HTTP 语义连续，承载与并发代际替换；队头阻塞换层不消失 | HTTP、HTTP/2、HTTP/3、QUIC、队头阻塞、TLS、HTTPS |
 | 16a | [TCP/IP Illustrated Treatise](./10-chronicle/16a-tcp-ip-illustrated-treatise.md) | 四层封装；IP 尽力而为；跨网 LPM/IGP/BGP；TCP 与 socket/NAPI | TCP/IP、IP、ICMP、UDP、TCP、MTU、CIDR、BGP、OSPF、socket、NAPI、CUBIC、BBR |
+| 16b | [TCP Message Framing Treatise](./10-chronicle/16b-tcp-message-framing-treatise.md) | 应用要消息、TCP 给字节流；粘包/半包同源；定长·分隔符·长度字段分帧 | message framing、粘包、半包、长度前缀、Netty、Nagle |
 | 17 | [Large Language Model Chronicle](./10-chronicle/17-large-language-model-chronicle.md) | 语言建模从循环网络走到 Transformer；预训练、规模与对齐把续写变成产品 | LLM、Transformer、注意力、GPT、BERT、缩放律、RAG、ChatGPT、Decoder-Only |
 | 18 | [Historiography Reconstruction Treatise](./10-chronicle/18-historiography-reconstruction-treatise.md) | 历史不是过去本身；史料·解释·限制下的有边界重建；选择与记忆改写问题 | 历史认识论、史料、解释、丝绸之路、工业革命、海地革命、记忆、纽伦堡 |
 
@@ -226,6 +227,7 @@ knowledge_base/
 | 浏览器史、代管、同源策略、沙盒、CORS、CSP、JavaScript、Flash、权限提示、Chromium、Blink、引擎集中、Electron、WebView、Manifest V3 | 15 |
 | HTTP、HTTP/1.1、HTTP/2、HTTP/3、QUIC、SPDY、队头阻塞、TLS、HTTPS、ALPN、Alt-Svc、HPACK、多路复用 | 16 |
 | TCP/IP、四层模型、IP、ICMP、UDP、TCP、MTU、路径 MTU、分片、子网、CIDR、最长前缀匹配、IGP、OSPF、BGP、自治系统、Ping、Traceroute、滑动窗口、慢启动、socket、listen、accept、NAPI、CUBIC、BBR | 16a |
+| message framing、粘包、半包、拆包、长度前缀、定长、分隔符、Netty、Nagle、TCP_NODELAY、PSH | 16b |
 | 大语言模型、LLM、Transformer、注意力、QKV、GPT、BERT、T5、缩放律、RAG、ChatGPT、Decoder-Only、幻觉、对齐 | 17 |
 | 历史是什么、史料、解释、限制、有边界的重建、丝绸之路、海地革命、记忆与历史、纽伦堡、工厂法 | 18 |
 | 企业架构、TOGAF、四大域、**六层域**、CSVLOD、科图采夫 | 20 |
@@ -294,7 +296,7 @@ knowledge_base/
 2. **14** 互联网如何成为网络之网络（协议、入口、收束与外溢）  
 3. **15** 浏览器如何代管陌生人的程序（同源、沙盒、权限）  
 4. **16** HTTP 如何从 0.9 走到 QUIC（队头阻塞换层）；物联网侧接同一传输见 **27**  
-5. **16a** TCP/IP 栈如何分工：IP 尽力而为、TCP 端到端可靠（接 14/16）  
+5. **16a** TCP/IP 栈如何分工：IP 尽力而为、TCP 端到端可靠（接 14/16）；**16b** 消息分帧（粘包 / 半包）
 6. **11** 信息如何被度量  
 7. **12** 人工智能如何走到大模型  
 8. **17** 语言侧如何从循环网络走到 Transformer  
@@ -468,6 +470,7 @@ AI 如何改变工程组织、如何承接被放大的速度。
 | **取势** | 浏览器代管陌生人的程序；产品是「可点陌生链接」，不是速度；规矩多半先出事再补 | [15](./10-chronicle/15-browser-custody-chronicle.md) |
 | **取势** | HTTP 语义连续，换的是承载与并发；队头阻塞换层不消失；HTTP/3 定稿于 2022 | [16](./10-chronicle/16-http-protocol-chronicle.md) |
 | **取势** | TCP/IP 四层封装；IP 尽力而为；跨网 LPM 与 IGP/BGP；TCP 窗口与拥塞 | [16a](./10-chronicle/16a-tcp-ip-illustrated-treatise.md) |
+| **取势** | 应用要消息、TCP 给字节流；粘包/半包同源；对策是 message framing | [16b](./10-chronicle/16b-tcp-message-framing-treatise.md) |
 | **取势** | 大语言模型的核心是条件续写；Transformer 之后是预训练、规模、对齐与产品破圈 | [17](./10-chronicle/17-large-language-model-chronicle.md) |
 | **取势** | 历史不是过去本身；史料·解释·限制下的有边界重建；选择与记忆改写问题 | [18](./10-chronicle/18-historiography-reconstruction-treatise.md) |
 | **明道** | 企业架构把战略译成可执行安排并持续约束该建什么；教学用四大域，实践常见六层；不是照搬某一框架 | [20](./20-architecture/20-enterprise-architecture-treatise.md) |
