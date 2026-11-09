@@ -2,13 +2,13 @@
 
 > 「HTTP 比 RPC 慢」在群里经久不衰；Spring Cloud 里 OpenFeign 却依然到处可见。矛盾不在口号，在**口径**与**瓶颈位置**。
 >
-> 本文按可核对的链展开：**对齐组合 → 公开压测量级 → 慢在哪三环 → 业务账 → 选型**。可与 [21](./21-service-architecture-evolution.md)（微服务选型自由）、[16](../10-chronicle/16-http-protocol-chronicle.md)（HTTP 代际与队头阻塞）、[27](./27-mqtt-over-quic-treatise.md)（传输层替换）、[29](./29-kafka-event-streaming-treatise.md)（异步事件日志）对照：此处专写**同步**服务间调用里慢多少、慢在哪、值不值得换。
+> 本文按可核对的链展开：**对齐组合 → 公开压测量级 → 慢在哪三环 → 业务账 → 选型**。可与 [21](./21-service-architecture-evolution.md)（微服务选型自由）、[16](../10-chronicle/16-http-protocol-chronicle.md)（HTTP 代际与队头阻塞）、[27](./27-mqtt-over-quic-treatise.md)（传输层替换）、[29](./29-kafka-event-streaming-treatise.md)（异步事件日志）、[28a](./28a-haproxy-nginx-envoy-treatise.md)（L4/L7 代理与 VIP 入口）对照：此处专写**同步**服务间调用里慢多少、慢在哪、值不值得换。
 
 先给一个直接答案：
 
 > **口语「HTTP vs RPC」，多半不是在比四个字母，而是在比两套组合：HTTP/1.1 + JSON（常见 OpenFeign / RestTemplate）对上 HTTP/2 或私有 TCP + 二进制序列化（gRPC、Dubbo 等）。** 公开压测里，后者吞吐常见约 **1～2×**、延迟常低约 **三成到一半**——这是某一环境的量级，不是定律；低流量、侧重单次延迟时，REST 偶可不输。慢的大头往往在 **JSON 与文本头**，其次才是连接复用；**gRPC 的传输正是 HTTP/2**，并非绕开 HTTP。多数业务里通信只占端到端一小截，被数据库与逻辑淹没；长链路、极高 QPS、大报文或弱网时差距才放大。先测量真实瓶颈，再决定是否为协议与序列化买单。
 
-**20-architecture 位置：** [21](./21-service-architecture-evolution.md) 写微服务时代「远程调用有一长串选项」；本文专解其中最吵的一问——**HTTP 风格调用与 RPC 框架，性能差从哪来、差多少、何时不用纠结**。
+**20-architecture 位置：** [21](./21-service-architecture-evolution.md) 写微服务时代「远程调用有一长串选项」；本文专解其中最吵的一问——**HTTP 风格调用与 RPC 框架，性能差从哪来、差多少、何时不用纠结**。流量路径上的代理与 VIP 入口见同族 [28a](./28a-haproxy-nginx-envoy-treatise.md)。
 
 ## 摘要
 

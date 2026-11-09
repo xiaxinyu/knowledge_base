@@ -2,13 +2,13 @@
 
 > 同属「反向代理 / 负载均衡」品类，三者主问题不同：HAProxy 以**连接级亲和的负载均衡**为中心；Nginx 以**事件驱动的通用边缘服务器**为中心；Envoy 以**可动态编排的云原生数据面**为中心。性能差距常被夸大；分叉在**进程模型、状态共享与控制面合同**。网络层位见 **§1.3**。
 >
-> 可与 [21](./21-service-architecture-evolution.md)（服务形态）、[16](../10-chronicle/16-http-protocol-chronicle.md)（HTTP/QUIC）、[28](./28-http-rpc-microservice-communication-treatise.md)（东西向）、[23](./23-kubernetes-control-plane-doctrine.md) / [24](./24-calico-l3-dataplane-treatise.md)（集群网络）对照。本文写**代理数据面**；§9 专论多节点 **VIP / 统一入口**。
+> 可与 [28](./28-http-rpc-microservice-communication-treatise.md)（东西向通信组合）、[16](../10-chronicle/16-http-protocol-chronicle.md)（HTTP/QUIC）、[23](./23-kubernetes-control-plane-doctrine.md) / [24](./24-calico-l3-dataplane-treatise.md) / [24a](./24a-cilium-ebpf-dataplane-treatise.md)（集群网络与数据面）、[21](./21-service-architecture-evolution.md)（服务形态，仅对照）合读。本文写**代理数据面**；§9 专论多节点 **VIP / 统一入口**。
 
 先给一个直接答案：
 
 > **三者均为事件驱动、非阻塞 I/O；分叉在共享域与控制面，而非功能清单。** 共同原则：拒绝一连接一线程、热路径非阻塞、连接亲和、控制面与数据面分离。Nginx：master + **多进程单线程 worker**；HAProxy：每线程一调度器、连接线程亲和；Envoy：main（xDS）+ siloed workers。多节点另选入口机制（§9）；层位总图见 **§1.3**。选型顺序：角色 → VIP 机制 → 共享域 → 延迟。
 
-**20-architecture 位置：** [21](./21-service-architecture-evolution.md) 写服务形态演进；本文写**代理层**与其前方的 **VIP / 统一入口层**。
+**20-architecture 位置：** 本文编号 **28a**，挂在服务间通信 / 流量路径侧，与 [28](./28-http-rpc-microservice-communication-treatise.md) 同族；写**代理层**与其前方的 **VIP / 统一入口层**。服务架构代际见 [21](./21-service-architecture-evolution.md)；平台工程专论见 [21a](./21a-platform-engineering-idp-treatise.md)。
 
 ## 摘要
 
@@ -715,4 +715,4 @@ flowchart TB
 
 [^nvidia-anycast]: NVIDIA Networking KB, *Anycast Design Guide*（ECMP anycast 与 TCP 长连接失效注意）. https://docs.nvidia.com/networking-ethernet-software/knowledge-base/Network-Solutions/Anycast-Design-Guide/ 。
 
-**声明：** 本文为架构对照，非安装手册或性能排行。§9 论述入口机制与代表实现，产品列表非穷尽；版本与云 API 以当期文档为准。HTTP 代际见 [16](../10-chronicle/16-http-protocol-chronicle.md)；服务形态见 [21](./21-service-architecture-evolution.md)。
+**声明：** 本文为架构对照，非安装手册或性能排行。§9 论述入口机制与代表实现，产品列表非穷尽；版本与云 API 以当期文档为准。HTTP 代际见 [16](../10-chronicle/16-http-protocol-chronicle.md)；同步通信组合见 [28](./28-http-rpc-microservice-communication-treatise.md)；服务形态见 [21](./21-service-architecture-evolution.md)。

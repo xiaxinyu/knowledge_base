@@ -295,7 +295,7 @@ flowchart LR
 
 网关位于客户端与服务之间：路由、请求聚合（一次客户端调用扇出到多服务再合并）、SSL 终结、认证鉴权、限流、日志等。Azure 将其拆解为 Gateway Routing / Aggregation / Offloading 三类能力。[^ms-gateway] 它降低前端与后端的耦合，但引入额外跳数，并可能成为单点——须独立扩容与多活，不能「只部署一个」。
 
-与 L4/L7 代理、VIP 入口的层次关系见 [21a](./21a-haproxy-nginx-envoy-treatise.md)：网关解决的是**应用入口与横切**，不等于集群入口的全部故事。
+与 L4/L7 代理、VIP 入口的层次关系见 [28a](./28a-haproxy-nginx-envoy-treatise.md)：网关解决的是**应用入口与横切**，不等于集群入口的全部故事。
 
 **（6）因：多端需求冲突 → BFF（按端可选）**
 
@@ -475,7 +475,8 @@ flowchart TD
 若平台仍是「文档 + 工单 + 裸集群」，负担只是换科室。Team Topologies 的核心主张：平台的主价值是降低流对齐团队的**外在认知负荷**，并按内部产品经营（自助、可用性、合用），而非强制标准化。[^team-topologies] Gartner：到 **2026** 年约 **80%** 大型软件工程组织将建平台团队（2022 约 45%）。[^gartner-pe] CNCF 侧强调 IDP（如 Backstage）与「K8s 是地基、不是完整平台」。[^cncf-trends-2024][^cncf-pe-2025]
 
 > **移走 / 换上：** 每业务队消化全套云原生工具链 → 平台产品管理、SLO、团队交互模式（协作 → X-as-a-Service）。  
-> **行业水位：** 平台工程已主流化，但多数组织仍处早期；成熟度不足时硬推 Mesh / 多云只会再转移一次混乱。
+> **行业水位：** 平台工程已主流化，但多数组织仍处早期；成熟度不足时硬推 Mesh / 多云只会再转移一次混乱。  
+> **专论：** 术语、五平面骨架、工具族、度量与落地顺序见 [21a 平台工程与 IDP](./21a-platform-engineering-idp-treatise.md)。
 
 ### 8.2 Mesh 降温与 Ambient / eBPF（对「下沉过猛」的纠偏）
 
@@ -610,7 +611,7 @@ CNCF 材料显示大量组织已在 K8s 上跑 GenAI，但 AI 工作负载的发
 
 - 周志明，《凤凰架构》演进各章；Sam Newman,《Building Microservices》(2nd)；Chris Richardson,《Microservices Patterns》  
 - Skelton & Pais,《Team Topologies》；AWS Well-Architected cell-based 指南；CNCF Annual Survey 2024/2025  
-- 本库 [22](./22-distributed-consistency-treatise.md) / [28](./28-http-rpc-microservice-communication-treatise.md) / [29](./29-kafka-event-streaming-treatise.md) / [21a](./21a-haproxy-nginx-envoy-treatise.md) / [23](./23-kubernetes-control-plane-doctrine.md) / [24a](./24a-cilium-ebpf-dataplane-treatise.md)  
+- 本库 [22](./22-distributed-consistency-treatise.md) / [28](./28-http-rpc-microservice-communication-treatise.md) / [28a](./28a-haproxy-nginx-envoy-treatise.md) / [29](./29-kafka-event-streaming-treatise.md) / [21a](./21a-platform-engineering-idp-treatise.md) / [23](./23-kubernetes-control-plane-doctrine.md) / [24a](./24a-cilium-ebpf-dataplane-treatise.md)  
 - 本库 [43](../40-paradigm/43-entropy-complex-systems-philosophy.md) / [41](../40-paradigm/41-ai-engineering-paradigm.md) / [42](../40-paradigm/42-agentic-sre-operations-playbook.md)
 
 **声明：** 代际地图与决策顺序，非中间件手册；展望附调查与厂商材料，不作时间表承诺。冲突时以 Fowler / Newman / Richardson / Azure / CNCF / AWS WA / 你方约束为准。
