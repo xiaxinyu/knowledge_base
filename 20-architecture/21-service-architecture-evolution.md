@@ -16,12 +16,17 @@
 | - | ------ | ---- |
 | **A** | 五域恒定：代际只换「谁承担」，不换问题本身 | §1.2 |
 | **B** | 转移三路：下沉平台 / 外包厂商 / 沉淀模式 | §2–§6 |
-| **C** | 选型有法则：先定位痛点，再选风格与模式 | §4.4.5、§7–§8 |
+| **C** | 选型有法则：先定位痛点与组织约束，再选风格 | §4.4.5、§7–§8 |
+
+> **与行业水位对照（写什么 / 不冒充什么）：**  
+> 对齐处 — Fowler / Richardson 模式因果、Newman「微服务是最后手段」、CNCF 云原生定义、Team Topologies「平台降认知负荷」、Gartner 平台工程预测。  
+> 补强处 — 组织拓扑与 Conway 约束进选型（§4.3、§7）；Mesh 采用降温的调查事实进展望（§8.2）；隔离粒度补 AWS cell-based（§8.3）。  
+> 不作处 — 不宣称六代必须线性经历；不把 Ambient / AI 写成已统一的「下一标准」。
 
 **怎么读：** 因何换代 → §1–§6｜拆开怎么做 → §4.4｜怎么选 → §7｜下一波 → §8｜容量拆法 → 附录 A。  
-「后微服务」为《凤凰架构》用语；行业多称云原生 / 平台工程（§5、§8）。本文是代际地图与决策顺序，不是中间件手册。
+「后微服务」为《凤凰架构》用语；行业多称云原生 / 平台工程。六代是**问题转移的谱系**，现场常并存，不是必修课表。
 
-**关键词：** 复杂度转移；五域恒定；微服务模式；平台工程；Ambient Mesh；选型决策
+**关键词：** 复杂度转移；五域恒定；微服务最后手段；平台工程；Ambient Mesh；cell-based；选型决策
 
 ---
 
@@ -111,7 +116,9 @@ UNIX 风格预设：远程调用应尽可能透明，开发者不必关心目标
 
 硬件提升后，应用收回单一进程（或少量进程）。这不是倒退，而是当时约束下的最优解之一。
 
-须区分规模：小型单体常划算；批判对象是大型单体（发布与协作耦合恶化）。中间态是**模块化单体**：进程内保持模块边界，推迟网络拆分，直到组织或负载证明必要。[^fowler-ms]（§7、§8 会再出现——当代选项，不是怀旧。）
+须区分规模：小型单体常划算；批判对象是大型单体（发布与协作耦合恶化）。中间态是**模块化单体**：进程内保持模块边界，推迟网络拆分，直到组织或负载证明必要。[^fowler-ms]
+
+> **行业共识（2020s）：** Sam Newman 将微服务称为 **architecture of last resort**——默认应从（模块化）单体出发，只有独立部署、团队自治或监管隔离等收益明确压过分布式代价时才拆。[^newman-last][^newman-book] 模块化单体是当代默认选项，不是「还没来得及微服务」的过渡羞辱。
 
 ### 2.1 缺陷：缺乏自治与隔离
 
@@ -178,10 +185,11 @@ SOA 试图同时回答服务识别、业务拆解与集成标准化：合同是 
 | **特征** | 按业务垂直切分；独立进程与部署；进程外边界；轻量网络通信 |
 | **收益** | 团队 / 发布并行；增量演进；细粒度伸缩；缩小单服务认知负荷 |
 | **代价** | 活动部件暴增；复杂度迁到运维与拓扑；分布式固有难题（见 [22](./22-distributed-consistency-treatise.md)） |
-| **宜用** | 多团队、长期演进收益高于短期成本 |
-| **慎用** | 小体量、单团队、领域边界尚不清 |
+| **宜用** | 多团队且边界已清晰；独立部署 / 独立伸缩 / 监管隔离的收益可度量 |
+| **慎用** | 小体量、单团队、领域边界尚不清；把「微服务」当默认正确 |
 
-> **暗线：** 移走「单体协作与发布耦合」→ 换上「分布式数据、边缘、韧性」。下列模式是标准应答。[^richardson-ms]
+> **组织前提（行业常漏、却决定成败）：** Conway 定律——系统结构镜像通信结构。微服务适合**已能按业务能力划队、且队间交互可契约化**的组织；队未齐就拆进程，得到的是分布式大泥球。Team Topologies 进一步指出：流对齐团队的认知负荷有上限，横切能力应交给平台队以 **X-as-a-Service** 吸收，而不是让每个业务队自建一套治理。[^conway][^team-topologies]  
+> **暗线：** 移走「单体协作与发布耦合」→ 换上「分布式数据、边缘、韧性 + 运维认知负荷」。下列模式是技术侧标准应答。[^richardson-ms]
 
 ### 4.4 常用设计模式（按问题簇）
 
@@ -377,7 +385,7 @@ Web 与移动端在屏、带宽、交互步骤上不同，硬塞进同一套「�
 
 K8s 默认抽象多在 Pod / Service 级，难做「同服务不同接口」的差异化策略。Service Mesh 用 Sidecar（或等价数据面）劫持东西向流量：超时、重试、熔断、mTLS、可观测——把 Circuit Breaker 等**标准化下沉**。[^service-mesh]
 
-代价：控制平面、数据面资源、平台运维。Sidecar 税本身又是下一波要移走的痛点（§8.2）。
+代价：控制平面、数据面资源、平台运维。CNCF 调查显示 Mesh 生产采用在 2023→2024 有所回落——Sidecar 税与运维门槛是主因，也是 Ambient / eBPF 要再转移的痛点（§8.2）。**Mesh 是可选下沉，不是后微服务必修课。**
 
 ### 5.3 本节收束
 
@@ -421,11 +429,12 @@ Serverless：**尽量不让业务开发者感知服务器、集群与容量规�
 | 后微服务 | 应用层治理过重 | K8s + Mesh | 平台 / YAML / SRE | B |
 | 无服务 | 运维与资源 | FaaS + BaaS | 云厂商与成本模型 | B |
 
-> **回证中心论点：** 每一代都在把最痛的复杂度移出业务日常视野——没有消灭，只是转移。
+> **回证中心论点：** 每一代都在把最痛的复杂度移出业务日常视野——没有消灭，只是转移。  
+> **并存提醒：** 表是谱系，不是通关顺序；同一组织可同时有模块化单体核心、若干微服务、托管 Serverless 切片与平台层。
 
 ### 7.2 选型决策框架
 
-不要先问「该上微服务吗」，按痛点决策（分论 C）：
+不要先问「该上微服务吗」，按**痛点 × 组织**决策（分论 C；对齐 Newman / Forrester「光谱而非二元」[^forrester-spectrum]）：
 
 ```mermaid
 flowchart TD
@@ -433,65 +442,74 @@ flowchart TD
   classDef ok fill:#eef6e8,stroke:#5a8a3a,color:#2f4f1f
   classDef warn fill:#f0e8fa,stroke:#6a3a8a,color:#3a1f5f
 
-  Q1{"痛点主要在哪？"}:::q
-  Q1 -->|"发布/协作耦合弱<br/>单团队小体量"| M["模块化单体"]:::ok
-  Q1 -->|"流量/存储瓶颈"| Cap["按附录 A 拆容量层<br/>缓存→集群→读写分离…"]:::ok
-  Q1 -->|"多团队 + 独立演进"| MS["微服务：先 §4.4.5 数据边界"]:::warn
-  MS --> Q2{"横切治理谁来扛？"}:::q
-  Q2 -->|"团队能维护治理库"| Lib["应用内框架 / 模式"]:::ok
-  Q2 -->|"平台团队成熟"| Plat["K8s + 可选 Mesh / IDP"]:::ok
-  Q2 -->|"峰值弹性 / 事件短任务"| SL["Serverless 组合进边界"]:::ok
+  Q0{"目标是否可度量？<br/>部署频率 / 隔离 / 伸缩"}:::q
+  Q0 -->|"否"| Stop["先定义结果，再谈风格"]:::ok
+  Q0 -->|"是"| Q1{"痛点主要在哪？"}:::q
+  Q1 -->|"单团队 / 边界未清"| M["模块化单体（默认）"]:::ok
+  Q1 -->|"流量/存储瓶颈"| Cap["附录 A：先拆容量层"]:::ok
+  Q1 -->|"独立部署收益明确<br/>且队拓扑已对齐"| MS["微服务：先 §4.4.5"]:::warn
+  MS --> Q2{"横切认知负荷谁吸收？"}:::q
+  Q2 -->|"尚无平台队"| Lib["应用内框架 + 慎上 Mesh"]:::ok
+  Q2 -->|"平台队成熟"| Plat["K8s + IDP；Mesh 按需"]:::ok
+  Q2 -->|"短任务/弹性切片"| SL["Serverless 组合进边界"]:::ok
 ```
 
-**四条硬规则：**
+**五条硬规则：**
 
-1. **先定痛点** — 落在 §1.2 哪一域？若只是规模耦合，勿用分布式药方。  
-2. **能不拆就不拆** — 模块化单体优先；拆则先 Database per Service，再走 §4.4.5。  
-3. **平台只接横切** — 发现 / 证书 / 部分韧性 / 发布；**不接**业务事务与领域边界。  
-4. **Serverless 是能力外包** — 不是风格取代；保留清晰数据所有权。
+1. **先定可度量结果** — 部署频率、故障爆破半径、团队吞吐等；风格是手段。[^newman-last]  
+2. **先定痛点落域** — §1.2 哪一域？若只是规模耦合，勿用分布式药方。  
+3. **能不拆就不拆** — 默认模块化单体；拆则队拓扑与数据边界同时成立，再走 §4.4.5。  
+4. **平台只接横切与认知负荷** — 发现 / 证书 / 发布 / 黄金路径；**不接**业务事务与领域边界。K8s ≠ 一致性免费。[^team-topologies]  
+5. **Serverless / Mesh 皆可选切片** — 不是风格取代；Mesh 尤其按需（见 §8.2 采用降温事实）。
 
-多团队已上微服务 + K8s 时，下一步通常是把平台做成**内部产品**（§8.1），而不是再发明一个框架。容量拆法 → 附录 A；年代锚点 → 附录 B。
+已上微服务 + K8s 时，下一步通常是平台产品化（§8.1），不是再发明框架。容量拆法 → 附录 A；年代锚点 → 附录 B。
 
 ---
 
 ## 8. 展望：下一波复杂度往哪移
 
-新痛点已换位：开发者认知负荷、Sidecar 税、平台可运营性、AI 算力调度。仍服从中心论点——再次选择承担方（材料口径 2024–2026）。
+新痛点已换位：流对齐团队的**认知负荷**、Sidecar 税、平台可运营性、AI 算力与推理流量。仍服从中心论点——再次选择承担方。下列判断附可核验数据；**趋势 ≠ 已统一标准**。
 
-### 8.1 平台工程与 IDP
+### 8.1 平台工程与 IDP（组织解，不是又一代协议）
 
-若平台仍是「文档 + 工单 + 裸集群」，负担只是换科室。平台工程把可复用能力做成内部产品：自助、黄金路径、明确 API。Gartner：到 **2026** 年约 **80%** 大型软件工程组织将建平台团队（2022 约 45%）。[^gartner-pe] CNCF 侧强调 IDP（如 Backstage）。[^cncf-trends-2024][^cncf-pe-2025]
+若平台仍是「文档 + 工单 + 裸集群」，负担只是换科室。Team Topologies 的核心主张：平台的主价值是降低流对齐团队的**外在认知负荷**，并按内部产品经营（自助、可用性、合用），而非强制标准化。[^team-topologies] Gartner：到 **2026** 年约 **80%** 大型软件工程组织将建平台团队（2022 约 45%）。[^gartner-pe] CNCF 侧强调 IDP（如 Backstage）与「K8s 是地基、不是完整平台」。[^cncf-trends-2024][^cncf-pe-2025]
 
-> **移走 / 换上：** 业务队消化全套云原生工具链 → 平台产品管理、SLO、组织接口。
+> **移走 / 换上：** 每业务队消化全套云原生工具链 → 平台产品管理、SLO、团队交互模式（协作 → X-as-a-Service）。  
+> **行业水位：** 平台工程已主流化，但多数组织仍处早期；成熟度不足时硬推 Mesh / 多云只会再转移一次混乱。
 
-### 8.2 Ambient Mesh 与 eBPF
+### 8.2 Mesh 降温与 Ambient / eBPF（对「下沉过猛」的纠偏）
 
-Istio Ambient Mode 于 **v1.24（2024-11）** GA：节点级 ztunnel 做 L4（含 mTLS），按需 Waypoint 做 L7。[^istio-ambient-ga] eBPF 数据面（如 Cilium）把网络 / 可观测 / 部分策略推进内核（见 [24a](./24a-cilium-ebpf-dataplane-treatise.md)）。[^cncf-trends-2024]
+CNCF Annual Survey **2024**：Service Mesh 生产采用约 **42%**，低于 2023 的约 **50%**；「近期无计划使用」上升——主因是复杂度、成本、性能与运维专长门槛。[^cncf-survey-2024] 这不是 Mesh 死亡，而是行业对 **Sidecar 全家桶默认上** 的降温。
 
-> **移走 / 换上：** Sidecar 税 → 共享 L4 + 按需 L7 / 内核专长。五域不变。
+Istio Ambient Mode 于 **v1.24（2024-11）** GA：节点级 ztunnel 做 L4（含 mTLS），按需 Waypoint 做 L7——把「默认每 Pod 一代理」拆成可增量采用。[^istio-ambient-ga] eBPF 数据面（如 Cilium）并行把网络 / 可观测 / 部分策略推进内核（见 [24a](./24a-cilium-ebpf-dataplane-treatise.md)）。
 
-### 8.3 模块化单体与可组合边界
+> **移走 / 换上：** Sidecar 税与「Mesh 必上」教条 → 共享 L4 + 按需 L7 / 内核专长。五域不变。  
+> **选型含义：** 无明确的 mTLS / L7 策略 / 多集群流量需求时，不必为「云原生齐全」上 Mesh。
 
-微服务净成本过高时，modular monolith 重回一等选项。[^gartner-mod-mono] 默认可组合：进程内模块 + 必要时服务边界 + Serverless 切片。
+### 8.3 可组合边界与 cell-based（隔离不一定等于微服务）
 
-> **移走 / 换上：** 过早分布式税 → 模块纪律与清晰拆分门槛（§7.2）。
+模块化单体重回默认（Newman / Gartner / Forrester 光谱论）。[^newman-last][^gartner-mod-mono][^forrester-spectrum] 默认可组合：进程内模块 + 必要时服务边界 + Serverless 切片。
 
-### 8.4 AI 工作负载与智能运维
+另一条常被忽略的隔离轴是 **cell-based architecture**（舱壁 / 蜂窝）：按分区键把工作负载复制为互不共享状态的 cell，单 cell 故障或坏发布只影响一部分流量——AWS Well-Architected 将其作为限制爆破半径的实践，**不必**为隔离而拆成细粒度微服务。[^aws-cell] 适合超高可用、多租户或「不能全站一起挂」的关键面；代价是冗余与路由层复杂度，不是中小系统默认项。
 
-GPU / TPU 调度推回舞台（见 [23](./23-kubernetes-control-plane-doctrine.md)）；平台叙事从 YAML 自助走向智能辅助（见 [41](../40-paradigm/41-ai-engineering-paradigm.md)、[42](../40-paradigm/42-agentic-sre-operations-playbook.md)）。
+> **移走 / 换上：** 「隔离 = 必须微服务」的简化 → 模块纪律 / 服务边界 / cell 分区按目标选用。
 
-> **移走 / 换上：** 部分人工机械操作 → 模型可靠性、策略边界与人机交接。控制仍是搬运。
+### 8.4 AI 工作负载与智能运维（缺口在平台成熟度）
+
+CNCF 材料显示大量组织已在 K8s 上跑 GenAI，但 AI 工作负载的发布节奏与平台成熟度仍显著落后于「innovator」档——瓶颈常在调度、异构算力、推理流量治理与组织能力，而非再发明一种服务风格（见 [23](./23-kubernetes-control-plane-doctrine.md)）。[^cncf-survey-2025] 平台叙事从 YAML 自助走向智能辅助时，复杂度从人工机械段转到**模型可靠性、策略边界与人机交接**（见 [41](../40-paradigm/41-ai-engineering-paradigm.md)、[42](../40-paradigm/42-agentic-sre-operations-playbook.md)）。
+
+> **移走 / 换上：** 部分机械值班 → 模型与策略治理。控制仍是搬运；AI 不自动取消 §4.4 数据边界。
 
 ### 8.5 收束
 
-| 抓手 | 移走 | 换上 | 仍在 |
-| ---- | ---- | ---- | ---- |
-| 平台工程 / IDP | 工具链过载 | 平台产品与组织接口 | 领域边界、数据正确性 |
-| Ambient / eBPF | Sidecar 税 | 节点 / 内核数据面 | 故障与安全域 |
-| 模块化单体 | 过早拆分税 | 模块纪律 | 再拆分压力 |
-| AI 运维 | 机械值班 | 模型与策略治理 | 责任与端到端正确性 |
+| 抓手 | 移走 | 换上 | 仍在 | 证据水位 |
+| ---- | ---- | ---- | ---- | -------- |
+| 平台工程 / IDP | 工具链与认知过载 | 平台产品与团队交互 | 领域边界、数据正确性 | Gartner 预测 + Team Topologies |
+| Ambient / eBPF | Sidecar 税、Mesh 教条 | 共享 L4 + 按需 L7 / 内核 | 故障与安全域 | CNCF Survey 降温 + Ambient GA |
+| 可组合 + cell | 「隔离=微服务」 | 模块 / 服务 / cell 分档 | 再拆分与路由代价 | Newman + AWS WA |
+| AI 平台与运维 | 部分机械操作 | 模型与策略治理 | 责任与端到端正确性 | CNCF AI-on-K8s 成熟度差 |
 
-> **一句话：** 下一波 = 平台产品化 + Mesh 轻量化 + 边界可组合 + AI 参与搬运。五域地图与三条转移路径仍然够用。
+> **一句话：** 下一波不是口号接力，而是把平台**产品化**、把 Mesh **按需轻量化**、把隔离**与目标对齐**（含 cell），并让 AI 参与运维搬运——五域地图、三路转移与组织约束仍然够用。
 
 ---
 
@@ -530,9 +548,12 @@ GPU / TPU 调度推回舞台（见 [23](./23-kubernetes-control-plane-doctrine.m
 | 2014 | Lewis & Fowler《Microservices》；其后 Richardson 模式语言 | 微服务定义与数据 / 协作模式 |
 | 2016–2017 | K8s 入驻 CNCF；Mesh 术语走红 | 云原生 / 平台下沉拐点 |
 | 2019 | Berkeley Serverless 技术报告 | 无服务作为云编程模型表述 |
-| 2023–2026 | 平台工程 / IDP 主流化（Gartner：2026 年约 80% 大型组织建平台团队） | §8.1：平台 YAML 产品化 |
+| 2019 | Skelton & Pais《Team Topologies》 | 平台降认知负荷；§8.1 |
+| 2023 | AWS Well-Architected cell-based 指南 | §8.3：隔离 ≠ 必须微服务 |
+| 2023–2026 | 平台工程 / IDP 主流化（Gartner 2026≈80%） | §8.1 |
+| 2024 | CNCF Survey：Mesh 生产采用约 42%（低于 2023 的 50%） | §8.2：下沉过猛的纠偏 |
 | 2024-11 | Istio Ambient Mode GA（v1.24） | §8.2：Sidecar 税再转移 |
-| 2024– | eBPF 数据面与 AI 调度进编排叙事 | §8.2–§8.4；本库 23 / 24a |
+| 2024– | eBPF 数据面与 AI-on-K8s 成熟度差 | §8.2–§8.4；本库 23 / 24a |
 
 关于厂商叙事（CORBA → EJB → SOA → Spring / Cloud Foundry → CNCF / K8s → Serverless）确有商业竞争与标准话语权的成分，但**「云原生」本身并非某一家的私有商标**：CNCF 将其界定为在现代动态环境（如公有云、私有云、混合云）中构建和运行可弹性扩展应用的方法，并强调容器、服务网格、微服务、不可变基础设施与声明式 API 等技术集合[^cncf-definition]。理解演进时，宜区分「工程问题」与「厂商叙事」。
 
@@ -575,18 +596,23 @@ GPU / TPU 调度推回舞台（见 [23](./23-kubernetes-control-plane-doctrine.m
 [^cncf-trends-2024]: CNCF, “Emerging trends in the cloud native ecosystem,” 19 Nov 2024（IDP / Backstage、平台工程、eBPF 相关可持续性与可观测等）。<https://www.cncf.io/blog/2024/11/19/emerging-trends-in-the-cloud-native-ecosystem/>  
 [^cncf-pe-2025]: CNCF, “From YAML to Intelligence: The Evolution of Platform Engineering,” 22 Jul 2025（IDP 作为平台工程核心交付物）。<https://www.cncf.io/blog/2025/07/22/from-yaml-to-intelligence-the-evolution-of-platform-engineering/>  
 [^istio-ambient-ga]: CNCF / Istio, “Fast, secure, and simple: Istio’s Ambient Mode reaches General Availability in v1.24,” 7 Nov 2024。<https://www.cncf.io/blog/2024/11/07/fast-secure-and-simple-istios-ambient-mode-reaches-general-availability-in-v1-24/>  
-[^gartner-mod-mono]: Gartner, “The Best Approach to Balancing Microservices and Monoliths”（模块化单体作为微服务增殖后的再平衡选项，2024）。<https://www.gartner.com/en/documents/5752615>
+[^gartner-mod-mono]: Gartner, “The Best Approach to Balancing Microservices and Monoliths”（模块化单体作为微服务增殖后的再平衡选项，2024）。<https://www.gartner.com/en/documents/5752615>  
+[^newman-last]: Sam Newman 多次将微服务表述为 “architecture of last resort / not the default”；参见 InfoQ 访谈与公开演讲整理，例如 <https://www.infoq.com/podcasts/microservices-benefits-supersede-caveats/>  
+[^newman-book]: Sam Newman, *Building Microservices*, 2nd ed., O’Reilly, 2021. <https://samnewman.io/books/building_microservices_2nd_edition/>  
+[^conway]: Melvin E. Conway, “How Do Committees Invent?” *Datamation*, 1968（Conway’s Law）。  
+[^team-topologies]: Matthew Skelton, Manuel Pais, *Team Topologies*, IT Revolution, 2019；Fowler 摘要：<https://martinfowler.com/bliki/TeamTopologies.html>  
+[^forrester-spectrum]: Forrester, monoliths vs microservices as a spectrum（非二元对决）— 见 “Beyond The Architecture Cage Match” 等公开论述。<https://www.forrester.com/blogs/beyond-the-architecture-cage-match-the-microservices-vs-monoliths-battle-is-hurting-your-business/>  
+[^cncf-survey-2024]: CNCF Annual Survey 2024：Service Mesh 生产采用约 42%（2023 约 50%）。报告 PDF：<https://www.cncf.io/wp-content/uploads/2025/04/cncf_annual_survey24_031225a.pdf>  
+[^cncf-survey-2025]: CNCF Annual Survey 2025：云原生成熟度与 AI / Mesh 采用相关；innovator 更可能生产使用 Mesh 等高级能力。<https://www.cncf.io/wp-content/uploads/2026/01/CNCF_Annual_Survey_Report_final.pdf>  
+[^aws-cell]: AWS Well-Architected, “Reducing the Scope of Impact with Cell-Based Architecture,” 2023；REL bulkhead / cell 实践。<https://docs.aws.amazon.com/wellarchitected/latest/reducing-scope-of-impact-with-cell-based-architecture/reducing-the-scope-of-impact-with-cell-based-architecture.html>
 
 ### 延伸阅读
 
-- 原始分布式：<https://icyfenix.cn/architecture/architect-history/primitive-distribution.html>  
-- 微服务：<https://icyfenix.cn/architecture/architect-history/microservices.html>  
-- 李智慧，《大型网站技术架构：核心原理与案例分析》（附录 A 路径的常见出处之一）  
-- Chris Richardson, *Microservices Patterns*（数据模式与协作模式的系统化叙述）  
+- 周志明，《凤凰架构》演进各章；Sam Newman,《Building Microservices》(2nd)；Chris Richardson,《Microservices Patterns》  
+- Skelton & Pais,《Team Topologies》；AWS Well-Architected cell-based 指南；CNCF Annual Survey 2024/2025  
 - 本库 [22](./22-distributed-consistency-treatise.md) / [28](./28-http-rpc-microservice-communication-treatise.md) / [29](./29-kafka-event-streaming-treatise.md) / [21a](./21a-haproxy-nginx-envoy-treatise.md) / [23](./23-kubernetes-control-plane-doctrine.md) / [24a](./24a-cilium-ebpf-dataplane-treatise.md)  
-- 本库 [43 熵与复杂系统](../40-paradigm/43-entropy-complex-systems-philosophy.md)：复杂度转移的一般语法  
-- 本库 [41](../40-paradigm/41-ai-engineering-paradigm.md) / [42](../40-paradigm/42-agentic-sre-operations-playbook.md)：AI 工程与智能运维侧的复杂度搬运
+- 本库 [43](../40-paradigm/43-entropy-complex-systems-philosophy.md) / [41](../40-paradigm/41-ai-engineering-paradigm.md) / [42](../40-paradigm/42-agentic-sre-operations-playbook.md)
 
-**声明：** 代际地图与决策顺序，非中间件手册。冲突时以 Fowler / Richardson / Azure / CNCF / Gartner 与你方约束为准。
+**声明：** 代际地图与决策顺序，非中间件手册；展望附调查与厂商材料，不作时间表承诺。冲突时以 Fowler / Newman / Richardson / Azure / CNCF / AWS WA / 你方约束为准。
 
 ---

@@ -165,7 +165,7 @@ knowledge_base/
 | 编号 | 文稿 | 核心命题 | 触发器（何时读） |
 |------|------|----------|------------------|
 | 20 | [Enterprise Architecture Treatise](./20-architecture/20-enterprise-architecture-treatise.md) | 战略译成可执行安排；教学四大域、实践六层；实践不是照搬某一框架 | EA、四大域、六层域、CSVLOD |
-| 21 | [Service Architecture Evolution](./20-architecture/21-service-architecture-evolution.md) | 中心论点：复杂度转移；五域恒定 + 三路去向 + 选型框架；展望平台工程/Ambient/eBPF | 问题域→六代转移→决策对策→下一波 |
+| 21 | [Service Architecture Evolution](./20-architecture/21-service-architecture-evolution.md) | 复杂度转移；Newman最后手段+Team Topologies；选型×组织；展望对齐CNCF Survey/Ambient/cell | 五域→代际→决策→下一波 |
 | 21a | [HAProxy · Nginx · Envoy Treatise](./20-architecture/21a-haproxy-nginx-envoy-treatise.md) | 代理 L4–L7；VIP 入口 L2–L3；五种机制（ADC/VRRP/K8s LB/ECMP/云） | HAProxy、Nginx、Envoy、L4、L7、VIP、VRRP、MetalLB、ECMP、ADC |
 | 22 | [Distributed Consistency Treatise](./20-architecture/22-distributed-consistency-treatise.md) | 跨节点之后，强一致与持续可用如何取舍 | CAP、共识、一致性 |
 | 23 | [Kubernetes Control-Plane Doctrine](./20-architecture/23-kubernetes-control-plane-doctrine.md) | 声明式协调 + Label 契约 + 网络合同 / CIDR + 同一循环 | K8s 控制面、CNI、Pod CIDR、Service CIDR、Label |
@@ -231,7 +231,7 @@ knowledge_base/
 | 大语言模型、LLM、Transformer、注意力、QKV、GPT、BERT、T5、缩放律、RAG、ChatGPT、Decoder-Only、幻觉、对齐 | 17 |
 | 历史是什么、史料、解释、限制、有边界的重建、丝绸之路、海地革命、记忆与历史、纽伦堡、工厂法 | 18 |
 | 企业架构、TOGAF、四大域、**六层域**、CSVLOD、科图采夫 | 20 |
-| 服务架构代际、复杂度转移、五域恒定、选型决策、平台工程、Ambient Mesh、Database per Service、Saga、CQRS、BFF、API Gateway、Strangler、断路器 | 21 |
+| 服务架构代际、复杂度转移、微服务最后手段、Team Topologies、选型决策、平台工程、Ambient Mesh、cell-based、Database per Service、Saga、CQRS | 21 |
 | HAProxy、Nginx、Envoy、VIP、VRRP、ECMP、anycast、Keepalived、MetalLB、kube-vip、PureLB、F5、Kemp、Citrix、ADC、云 LB | 21a |
 | 服务代际 ↔ 入口代理 / 网格数据面 | 21 / 21a |
 | 服务代际 ↔ 服务间通信选型 | 21 / 28 |
