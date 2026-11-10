@@ -132,7 +132,7 @@ knowledge_base/
 
 - **`10`**：技术与秩序长河 + 读史方法。`10`–`12` 计算 / 信息 / 智能；`13` 霸权与工业革命（与 [55](./50-strategy/55-global-manufacturing-migration-chronicle.md) 互参）；`14`–`16` 互联网 → 浏览器 → HTTP/QUIC；`16a` TCP/IP 栈专论、`16b` 消息分帧 / 粘包半包（接 14/16）；`17` 语言模型；`18` 历史认识论（读编年的方法篇，不是又一段国别史）。  
 - **`20`**：系统如何立身，内分三簇（编号不重排，阅读可按簇跳）：**企业与服务** `20`–`21`、`25`、`28`–`29`（`28` 同步调用，`29` 异步事件日志）；**分布式平台** `22`–`24`；**机器与传输** `26`–`27`（`27` 与史域 [16](./10-chronicle/16-http-protocol-chronicle.md) 同谈 QUIC，一史一用）。  
-- **`30`**：`30` IT 治理（COBIT）；`31` 平台质量实证。域薄，空号留给后续控制 / 审计专题。  
+- **`30`**：`30` IT 治理（COBIT）；`31` 平台质量实证；`32` 项目管理 / PMBOK 价值交付。域薄，空号留给后续控制 / 审计专题。  
 - **`40`**：智能协作与横切镜片。`40`–`42` 工具哲学 → 组织范式 → 运维落地；`44`–`45` 产业前沿与多 Agent 协作；`43` / `46` 为熵与系统思维（横切）；`47` 以 Brooks「无银弹」重读 AI 提效（偶然 / 本质）；`48` 为 AI 数学骨架（表示 / 计算 / 度量）。  
 - **`50`**：同一问的多个切面，不是上下卷。公开索引：`50` 局、`51` 译、`52` 币、`53` 配、`54` 人、`55` 迁、`57` 环、`58` 特许公司（东印度）。口诀 **局、迁、译、币、配、人** 仍只记前六切面的检索习惯，不是文件顺序；`57`/`58` 另记。**`56`、`59` 有本地稿但不入库、不进公开索引**（`.gitignore`），公开地图留空该号，勿占用。
 
@@ -186,6 +186,7 @@ knowledge_base/
 |------|------|----------|------------------|
 | 30 | [COBIT IT Governance Framework](./30-governance/30-cobit-it-governance-framework.md) | 技术是否创造可验证的经营结果 | COBIT、IT 治理 |
 | 31 | [Platform Service Quality Case Study](./30-governance/31-platform-service-quality-case-study.md) | 平台质量如何被定义、证明并改成经营结果 | 平台质量、SERVQUAL |
+| 32 | [Project Management · PMBOK Value Delivery](./30-governance/32-project-management-pmbok-value-delivery-treatise.md) | 第6–8版：过程共同语言→价值原则→过程回嵌；成功=价值+执行；混合方法 | PMBOK、价值交付、绩效域、混合方法、ITTO、项目成功 |
 
 #### 40 · 优术 · 智
 
@@ -252,6 +253,8 @@ knowledge_base/
 | 恢复理论 ↔ 共识提交 ↔ 事件日志产品 | 29a / 22 / 29 |
 | COBIT、治理 vs 管理 | 30 |
 | 平台服务质量、期望—感知差距 | 31 |
+| PMBOK、价值交付、原则、绩效域、焦点领域、混合方法、ITTO、项目成功、Pulse of the Profession | 32 |
+| IT 治理 ↔ 平台质量 ↔ 项目价值交付 | 30 / 31 / 32 |
 | Unix 哲学、无状态 Agent、可组合 | 40 |
 | AI 工程组织、5+2、提效承接 | 41 |
 | Agentic SRE、MTTR、运维手册 | 42 |
@@ -327,7 +330,8 @@ knowledge_base/
 1. **20** 战略如何翻译为安排（四大域 / 六层）  
 2. **30** COBIT 如何落地  
 3. **31** 平台质量如何度量与改进  
-4. **50** AI 对治理与竞争的冲击（交叠点、死亡之谷）  
+4. **32** 项目如何从过程共同语言走向价值交付（PMBOK 6→8）  
+5. **50** AI 对治理与竞争的冲击（交叠点、死亡之谷）  
 
 #### AI 工程负责人 / 研发管理者
 
@@ -489,6 +493,7 @@ AI 如何改变工程组织、如何承接被放大的速度。
 | **明道** | 平台工程=TVP+IDP 产品化；强制控制非强制采用；CNCF 五维成熟度；K8s 是地基 | [21a](./20-architecture/21a-platform-engineering-idp-treatise.md) |
 | **明道** | 代理在 L4–L7，VIP 入口在 L2–L3；分叉在共享域；五种入口机制与代理正交 | [28a](./20-architecture/28a-haproxy-nginx-envoy-treatise.md) |
 | **明道** | 治理与管理必须分离；平台质量是期望与感知的差距 | [30](./30-governance/30-cobit-it-governance-framework.md) / [31](./30-governance/31-platform-service-quality-case-study.md) |
+| **明道** | 项目管理主线从「按过程做完」转向「交付可感知价值」；第8版是原则精炼+过程回嵌，不是退回第6版 | [32](./30-governance/32-project-management-pmbok-value-delivery-treatise.md) |
 | **优术** | 遗忘有时强于记忆；个人写出代码变快之后，组织交付未必变快 | [40](./40-paradigm/40-unix-agent-stateless-philosophy.md) / [41](./40-paradigm/41-ai-engineering-paradigm.md) |
 | **优术** | AI 主清偶然之难；本质之难仍在；难的是精确决定要构建什么；局部十倍不是银弹 | [47](./40-paradigm/47-no-silver-bullet-ai-essential-difficulty-philosophy.md) |
 | **优术** | 智能落地是表示、计算、度量；线代 / 微积分 / 概率 / 优化是支柱，不是调参附属 | [48](./40-paradigm/48-ai-mathematical-foundations-treatise.md) |
