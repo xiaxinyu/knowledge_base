@@ -98,7 +98,8 @@ knowledge_base/
 ├── 20-architecture/    明道 · 构
 ├── 30-governance/      明道 · 治
 ├── 40-paradigm/        优术 · 智
-└── 50-strategy/        优术 · 略
+├── 50-strategy/        优术 · 略
+└── 90-method/          优术 · 法
 ```
 
 | 区号 | 目录 | 境界 | 线索 | 所问 |
@@ -108,6 +109,7 @@ knowledge_base/
 | **30** | `30-governance/` | 明道 | 治 | 技术如何可信？ |
 | **40** | `40-paradigm/` | 优术 | 智 | 智能如何协作？复杂系统如何被分析？ |
 | **50** | `50-strategy/` | 优术 | 略 | 价值如何取胜？ |
+| **90** | `90-method/` | 优术 | 法 | 元技能与学习方法如何立？ |
 
 此序即本末：
 
@@ -126,7 +128,7 @@ knowledge_base/
 | **60–69** | 文化与品牌 | `50-strategy` 中译介类若继续增加，再迁入 60 |
 | **70–79** | 运营与质量 | — |
 | **80–89** | 安全与风险 | — |
-| **90–99** | 方法与元知识 | — |
+| **90–99** | 方法与元知识 | `91` 英语介词关系逻辑；空号留给后续学习方法 / 元认知专题 |
 
 同域内按认知依赖递增：先概念，后演进，再原则，再落地。域简介如下（与 §3.1 索引表一致；冲突以索引表为准）：
 
@@ -135,6 +137,7 @@ knowledge_base/
 - **`30`**：`30` IT 治理（COBIT）；`31` 平台质量实证；`32` 项目管理 / PMBOK 价值交付。域薄，空号留给后续控制 / 审计专题。  
 - **`40`**：智能协作与横切镜片。`40`–`42` 工具哲学 → 组织范式 → 运维落地；`44`–`45` 产业前沿与多 Agent 协作；`43` / `46` 为熵与系统思维（横切）；`47` 以 Brooks「无银弹」重读 AI 提效（偶然 / 本质）；`48` 为 AI 数学骨架（表示 / 计算 / 度量）。  
 - **`50`**：同一问的多个切面，不是上下卷。公开索引：`50` 局、`51` 译、`52` 币、`53` 配、`54` 人、`55` 迁、`57` 环、`58` 特许公司（东印度）。口诀 **局、迁、译、币、配、人** 仍只记前六切面的检索习惯，不是文件顺序；`57`/`58` 另记。**`56`、`59` 有本地稿但不入库、不进公开索引**（`.gitignore`），公开地图留空该号，勿占用。
+- **`90`**：方法与元知识。`91` 英语介词：关系逻辑优于中文对译；空号留给后续语言 / 学习方法专论。
 
 ---
 
@@ -215,6 +218,12 @@ knowledge_base/
 | 57 | [Dollar System Division of Labor](./50-strategy/57-dollar-system-division-of-labor-treatise.md) | 三层环流（资源—制造—消费）与四层利润金字塔；实物向消费端，美元回流美国；升级=向上跃迁 | 美元环流、美债回流、储备货币、国际分工、利润金字塔 |
 | 58 | [East India Company Corporate Colonialism](./50-strategy/58-east-india-company-corporate-colonialism-treatise.md) | 特许贸易公司渐进吸收主权职能；Diwani 质变；军税正反馈；约束来自外部主权 | 东印度公司、普拉西、Diwani、公司军、渐进越界、成本外化 |
 
+#### 90 · 优术 · 法
+
+| 编号 | 文稿 | 核心命题 | 触发器（何时读） |
+|------|------|----------|------------------|
+| 91 | [English Prepositions · How to Use](./90-method/91-english-prepositions-relational-logic-treatise.md) | 先判关系再选词；in/on/at 地点与时间可跟练；对齐 Cambridge/BC/Oxford 并附核对法 | 介词、in/on/at、for、like/as、中英思维 |
+
 ### 3.2 概念反查
 
 按概念找编号（姊妹篇用「/」）：扫表 → 开对应文的「直接答案 / 摘要」→ 感兴趣再沿目录深入。
@@ -267,6 +276,7 @@ knowledge_base/
 | AI 提效 ↔ 偶然/本质 ↔ 组织承接 | 47 / 41 |
 | AI 数学骨架 ↔ 编年机制 ↔ 无银弹 | 48 / 12 / 47 |
 | AI 产业冲击、护城河、**死亡之谷**、2026 交叠点、智能体入口 | 50 |
+| 英语介词、关系逻辑、trajector/landmark、in/on/at/for、like/as、中英思维差异 | 91 |
 | 品牌、文化译介、文化折扣 / 溢价、符号—叙事—价值 | 51 |
 | Token、智能经济计量 | 52 |
 | 资本配置、周期、特许权 | 53 |
@@ -503,6 +513,7 @@ AI 如何改变工程组织、如何承接被放大的速度。
 | **优术** | 制造业迁移改的是重心与环节，不是前任归零；无法被 Token 化的判断、创意与信任，才有剩余溢价 | [55](./50-strategy/55-global-manufacturing-migration-chronicle.md) / [52](./50-strategy/52-token-economics-treatise.md) |
 | **优术** | 实物向消费端、美元回流美国是近四十年分工主轴的教学像；升级是金字塔上跃迁，去美元缓慢、替代未成型 | [57](./50-strategy/57-dollar-system-division-of-labor-treatise.md) / [13](./10-chronicle/13-world-hegemony-transfer-chronicle.md) |
 | **优术** | 特许贸易公司可渐进吸收税收与武力；Diwani 后成本外化；内部难自刹，约束来自外部主权 | [58](./50-strategy/58-east-india-company-corporate-colonialism-treatise.md) |
+| **优术** | 英语介词先判关系再选词；空间→时间→抽象；勿用中文结果去套英文单词 | [91](./90-method/91-english-prepositions-relational-logic-treatise.md) |
 
 运维侧可核对的价值，是压缩 MTTR 中可并行、可检索、可证据化的时间段，而不是承诺无人值守自愈——见 [42](./40-paradigm/42-agentic-sre-operations-playbook.md)、[44](./40-paradigm/44-agentic-ops-frontier-treatise.md)。编排平台是持续收敛的控制计算机；节点即路由器，或 eBPF 换数据面底座——见 [23](./20-architecture/23-kubernetes-control-plane-doctrine.md)、[24](./20-architecture/24-calico-l3-dataplane-treatise.md)、[24a](./20-architecture/24a-cilium-ebpf-dataplane-treatise.md)。单机一次 Load 的虚实翻译与 Cache 链路见 [26](./20-architecture/26-cpu-memory-access-treatise.md)；指令流水线、冒险与乱序见 [26a](./20-architecture/26a-cpu-instruction-pipeline-treatise.md)。资本配置可带走的是三问，选人三则合验于烂摊子——见 [53](./50-strategy/53-li-ka-shing-capital-allocation-treatise.md)、[54](./50-strategy/54-ning-gaoning-talent-selection-treatise.md)。特许公司如何渐进吸收主权职能见 [58](./50-strategy/58-east-india-company-corporate-colonialism-treatise.md)。品牌走出去，目标是少打折扣、多造溢价——见 [51](./50-strategy/51-brand-cultural-translation.md)。智能体编年见 [12](./10-chronicle/12-artificial-intelligence-chronicle.md)。AI 数学骨架（表示 / 计算 / 度量）见 [48](./40-paradigm/48-ai-mathematical-foundations-treatise.md)。互联网编年见 [14](./10-chronicle/14-internet-history-chronicle.md)。浏览器代管与沙盒规矩见 [15](./10-chronicle/15-browser-custody-chronicle.md)。HTTP 从 0.9 到 QUIC 见 [16](./10-chronicle/16-http-protocol-chronicle.md)。MQTT over QUIC 与弱网传输层替换见 [27](./20-architecture/27-mqtt-over-quic-treatise.md)。微服务里 HTTP 与 RPC 慢在哪见 [28](./20-architecture/28-http-rpc-microservice-communication-treatise.md)。入口与网格数据面：HAProxy / Nginx / Envoy 对照见 [28a](./20-architecture/28a-haproxy-nginx-envoy-treatise.md)。Kafka 事件日志与解耦 / 削峰见 [29](./20-architecture/29-kafka-event-streaming-treatise.md)。WAL / MVCC 与 MySQL·PG·Oracle·Redis·etcd 对照见 [29a](./20-architecture/29a-data-store-wal-mvcc-treatise.md)。Brooks「无银弹」与 AI 偶然 / 本质之难见 [47](./40-paradigm/47-no-silver-bullet-ai-essential-difficulty-philosophy.md)。
 
