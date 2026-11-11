@@ -186,7 +186,7 @@ knowledge_base/
 |------|------|----------|------------------|
 | 30 | [COBIT IT Governance Framework](./30-governance/30-cobit-it-governance-framework.md) | 技术是否创造可验证的经营结果 | COBIT、IT 治理 |
 | 31 | [Platform Service Quality Case Study](./30-governance/31-platform-service-quality-case-study.md) | 平台质量如何被定义、证明并改成经营结果 | 平台质量、SERVQUAL |
-| 32 | [Project Management · PMBOK Value Delivery](./30-governance/32-project-management-pmbok-value-delivery-treatise.md) | 第6–8版：过程共同语言→价值原则→过程回嵌；成功=价值+执行；混合方法 | PMBOK、价值交付、绩效域、混合方法、ITTO、项目成功 |
+| 32 | [Project Management · PMBOK Value Delivery](./30-governance/32-project-management-pmbok-value-delivery-treatise.md) | 第6–8版骨架+第8版40过程全表；PMP ECO与PMBOK两套坐标系；成功=价值+执行 | PMBOK、PMP、ECO、价值交付、绩效域、关注领域、ITTO、混合方法 |
 
 #### 40 · 优术 · 智
 
@@ -253,7 +253,7 @@ knowledge_base/
 | 恢复理论 ↔ 共识提交 ↔ 事件日志产品 | 29a / 22 / 29 |
 | COBIT、治理 vs 管理 | 30 |
 | 平台服务质量、期望—感知差距 | 31 |
-| PMBOK、价值交付、原则、绩效域、焦点领域、混合方法、ITTO、项目成功、Pulse of the Profession | 32 |
+| 铁三角、三基准、五大过程组、十大知识领域、PMBOK、PMP、ECO、价值交付、绩效域、关注领域、ITTO、混合方法 | 32 |
 | IT 治理 ↔ 平台质量 ↔ 项目价值交付 | 30 / 31 / 32 |
 | Unix 哲学、无状态 Agent、可组合 | 40 |
 | AI 工程组织、5+2、提效承接 | 41 |
